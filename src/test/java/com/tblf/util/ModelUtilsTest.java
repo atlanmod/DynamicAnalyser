@@ -1,9 +1,14 @@
 package com.tblf.util;
 
 import com.tblf.util.ModelUtils;
+import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.gmt.modisco.java.ClassDeclaration;
 import org.eclipse.gmt.modisco.java.Model;
+import org.eclipse.gmt.modisco.java.Package;
+import org.eclipse.gmt.modisco.java.emf.JavaFactory;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -35,16 +40,31 @@ public class ModelUtilsTest {
     }
 
     @Test
-    public void getQualifiedName() throws Exception {
-        File f = new File("src/test/resources/junit_java.xmi");
-        Resource resource = ModelUtils.loadModel(f);
-        resource.getAllContents().forEachRemaining(eObject -> {
-            if (eObject instanceof ClassDeclaration) {
-                System.out.println(ModelUtils.getQualifiedName(eObject));
-            }
-        });
+    public void getQualifiedNameTest() throws Exception {
 
+        Model model = JavaFactory.eINSTANCE.createModel();
+        model.setName("model");
+        Package pkg1 = JavaFactory.eINSTANCE.createPackage();
+        pkg1.setName("pkg1");
+        Package pkg2 = JavaFactory.eINSTANCE.createPackage();
+        pkg2.setName("pkg2");
+        Package pkg3 = JavaFactory.eINSTANCE.createPackage();
+        pkg3.setName("pkg3");
 
+        ClassDeclaration clazz = JavaFactory.eINSTANCE.createClassDeclaration();
+        clazz.setName("clazz");
+
+        ClassDeclaration interClazz = JavaFactory.eINSTANCE.createClassDeclaration();
+        interClazz.setName("internClazz");
+
+        clazz.getBodyDeclarations().add(interClazz);
+        pkg3.getOwnedElements().add(clazz);
+        pkg2.getOwnedPackages().add(pkg3);
+        pkg1.getOwnedPackages().add(pkg2);
+        model.getOwnedElements().add(pkg1);
+
+        Assert.assertEquals("pkg1.pkg2.pkg3.clazz$internClazz", ModelUtils.getQualifiedName(interClazz));
+        Assert.assertEquals("pkg1.pkg2.pkg3.clazz", ModelUtils.getQualifiedName(clazz));
     }
 
 }

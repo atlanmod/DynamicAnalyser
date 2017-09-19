@@ -1,4 +1,4 @@
-package com.tblf.parser;
+package com.tblf.parsing;
 
 import com.tblf.util.ModelUtils;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -19,9 +19,7 @@ public class ModelParserTest {
         modelParser.parse(model);
 
         Assert.assertFalse(modelParser.getTargets().isEmpty());
-        Assert.assertTrue("Some files don't exist", modelParser.getTargets().stream().allMatch(File::exists));
 
         Assert.assertFalse(modelParser.getTests().isEmpty());
-        Assert.assertTrue("Some files don't exist", modelParser.getTests().stream().allMatch(File::exists));
     }
 }
