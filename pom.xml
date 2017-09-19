@@ -26,6 +26,12 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>io.github.lukehutch</groupId>
+      <artifactId>fast-classpath-scanner</artifactId>
+      <version>LATEST</version>
+    </dependency>
+
     <!-- EMF -->
     <dependency>
       <groupId>org.eclipse.emf</groupId>
@@ -43,6 +49,13 @@
       <groupId>org.eclipse.emf</groupId>
       <artifactId>org.eclipse.emf.ecore.xmi</artifactId>
       <version>2.12.0</version>
+    </dependency>
+
+    <!-- mvn install:install-file -Dfile=c:\org.eclipse.gmt.modisco.java_1.0.1.201702142048.jar -DgroupId=com.tblf -DartifactId=modisco -Dversion=1.0.1 -Dpackaging=jar -->
+    <dependency>
+      <groupId>com.tblf</groupId>
+      <artifactId>modisco</artifactId>
+      <version>1.0.1</version>
     </dependency>
 
     <!-- Instrumentation -->
@@ -90,7 +103,7 @@
               <!-- <mainClass>test.org.Cliente</mainClass> -->
             </manifest>
             <manifestEntries>
-              <Class-Path>libs/</Class-Path>
+              <Class-Path>${project.build.directory}/libs</Class-Path>
             </manifestEntries>
           </archive>
         </configuration>
