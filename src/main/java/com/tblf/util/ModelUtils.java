@@ -26,14 +26,26 @@ import java.util.Map;
  */
 public class ModelUtils {
 
+    static
+    {
+        System.out.println("Initializing MoDisco java package");
+        JavaPackage.eINSTANCE.eClass();
+        Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
+        Map<String, Object> m = reg.getExtensionToFactoryMap();
+        m.put("xmi", new XMIResourceFactoryImpl());
+    }
+
+    /**
+     * Load the XMI model contained in the {@link File} f*
+     * @param f the {@link File} ending with XMI
+     * @return
+     * @throws Exception
+     *
+     * @PreCondition The File is a XMI file using the Java Modisco metamodel
+     */
     public static Resource loadModel(File f) throws Exception {
 
         if (f.exists()) {
-
-            JavaPackage.eINSTANCE.eClass();
-            Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
-            Map<String, Object> m = reg.getExtensionToFactoryMap();
-            m.put("xmi", new XMIResourceFactoryImpl());
 
             ResourceSet resourceSet = new ResourceSetImpl();
 
@@ -83,11 +95,12 @@ public class ModelUtils {
      */
     public static String getQualifiedName(EObject eObject) {
         EStructuralFeature eStructuralFeature =  eObject.eClass().getEStructuralFeature("name");
-        String currentName = (String) eObject.eGet(eStructuralFeature);
 
-        if (eObject instanceof Model) {
+        if (eStructuralFeature == null ||eObject instanceof Model) {
             return "";
         }
+
+        String currentName = (String) eObject.eGet(eStructuralFeature);
 
         if (eObject.eContainer() instanceof ClassDeclaration) {
             currentName = "$".concat(currentName);
@@ -100,4 +113,5 @@ public class ModelUtils {
         return getQualifiedName(eObject.eContainer())+currentName;
 
     }
+
 }
