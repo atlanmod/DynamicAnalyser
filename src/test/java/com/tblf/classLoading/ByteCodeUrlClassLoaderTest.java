@@ -76,19 +76,17 @@ public class ByteCodeUrlClassLoaderTest {
         ModelParser modelParser = new ModelParser();
         modelParser.parse(ModelUtils.loadModel(new File("src/test/resources/junit_java.xmi")));
 
-        modelParser.getTargets().forEach(s -> {
+        modelParser.getTargets().forEach((s, f) -> {
             try {
                 urlClassLoader.loadClass(s);
-                System.out.println("found "+s);
             } catch (IllegalAccessError | ClassNotFoundException e) {
                 System.out.println("cannot find "+s);
             }
         });
 
-        modelParser.getTests().forEach(s -> {
+        modelParser.getTests().forEach((s, f) -> {
             try {
                 urlClassLoader.loadClass(s);
-                System.out.println("found "+s);
             } catch (IllegalAccessError | ClassNotFoundException e) {
                 System.out.println("cannot find "+s);
             }
