@@ -1,4 +1,4 @@
-package com.tblf.classloading;
+package com.tblf.classLoading;
 
 import com.tblf.parsing.ModelParser;
 import com.tblf.util.ModelUtils;
@@ -11,9 +11,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Files;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Created by Thibault on 19/09/2017.
