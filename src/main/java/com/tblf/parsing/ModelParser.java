@@ -5,20 +5,22 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.gmt.modisco.java.ClassDeclaration;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Thibault on 19/09/2017.
  */
 public class ModelParser {
 
-    private List<String> targets;
-    private List<String> tests;
+    private Map<String, File> targets;
+    private Map<String, File> tests;
 
     public ModelParser() {
-        targets = new LinkedList<>();
-        tests = new LinkedList<>();
+        targets = new HashMap<>();
+        tests = new HashMap<>();
     }
 
     /**
@@ -34,28 +36,28 @@ public class ModelParser {
                     File file = ModelUtils.getSrcFromClass(classDeclaration);
 
                     if (ModelUtils.isATestClass(classDeclaration)) {
-                        tests.add(ModelUtils.getQualifiedName(classDeclaration));
+                        tests.put(ModelUtils.getQualifiedName(classDeclaration), file);
                     } else {
-                        targets.add(ModelUtils.getQualifiedName(classDeclaration));
+                        targets.put(ModelUtils.getQualifiedName(classDeclaration), file);
                     }
                 }
             }
         });
     }
 
-    public List<String> getTargets() {
+    public Map<String, File> getTargets() {
         return targets;
     }
 
-    public void setTargets(List<String> targets) {
+    public void setTargets(Map<String, File> targets) {
         this.targets = targets;
     }
 
-    public List<String> getTests() {
+    public Map<String, File> getTests() {
         return tests;
     }
 
-    public void setTests(List<String> tests) {
+    public void setTests(Map<String, File> tests) {
         this.tests = tests;
     }
 }
