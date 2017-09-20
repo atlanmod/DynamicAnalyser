@@ -16,7 +16,7 @@ public class SingleURLClassLoader {
     private URLClassLoader urlClassLoader;
 
     private SingleURLClassLoader() {
-        urlClassLoader = new URLClassLoader(new URL[]{});
+        urlClassLoader = new InstURLClassLoader(new URL[]{});
     }
 
     /**
