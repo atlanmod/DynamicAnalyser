@@ -15,7 +15,6 @@ public class TargetMethodVisitor extends AdviceAdapter {
 
     @Override
     public void visitLineNumber(int i, Label label) {
-        System.out.println("Visiting line "+i+" "+label.getOffset());
         trace(i);
         super.visitLineNumber(i, label);
     }
@@ -25,8 +24,8 @@ public class TargetMethodVisitor extends AdviceAdapter {
 
         //TODO
         mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-        mv.visitLdcInsn("------" + line + " " + "executed");
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
+        mv.visitLdcInsn("" + line + " ");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "print", "(Ljava/lang/String;)V", false);
 
 
         mv.visitEnd();
