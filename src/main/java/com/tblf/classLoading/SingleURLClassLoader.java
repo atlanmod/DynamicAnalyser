@@ -36,7 +36,7 @@ public class SingleURLClassLoader {
      * @param urls
      */
     public void addURLs(URL[] urls) {
-        urlClassLoader = new URLClassLoader(urls, urlClassLoader);
+        urlClassLoader = new InstURLClassLoader(urls, urlClassLoader);
     }
 
     public URLClassLoader getUrlClassLoader() {

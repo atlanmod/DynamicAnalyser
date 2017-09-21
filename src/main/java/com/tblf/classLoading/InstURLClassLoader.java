@@ -14,6 +14,10 @@ public class InstURLClassLoader extends URLClassLoader {
         super(urls);
     }
 
+    public InstURLClassLoader(URL[] urls, ClassLoader parent) {
+        super(urls, parent);
+    }
+
     public void loadBytes(byte[] bytes, String className) {
         defineClass(className, bytes, 0, bytes.length);
     }
