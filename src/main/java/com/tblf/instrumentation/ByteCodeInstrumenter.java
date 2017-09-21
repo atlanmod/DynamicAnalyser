@@ -2,6 +2,7 @@ package com.tblf.instrumentation;
 import com.tblf.classLoading.InstURLClassLoader;
 import com.tblf.classLoading.SingleURLClassLoader;
 import com.tblf.instrumentation.visitors.TargetClassVisitor;
+import com.tblf.instrumentation.visitors.TestClassVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -73,12 +74,20 @@ public class ByteCodeInstrumenter implements Instrumenter {
         ClassReader classReader = new ClassReader(inputStream);
         ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 
-        classReader.accept(new TargetClassVisitor(Opcodes.ASM5, classWriter), 0);
+        classReader.accept(new TargetClassVisitor(Opcodes.ASM5, classWriter), ClassReader.EXPAND_FRAMES);
+
 
         return classWriter.toByteArray();
     }
 
-    private byte[] instrumentTestClass(File test) {
-        throw new NotImplementedException();
+    private byte[] instrumentTestClass(File test) throws IOException {
+        InputStream inputStream = new FileInputStream(test);
+        ClassReader classReader = new ClassReader(inputStream);
+        ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+
+        classReader.accept(new TestClassVisitor(Opcodes.ASM5, classWriter), ClassReader.EXPAND_FRAMES);
+
+
+        return classWriter.toByteArray();
     }
 }
