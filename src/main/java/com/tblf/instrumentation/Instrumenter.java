@@ -1,11 +1,11 @@
 package com.tblf.instrumentation;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Created by Thibault on 20/09/2017.
  */
 public interface Instrumenter {
 
-    public void instrument(List<String> targets, List<String> tests);
+    public void instrument(Collection<String> targets, Collection<String> tests);
 }

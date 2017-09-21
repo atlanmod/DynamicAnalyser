@@ -38,7 +38,7 @@ public class InstrumentationUtils {
         if (file.exists()) {
             return file;
         } else {
-            throw new FileNotFoundException("Error while finding the class file");
+            throw new FileNotFoundException("Error while finding the class file: "+file.toURL());
         }
     }
 }
