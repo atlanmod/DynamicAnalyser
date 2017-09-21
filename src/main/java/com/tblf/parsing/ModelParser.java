@@ -6,8 +6,6 @@ import org.eclipse.gmt.modisco.java.ClassDeclaration;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 /**

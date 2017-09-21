@@ -1,9 +1,9 @@
 package com.tblf.classLoading;
 
-import org.apache.commons.io.IOUtils;
-
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.ByteBuffer;
+import java.security.ProtectionDomain;
 
 /**
  * Created by Thibault on 20/09/2017.
@@ -18,7 +18,15 @@ public class InstURLClassLoader extends URLClassLoader {
         super(urls, parent);
     }
 
-    public void loadBytes(byte[] bytes, String className) {
-        defineClass(className, bytes, 0, bytes.length);
+    public void loadBytes(byte[] bytes) {
+        defineClass(null, bytes, 0, bytes.length);
+    }
+
+    public void loadBytes(byte[] bytes, String name) {
+        defineClass(name, bytes, 0, bytes.length);
+    }
+
+    public void loadBytes(ByteBuffer byteBuffer) {
+        Class aClass = defineClass((String)null, byteBuffer, (ProtectionDomain)null);
     }
 }
