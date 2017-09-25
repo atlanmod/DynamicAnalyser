@@ -1,5 +1,6 @@
 package com.tblf.instrumentation.visitors;
 
+import org.objectweb.asm.Attribute;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.commons.AdviceAdapter;
 
@@ -8,23 +9,33 @@ import org.objectweb.asm.commons.AdviceAdapter;
  */
 public class TestMethodVisitor extends AdviceAdapter {
 
-    String name;
+    private String className;
+    private String name;
 
-    protected TestMethodVisitor(int api, MethodVisitor mv, int access, String name, String desc) {
+    protected TestMethodVisitor(int api, MethodVisitor mv, int access, String name, String desc, String className) {
         super(api, mv, access, name, desc);
         this.name = name;
-        trace();
+        this.className = className;
     }
 
-    private void trace() {
+    private void traceEnter() {
         mv.visitCode();
-
         //TODO
-        mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-        mv.visitLdcInsn(name + " ");
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "print", "(Ljava/lang/String;)V", false);
 
-
+        mv.visitLdcInsn(className); //put the method class name in the stack
+        mv.visitLdcInsn(name); //put the method name in the stack
+        mv.visitMethodInsn(INVOKESTATIC, "com/tblf/Link/Calls", "setTestMethod", "(Ljava/lang/String;Ljava/lang/String;)V", false);
         mv.visitEnd();
+    }
+
+    @Override
+    protected void onMethodEnter() {
+        traceEnter();
+        super.onMethodEnter();
+    }
+
+    @Override
+    public void visitAttribute(Attribute attribute) {
+        super.visitAttribute(attribute);
     }
 }
