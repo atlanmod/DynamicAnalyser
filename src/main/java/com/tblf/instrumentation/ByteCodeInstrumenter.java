@@ -44,28 +44,29 @@ public class ByteCodeInstrumenter implements Instrumenter {
     public void instrument(Collection<String> targets, Collection<String> tests) {
         int[] scores = new int[]{0, 0, 0, 0};
 
-        //Remove the internal classes since they're in the same file than their mother classes
-        targets.stream().forEach(t -> {
+        targets.forEach(t -> {
             try {
                 File target = InstrumentationUtils.getClassFile(binFolder, t);
-                byte[] targetAsByte = instrumentTargetClass(target);
-                instURLClassLoader.loadBytes(targetAsByte);
+                LOGGER.fine("Instrumenting class "+t+" of classFile "+target.toString());
+                byte[] targetAsByte = instrumentTargetClass(target, t);
+                ((InstURLClassLoader) SingleURLClassLoader.getInstance().getUrlClassLoader()).loadBytes(targetAsByte);
                 scores[0]++;
+
             } catch (IOException | LinkageError e) {
-                LOGGER.info("Couldn't instrument "+t+" : "+e.getMessage());
+                LOGGER.fine("Couldn't instrument "+t+" : "+e.getMessage());
                 scores[1]++;
             }
         });
 
-        tests.stream().forEach(t -> {
+        tests.forEach(t -> {
             File target = null;
             try {
                 target = InstrumentationUtils.getClassFile(binFolder, t);
-                byte[] targetAsByte = instrumentTestClass(target);
-                instURLClassLoader.loadBytes(targetAsByte);
+                byte[] targetAsByte = instrumentTestClass(target, t);
+                ((InstURLClassLoader) SingleURLClassLoader.getInstance().getUrlClassLoader()).loadBytes(targetAsByte);
                 scores[2]++;
             } catch (IOException | LinkageError e) {
-                LOGGER.info("Couldn't instrument "+t+" : "+e.getMessage());
+                LOGGER.fine("Couldn't instrument "+t+" : "+e.getMessage());
                 scores[3]++;
             }
         });
@@ -81,23 +82,23 @@ public class ByteCodeInstrumenter implements Instrumenter {
         this.binFolder = binFolder;
     }
 
-    private byte[] instrumentTargetClass(File target) throws IOException {
+    private byte[] instrumentTargetClass(File target, String qualifiedName) throws IOException {
 
         InputStream inputStream = new FileInputStream(target);
         ClassReader classReader = new ClassReader(inputStream);
         ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 
-        classReader.accept(new TargetClassVisitor(Opcodes.ASM5, classWriter), ClassReader.EXPAND_FRAMES);
+        classReader.accept(new TargetClassVisitor(Opcodes.ASM5, classWriter, qualifiedName), ClassReader.EXPAND_FRAMES);
 
         return classWriter.toByteArray();
     }
 
-    private byte[] instrumentTestClass(File test) throws IOException {
+    private byte[] instrumentTestClass(File test, String qualifiedName) throws IOException {
         InputStream inputStream = new FileInputStream(test);
         ClassReader classReader = new ClassReader(inputStream);
         ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 
-        classReader.accept(new TestClassVisitor(Opcodes.ASM5, classWriter), ClassReader.EXPAND_FRAMES);
+        classReader.accept(new TestClassVisitor(Opcodes.ASM5, classWriter, qualifiedName), ClassReader.EXPAND_FRAMES);
 
         return classWriter.toByteArray();
     }
