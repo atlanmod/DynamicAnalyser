@@ -1,145 +1,156 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.tblf</groupId>
-  <artifactId>DynamicAnalysis</artifactId>
-  <version>1.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
+    <groupId>com.tblf</groupId>
+    <artifactId>DynamicAnalysis</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
-  <name>DynamicAnalysis</name>
-  <url>http://maven.apache.org</url>
+    <name>DynamicAnalysis</name>
+    <url>http://maven.apache.org</url>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-  </properties>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
 
-  <dependencies>
+    <dependencies>
 
-    <!-- Tests -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.12</version>
-    </dependency>
+        <!-- Tests -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+        </dependency>
 
-    <dependency>
-      <groupId>io.github.lukehutch</groupId>
-      <artifactId>fast-classpath-scanner</artifactId>
-      <version>LATEST</version>
-    </dependency>
+        <dependency>
+            <groupId>com.tblf</groupId>
+            <artifactId>DotCP</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
 
-    <!-- EMF -->
-    <dependency>
-      <groupId>org.eclipse.emf</groupId>
-      <artifactId>org.eclipse.emf.ecore</artifactId>
-      <version>2.12.0</version>
-    </dependency>
+        <dependency>
+            <groupId>io.github.lukehutch</groupId>
+            <artifactId>fast-classpath-scanner</artifactId>
+            <version>LATEST</version>
+        </dependency>
 
-    <dependency>
-      <groupId>org.eclipse.emf</groupId>
-      <artifactId>org.eclipse.emf.common</artifactId>
-      <version>2.12.0</version>
-    </dependency>
+        <!-- EMF -->
+        <dependency>
+            <groupId>org.eclipse.emf</groupId>
+            <artifactId>org.eclipse.emf.ecore</artifactId>
+            <version>2.12.0</version>
+        </dependency>
 
-    <dependency>
-      <groupId>org.eclipse.emf</groupId>
-      <artifactId>org.eclipse.emf.ecore.xmi</artifactId>
-      <version>2.12.0</version>
-    </dependency>
+        <dependency>
+            <groupId>org.eclipse.emf</groupId>
+            <artifactId>org.eclipse.emf.common</artifactId>
+            <version>2.12.0</version>
+        </dependency>
 
-    <!-- mvn install:install-file -Dfile=c:\org.eclipse.gmt.modisco.java_1.0.1.201702142048.jar -DgroupId=com.tblf -DartifactId=modisco -Dversion=1.0.1 -Dpackaging=jar -->
-    <dependency>
-      <groupId>com.tblf</groupId>
-      <artifactId>modisco</artifactId>
-      <version>1.0.1</version>
-    </dependency>
+        <dependency>
+            <groupId>org.eclipse.emf</groupId>
+            <artifactId>org.eclipse.emf.ecore.xmi</artifactId>
+            <version>2.12.0</version>
+        </dependency>
 
-    <!-- Instrumentation -->
-    <dependency>
-      <groupId>org.ow2.asm</groupId>
-      <artifactId>asm-all</artifactId>
-      <version>5.2</version>
-    </dependency>
+        <!-- mvn install:install-file -Dfile=c:\org.eclipse.gmt.modisco.java_1.0.1.201702142048.jar -DgroupId=com.tblf -DartifactId=modisco -Dversion=1.0.1 -Dpackaging=jar -->
+        <dependency>
+            <groupId>com.tblf</groupId>
+            <artifactId>modisco</artifactId>
+            <version>1.0.1</version>
+        </dependency>
 
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>2.5</version>
-    </dependency>
+        <!-- Instrumentation -->
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-all</artifactId>
+            <version>5.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.5</version>
+        </dependency>
+        <dependency>
+            <groupId>com.tblf</groupId>
+            <artifactId>Link</artifactId>
+            <version>1.0.0</version>
+        </dependency>
 
 
-  </dependencies>
+    </dependencies>
 
-  <build>
-    <plugins>
+    <build>
+        <plugins>
 
-      <!-- Add jar to classpath -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>copy-dependencies</id>
-            <phase>prepare-package</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}/libs</outputDirectory>
-              <overWriteReleases>false</overWriteReleases>
-              <overWriteSnapshots>false</overWriteSnapshots>
-              <overWriteIfNewer>true</overWriteIfNewer>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
+            <!-- Add jar to classpath -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/libs</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
-      <!-- Add jar to dependencies -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <configuration>
-          <archive>
-            <manifest>
-              <addClasspath>true</addClasspath>
-              <!-- <classpathPrefix>lib</classpathPrefix> -->
-              <!-- <mainClass>test.org.Cliente</mainClass> -->
-            </manifest>
-            <manifestEntries>
-              <Class-Path>${project.build.directory}/libs</Class-Path>
-            </manifestEntries>
-          </archive>
-        </configuration>
-      </plugin>
+            <!-- Add jar to dependencies -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <!-- <classpathPrefix>lib</classpathPrefix> -->
+                            <!-- <mainClass>test.org.Cliente</mainClass> -->
+                        </manifest>
+                        <manifestEntries>
+                            <Class-Path>${project.build.directory}/libs</Class-Path>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
 
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.2</version>
-        <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-        </configuration>
-      </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.2</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.12.4</version>
-        <configuration>
-          <excludes>
-            <exclude>**/binaries/**</exclude>
-          </excludes>
-          <systemPropertyVariables>
-            <!-- Set JUL Formatting -->
-            <java.util.logging.SimpleFormatter.format>%5$s%6$s%n</java.util.logging.SimpleFormatter.format>
-          </systemPropertyVariables>
-        </configuration>
-      </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.12.4</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/binaries/**</exclude>
+                    </excludes>
+                    <systemPropertyVariables>
+                        <!-- Set JUL Formatting -->
+                        <java.util.logging.SimpleFormatter.format>%5$s%6$s%n</java.util.logging.SimpleFormatter.format>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
 
-    </plugins>
-  </build>
+        </plugins>
+    </build>
 
 </project>
