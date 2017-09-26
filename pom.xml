@@ -81,6 +81,17 @@
             <version>1.0.0</version>
         </dependency>
 
+        <!--Model building -->
+        <dependency>
+            <groupId>com.tblf</groupId>
+            <artifactId>AnalysisModel</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.tblf</groupId>
+            <artifactId>modisco</artifactId>
+            <version>1.0.1</version>
+        </dependency>
 
     </dependencies>
 
