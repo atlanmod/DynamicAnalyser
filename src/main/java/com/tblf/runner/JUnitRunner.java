@@ -36,7 +36,7 @@ public class JUnitRunner {
                 Result result = jUnitCore.run(classLoader.loadClass(s));
                 LOGGER.info(RunnerUtils.results(result));
             } catch (Throwable e) {
-                LOGGER.warning(e.getMessage());
+                LOGGER.warning("Couldn't run the tests of class: "+s+" : "+e.getMessage());
             }
         });
 

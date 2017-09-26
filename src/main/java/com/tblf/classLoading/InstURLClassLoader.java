@@ -19,7 +19,7 @@ public class InstURLClassLoader extends URLClassLoader {
     }
 
     public void loadBytes(byte[] bytes) {
-        defineClass(null, bytes, 0, bytes.length);
+        Class aClass = defineClass(null, bytes, 0, bytes.length);
     }
 
     public void loadBytes(byte[] bytes, String name) {
