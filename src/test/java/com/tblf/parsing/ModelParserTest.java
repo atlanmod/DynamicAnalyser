@@ -14,7 +14,7 @@ public class ModelParserTest {
 
     @Test
     public void checkParse() throws Exception {
-        Resource model = ModelUtils.loadModel(new File("src/test/resources/junit_java.xmi"));
+        Resource model = ModelUtils.loadModelFromZip(new File("src/test/resources/junit_java.zip"));
         ModelParser modelParser = new ModelParser();
         modelParser.parse(model);
 

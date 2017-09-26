@@ -27,7 +27,7 @@ public class JUnitRunnerTest {
         URLClassLoader urlClassLoader = new URLClassLoader(new URL[]{file.toURI().toURL()}, ClassLoader.getSystemClassLoader());
 
         ModelParser modelParser = new ModelParser();
-        modelParser.parse(ModelUtils.loadModel(new File("src/test/resources/junit_java.xmi")));
+        modelParser.parse(ModelUtils.loadModelFromZip(new File("src/test/resources/junit_java.zip")));
 
         JUnitRunner jUnitRunner = new JUnitRunner(urlClassLoader);
         jUnitRunner.runTests(modelParser.getTests().keySet().stream().filter(s -> s.contains("org.junit.rules")).collect(Collectors.toList()));

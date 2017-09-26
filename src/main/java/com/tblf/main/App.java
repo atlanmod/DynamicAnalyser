@@ -6,6 +6,7 @@ import com.tblf.instrumentation.ByteCodeInstrumenter;
 import com.tblf.parsing.ModelParser;
 import com.tblf.runner.JUnitRunner;
 import com.tblf.util.ModelUtils;
+import org.eclipse.emf.ecore.resource.Resource;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -27,6 +28,7 @@ public class App
      * @throws ClassNotFoundException
      */
     public static void main( String[] args ) throws Exception {
+        //Checking the inputs
         if (args.length != 2) {
             LOGGER.warning("Incorrect arguments. Expecting [modelUri, binariesUri]");
             return;
@@ -40,23 +42,38 @@ public class App
             return;
         }
 
+        //Loading the model
+        Resource resource = null;
+        if (model.toString().endsWith(".xmi")) {
+            resource = ModelUtils.loadModel(model);
+        } else if (model.toString().endsWith(".zip")) {
+            resource = ModelUtils.loadModelFromZip(model);
+        } else {
+            LOGGER.warning("Incorrect model input");
+            System.exit(1);
+        }
+
+        //Parsing the model
         ModelParser modelParser = new ModelParser();
-        modelParser.parse(ModelUtils.loadModel(model));
+        modelParser.parse(resource);
 
         if (modelParser.getTests().isEmpty() || modelParser.getTargets().isEmpty()) {
             LOGGER.warning("couldnt find test or SUT classes");
             return;
         }
 
+        //Instrumenting the binaries
         SingleURLClassLoader.getInstance().addURLs(new URL[]{binaries.toURI().toURL(), new File("libs/junit-4.12.jar").toURI().toURL()});
 
         ByteCodeInstrumenter byteCodeInstrumenter = new ByteCodeInstrumenter(binaries);
         byteCodeInstrumenter.instrument(modelParser.getTargets().keySet(), modelParser.getTests().keySet());
 
+        //Running the test suites
         JUnitRunner jUnitRunner = new JUnitRunner(SingleURLClassLoader.getInstance().getUrlClassLoader());
 
         jUnitRunner.runTests(modelParser.getTests().keySet());
 
+        //Analyzing the traces
         File file = ((FileTracer) FileTracer.getInstance()).getFile();
         System.out.println(file.getAbsolutePath());
     }

@@ -19,9 +19,9 @@ public class ModelUtilsTest {
 
     @Test
     public void checkCreateModel() {
-        File f = new File("src/test/resources/junit_java.xmi");
+        File f = new File("src/test/resources/junit_java.zip");
         try {
-            Resource resource = ModelUtils.loadModel(f);
+            Resource resource = ModelUtils.loadModelFromZip(f);
             Model model = (Model) resource.getContents().get(0);
             Assert.assertEquals(model.getName(), "junit");
         } catch (Exception e) {

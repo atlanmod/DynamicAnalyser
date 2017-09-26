@@ -93,7 +93,7 @@ public class ByteCodeInstrumenterTest {
 
     @Test
     public void checkInstrumentModel() throws Exception {
-        Resource model = ModelUtils.loadModel(new File("src/test/resources/assertj-core_java.xmi"));
+        Resource model = ModelUtils.loadModelFromZip(new File("src/test/resources/assertj-core_java.zip"));
         ModelParser modelParser = new ModelParser();
         modelParser.parse(model);
 

@@ -74,7 +74,7 @@ public class ByteCodeUrlClassLoaderTest {
                 .anyMatch(s -> s.contains("org.junit.runners.Parameterized")));
 
         ModelParser modelParser = new ModelParser();
-        modelParser.parse(ModelUtils.loadModel(new File("src/test/resources/junit_java.xmi")));
+        modelParser.parse(ModelUtils.loadModelFromZip(new File("src/test/resources/junit_java.zip")));
 
         modelParser.getTargets().forEach((s, f) -> {
             try {

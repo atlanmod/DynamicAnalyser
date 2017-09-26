@@ -16,6 +16,7 @@ import org.eclipse.gmt.modisco.java.emf.JavaPackage;
 
 import java.io.*;
 import java.net.MalformedURLException;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.List;
@@ -100,12 +101,14 @@ public class ModelUtils {
 
         while ((zipEntry = zipInputStream.getNextEntry()) != null) {
             LOGGER.info("Extracting: "+ zipEntry);
-            filesUnzipped.add(FileUtils.getFile(zip.getParentFile(), zipEntry.toString()));
+
+            File file = FileUtils.getFile(zip.getParentFile(), zipEntry.toString());
+            filesUnzipped.add(file);
 
             int count;
             byte data[] = new byte[BUFFER];
 
-            FileOutputStream fileOutputStream = new FileOutputStream(zipEntry.getName());
+            FileOutputStream fileOutputStream = new FileOutputStream(file);
             bufferedOutputStream = new BufferedOutputStream(fileOutputStream, BUFFER);
 
             while ((count = zipInputStream.read(data, 0, BUFFER)) != -1) {
