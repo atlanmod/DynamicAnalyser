@@ -1,5 +1,6 @@
 package com.tblf.util;
 
+import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
@@ -13,14 +14,23 @@ import org.eclipse.gmt.modisco.java.Model;
 import org.eclipse.gmt.modisco.java.Package;
 import org.eclipse.gmt.modisco.java.emf.JavaPackage;
 
-import java.io.File;
+import java.io.*;
+import java.net.MalformedURLException;
 import java.nio.file.NoSuchFileException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * Created by Thibault on 18/09/2017.
  */
 public class ModelUtils {
+
+    private static final Logger LOGGER = Logger.getAnonymousLogger();
 
     static
     {
@@ -39,7 +49,7 @@ public class ModelUtils {
      *
      * @PreCondition The File is a XMI file using the Java Modisco metamodel
      */
-    public static Resource loadModel(File f) throws Exception {
+    public static Resource loadModel(File f) throws IOException {
 
         if (f.exists()) {
 
@@ -50,6 +60,66 @@ public class ModelUtils {
             throw new NoSuchFileException("The file does not exist!");
         }
     }
+
+    /**
+     * Unzip a zip file using the {@link ModelUtils}.unzip() function and return the resource contains in the XMI.
+     * If the zip contains multiple XMI, this function will only return a random one.
+     * @param zipFile
+     * @return a {@link Resource} containing the model
+     * @throws Exception
+     */
+    public static Resource loadModelFromZip(File zipFile) throws IOException {
+
+        List<File> files = unzip(zipFile);
+
+        Optional<File> xmiFile = files.stream().filter(file -> file.toString().endsWith(".xmi")).findAny();
+
+        if (xmiFile.isPresent()) {
+            return loadModel(xmiFile.get());
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Unzip a model zipped and return the list of all the files it contains.
+     * (The zip could contain any kind of files, but we use it for xmi model compressed as zips)
+     * @param zip
+     * @return
+     * @throws IOException
+     */
+    public static List<File> unzip(File zip) throws IOException {
+        BufferedOutputStream bufferedOutputStream;
+        FileInputStream fileInputStream = new FileInputStream(zip);
+        ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(fileInputStream));
+        ZipEntry zipEntry;
+
+        List<File> filesUnzipped = new ArrayList<>();
+
+        final int BUFFER = 2048;
+
+        while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+            LOGGER.info("Extracting: "+ zipEntry);
+            filesUnzipped.add(FileUtils.getFile(zip.getParentFile(), zipEntry.toString()));
+
+            int count;
+            byte data[] = new byte[BUFFER];
+
+            FileOutputStream fileOutputStream = new FileOutputStream(zipEntry.getName());
+            bufferedOutputStream = new BufferedOutputStream(fileOutputStream, BUFFER);
+
+            while ((count = zipInputStream.read(data, 0, BUFFER)) != -1) {
+                bufferedOutputStream.write(data,0, count);
+            }
+
+            bufferedOutputStream.flush();
+            bufferedOutputStream.close();
+        }
+        zipInputStream.close();
+
+        return filesUnzipped;
+    }
+
 
     /**
      * Check if a class is a test class by verifying its methods annotations
@@ -107,7 +177,6 @@ public class ModelUtils {
         }
 
         return getQualifiedName(eObject.eContainer())+currentName;
-
     }
 
 }

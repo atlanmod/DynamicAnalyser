@@ -9,6 +9,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 
 /**
@@ -63,4 +64,17 @@ public class ModelUtilsTest {
         Assert.assertEquals("pkg1.pkg2.pkg3.clazz", ModelUtils.getQualifiedName(clazz));
     }
 
+    @Test
+    public void testZipModel() {
+        File modelAsZip = new File("src/test/resources/junit_java.zip");
+
+        try {
+            Resource resource = ModelUtils.loadModelFromZip(modelAsZip);
+            Model model = (Model) resource.getContents().get(0);
+
+            Assert.assertEquals("junit", model.getName());
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+        }
+    }
 }
