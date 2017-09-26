@@ -1,5 +1,6 @@
 package com.tblf.main;
 
+import com.tblf.Link.FileTracer;
 import com.tblf.classLoading.SingleURLClassLoader;
 import com.tblf.instrumentation.ByteCodeInstrumenter;
 import com.tblf.parsing.ModelParser;
@@ -47,12 +48,16 @@ public class App
             return;
         }
 
+        SingleURLClassLoader.getInstance().addURLs(new URL[]{binaries.toURI().toURL(), new File("libs/junit-4.12.jar").toURI().toURL()});
+
         ByteCodeInstrumenter byteCodeInstrumenter = new ByteCodeInstrumenter(binaries);
         byteCodeInstrumenter.instrument(modelParser.getTargets().keySet(), modelParser.getTests().keySet());
 
-        SingleURLClassLoader.getInstance().addURLs(new URL[]{binaries.toURI().toURL()});
         JUnitRunner jUnitRunner = new JUnitRunner(SingleURLClassLoader.getInstance().getUrlClassLoader());
 
         jUnitRunner.runTests(modelParser.getTests().keySet());
+
+        File file = ((FileTracer) FileTracer.getInstance()).getFile();
+        System.out.println(file.getAbsolutePath());
     }
 }
