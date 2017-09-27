@@ -88,7 +88,11 @@ public class ByteCodeInstrumenter implements Instrumenter {
         ClassReader classReader = new ClassReader(inputStream);
         ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 
-        classReader.accept(new TargetClassVisitor(Opcodes.ASM5, classWriter, qualifiedName), ClassReader.EXPAND_FRAMES);
+        try {
+            classReader.accept(new TargetClassVisitor(Opcodes.ASM5, classWriter, qualifiedName), ClassReader.EXPAND_FRAMES);
+        } catch (Throwable t) {
+
+        }
 
         return classWriter.toByteArray();
     }

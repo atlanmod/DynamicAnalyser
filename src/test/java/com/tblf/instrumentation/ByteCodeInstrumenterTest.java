@@ -93,7 +93,7 @@ public class ByteCodeInstrumenterTest {
 
     @Test
     public void checkInstrumentModel() throws Exception {
-        Resource model = ModelUtils.loadModelFromZip(new File("src/test/resources/assertj-core_java.zip"));
+        Resource model = ModelUtils.loadModelFromZip(new File("src/test/resources/binaries/assertj-core_java.zip"));
         ModelParser modelParser = new ModelParser();
         modelParser.parse(model);
 
@@ -108,6 +108,8 @@ public class ByteCodeInstrumenterTest {
         Assert.assertFalse(jars.isEmpty());
 
         jars.add(assertJFolder);
+
+        jars.forEach(f -> System.out.println(f));
 
         URL[] urls = jars.stream().map(file -> {
             try {
