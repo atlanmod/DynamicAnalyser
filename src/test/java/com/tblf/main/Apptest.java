@@ -11,8 +11,9 @@ public class Apptest {
     @Test
     public void checkMain() {
         try {
-            App.main(new String[]{"src/test/resources/junit_java.zip", "src/test/resources/binaries/junit/bin"});
+            App.main(new String[]{"src/test/resources/binaries/assertj/assertj-core_java.zip", "src/test/resources/binaries/assertj"});
         } catch (Exception e) {
+            e.printStackTrace();
             Assert.fail(e.getMessage());
         }
     }

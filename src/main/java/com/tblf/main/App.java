@@ -1,17 +1,21 @@
 package com.tblf.main;
 
+import com.tblf.DotCP.DotCPParserBuilder;
 import com.tblf.Link.FileTracer;
 import com.tblf.classLoading.SingleURLClassLoader;
 import com.tblf.instrumentation.ByteCodeInstrumenter;
 import com.tblf.parsing.ModelParser;
 import com.tblf.runner.JUnitRunner;
 import com.tblf.util.ModelUtils;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Main method of the Application
@@ -62,8 +66,28 @@ public class App
             return;
         }
 
+        //Getting the dependencies from the .classpath file, assuming it is located in the same folder as the zip
+        File dotCP = FileUtils.getFile(model.getParentFile(), ".classpath");
+        List<File> dependencies = new DotCPParserBuilder().create().parse(dotCP);
+
+        LOGGER.info("Adding the following dependencies to the classpath: "+dependencies.toString());
+
+        dependencies.add(new File("libs/junit-4.12.jar"));
+        dependencies.add(binaries);
+        URL[] dependencyArray = dependencies.stream().map(file -> {
+            URL url = null;
+            try {
+                url = file.toURI().toURL();
+            } catch (MalformedURLException e) {
+
+            } finally {
+                return url;
+            }
+        }).collect(Collectors.toList()).toArray(new URL[dependencies.size()]);
+
+
         //Instrumenting the binaries
-        SingleURLClassLoader.getInstance().addURLs(new URL[]{binaries.toURI().toURL(), new File("libs/junit-4.12.jar").toURI().toURL()});
+        SingleURLClassLoader.getInstance().addURLs(dependencyArray);
 
         ByteCodeInstrumenter byteCodeInstrumenter = new ByteCodeInstrumenter(binaries);
         byteCodeInstrumenter.instrument(modelParser.getTargets().keySet(), modelParser.getTests().keySet());
