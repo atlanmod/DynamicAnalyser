@@ -1,8 +1,12 @@
 package com.tblf.instrumentation.visitors;
 
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.commons.AdviceAdapter;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Thibault on 20/09/2017.
@@ -10,6 +14,7 @@ import org.objectweb.asm.commons.AdviceAdapter;
 public class TargetMethodVisitor extends AdviceAdapter {
     private String name;
     private String className;
+    private int currentLine;
 
     public TargetMethodVisitor(int api, MethodVisitor mv, int access, String name, String desc, String className) {
         super(api, mv, access, name, desc);
@@ -25,17 +30,25 @@ public class TargetMethodVisitor extends AdviceAdapter {
 
     @Override
     public void visitLineNumber(int i, Label label) {
-        trace(i);
+        currentLine = i;
         super.visitLineNumber(i, label);
     }
 
+    @Override
+    public void visitInsn(int i) {
+        trace(currentLine);
+        super.visitInsn(i);
+    }
+
+    @Override
+    public void visitLabel(Label label) {
+        //trace(labelIntegerMap.get(label));
+        super.visitLabel(label);
+    }
+
     private void trace(int line) {
-        mv.visitCode();
-
-        mv.visitVarInsn(BIPUSH, line);
-        mv.visitMethodInsn(INVOKESTATIC, "com/tblf/Link/Calls", "match", "(I)V", false);
-
-        mv.visitEnd();
+        mv.visitLdcInsn(String.valueOf(line)); //put the method name in the stack
+        mv.visitMethodInsn(INVOKESTATIC, "com/tblf/Link/Calls", "match", "(Ljava/lang/String;)V", false);
     }
 
     private void traceEnter() {
@@ -52,9 +65,4 @@ public class TargetMethodVisitor extends AdviceAdapter {
         super.visitCode();
     }
 
-    @Override
-    public void visitLabel(Label label) {
-
-        super.visitLabel(label);
-    }
 }

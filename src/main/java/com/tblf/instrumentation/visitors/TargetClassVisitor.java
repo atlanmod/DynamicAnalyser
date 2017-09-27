@@ -17,6 +17,10 @@ public class TargetClassVisitor extends ClassVisitor {
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         MethodVisitor methodVisitor = super.visitMethod(access, name, desc, signature, exceptions);
-        return new TargetMethodVisitor(this.api, methodVisitor, access, name, desc, this.name);
+        if ("<init>".equals(name)) {
+            return methodVisitor;
+        } else {
+            return new TargetMethodVisitor(this.api, methodVisitor, access, name, desc, this.name);
+        }
     }
 }
