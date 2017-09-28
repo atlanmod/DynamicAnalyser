@@ -2,6 +2,7 @@ package com.tblf.instrumentation;
 
 import org.apache.commons.io.FileUtils;
 
+import javax.naming.event.ObjectChangeListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -19,7 +20,6 @@ public class InstrumentationUtils {
      * @return the .class {@link File}
      */
     public static File getClassFile(File rootBinFolder, String qualifiedName) throws IOException {
-
         if (!rootBinFolder.exists() || !rootBinFolder.isDirectory()) {
             throw new IOException("The binaries folder is incorrect");
         }
