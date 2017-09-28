@@ -3,10 +3,14 @@ package com.tblf.parsing;
 import com.tblf.util.ModelUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.gmt.modisco.java.ClassDeclaration;
+import org.eclipse.gmt.modisco.java.Model;
+import org.eclipse.ocl.ParserException;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by Thibault on 19/09/2017.
@@ -26,21 +30,18 @@ public class ModelParser {
      * @param model
      */
     public void parse(Resource model) {
-        model.getAllContents().forEachRemaining(object -> {
-            if (object instanceof ClassDeclaration) {
-                ClassDeclaration classDeclaration = (ClassDeclaration) object;
 
-                if (classDeclaration.getOriginalCompilationUnit() != null) {
-                    File file = ModelUtils.getSrcFromClass(classDeclaration);
+        Collection<ClassDeclaration> targetCollection = ModelUtils.queryForAllClasses((Model) model.getContents().get(0));
+        Collection<ClassDeclaration> testCollection = ModelUtils.queryForTestClasses((Model) model.getContents().get(0));
+        targetCollection.removeAll(testCollection);
 
-                    if (ModelUtils.isATestClass(classDeclaration)) {
-                        tests.put(ModelUtils.getQualifiedName(classDeclaration), file);
-                    } else {
-                        targets.put(ModelUtils.getQualifiedName(classDeclaration), file);
-                    }
-                }
-            }
-        });
+        targets = targetCollection  .stream()
+                                    .filter(classDeclaration -> classDeclaration.getOriginalCompilationUnit() != null)
+                                    .collect(Collectors.toMap(ModelUtils::getQualifiedName, ModelUtils::getSrcFromClass, (s, s2) -> s));
+
+        tests = testCollection  .stream()
+                                .filter(classDeclaration -> classDeclaration.getOriginalCompilationUnit() != null)
+                                .collect(Collectors.toMap(ModelUtils::getQualifiedName, ModelUtils::getSrcFromClass, (s, s2) -> s));
     }
 
     public Map<String, File> getTargets() {
