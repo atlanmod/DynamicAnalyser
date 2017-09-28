@@ -1,16 +1,24 @@
 package com.tblf.util;
 
+import com.tblf.parsing.ModelParser;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.gmt.modisco.java.ClassDeclaration;
 import org.eclipse.gmt.modisco.java.Model;
 import org.eclipse.gmt.modisco.java.Package;
 import org.eclipse.gmt.modisco.java.emf.JavaFactory;
+import org.eclipse.gmt.modisco.java.emf.JavaPackage;
+import org.eclipse.ocl.OCL;
+import org.eclipse.ocl.Query;
+import org.eclipse.ocl.ecore.EcoreEnvironmentFactory;
+import org.eclipse.ocl.expressions.OCLExpression;
+import org.eclipse.ocl.helper.OCLHelper;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
+import java.util.Collection;
 
 /**
  * Unit test for simple App.
@@ -29,11 +37,22 @@ public class ModelUtilsTest {
         }
     }
 
+    @Test
+    public void checkGetTests() throws IOException {
+        File f = new File("src/test/resources/junit_java.zip");
+        Resource resource = ModelUtils.loadModelFromZip(f);
+        Model model = (Model) resource.getContents().get(0);
+        Assert.assertEquals(model.getName(), "junit");
+
+        Collection collection = ModelUtils.queryForTestClasses(model);
+
+        Assert.assertTrue(collection.size() > 400);
+    }
+
     @Test(expected = NoSuchFileException.class)
     public void checkCreateModelWithoutFile() throws Exception {
         File f = new File("");
-        Resource resource = ModelUtils.loadModel(f);
-
+        ModelUtils.loadModel(f);
     }
 
     @Test

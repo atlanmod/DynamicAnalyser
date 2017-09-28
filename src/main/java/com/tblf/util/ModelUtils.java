@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
+import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
@@ -13,16 +14,19 @@ import org.eclipse.gmt.modisco.java.ClassDeclaration;
 import org.eclipse.gmt.modisco.java.Model;
 import org.eclipse.gmt.modisco.java.Package;
 import org.eclipse.gmt.modisco.java.emf.JavaPackage;
+import org.eclipse.ocl.OCL;
+import org.eclipse.ocl.ParserException;
+import org.eclipse.ocl.Query;
+import org.eclipse.ocl.ecore.EcoreEnvironmentFactory;
+import org.eclipse.ocl.expressions.OCLExpression;
+import org.eclipse.ocl.helper.OCLHelper;
+import org.eclipse.ocl.options.ParsingOptions;
 
 import java.io.*;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -32,6 +36,8 @@ import java.util.zip.ZipInputStream;
 public class ModelUtils {
 
     private static final Logger LOGGER = Logger.getAnonymousLogger();
+    private static final OCLHelper OCL_HELPER;
+    private static final OCL ocl;
 
     static
     {
@@ -40,6 +46,15 @@ public class ModelUtils {
         Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
         Map<String, Object> m = reg.getExtensionToFactoryMap();
         m.put("xmi", new XMIResourceFactoryImpl());
+
+        ocl = OCL.newInstance(EcoreEnvironmentFactory.INSTANCE);
+        OCL_HELPER = ocl.createOCLHelper();
+        OCL_HELPER.setContext(JavaPackage.eINSTANCE.getEClassifier("Model"));
+
+        ParsingOptions.setOption(ocl.getEnvironment(),
+                ParsingOptions.implicitRootClass(ocl.getEnvironment()),
+                EcorePackage.Literals.EOBJECT);
+
     }
 
     /**
@@ -136,6 +151,42 @@ public class ModelUtils {
                         .stream()
                         .anyMatch(ModelUtils::isATestAnnotation));
     }
+
+    /**
+     * Gather all the test classes from a {@link Model} using OCL queries
+     * A {@link ClassDeclaration} is considered as a test class if it had @{@link org.junit.Test} annotations
+     * @param model
+     * @return
+     */
+    public static Collection<ClassDeclaration> queryForTestClasses(Model model) {
+
+        OCLExpression query = null;
+        try {
+            query = OCL_HELPER.createQuery("Annotation.allInstances() -> select( a : Annotation | a.type.type.name = 'Test') -> collect( a : Annotation | a.oclAsType(ecore::EObject).eContainer().eContainer())");
+        } catch (ParserException e) {
+            LOGGER.warning("Error in the OCL query" + e);
+        }
+
+        Query eval = ocl.createQuery(query);
+        return (Collection<ClassDeclaration>) eval.evaluate(model);
+
+    }
+
+    /**
+     * Return all the {@link ClassDeclaration} from a Model using an OCL query
+     * @param model
+     * @return
+     */
+    public static Collection<ClassDeclaration> queryForAllClasses(Model model) {
+        OCLExpression query = null;
+        try {
+            query = OCL_HELPER.createQuery("ClassDeclaration.allInstances()");
+        } catch (ParserException e) {
+            LOGGER.warning("Error in the OCL query" + e);
+        }
+        return ((Collection<ClassDeclaration>) ocl.createQuery(query).evaluate(model)).stream().collect(Collectors.toSet());
+    }
+
 
     /**
      * Check if an @{@link Annotation} is a test annotation.
