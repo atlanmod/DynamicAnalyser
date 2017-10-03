@@ -106,6 +106,12 @@
             <version>1.0.1-SNAPSHOT</version>
         </dependency>
 
+        <dependency>
+            <groupId>fr.inria.atlanmod.neoemf</groupId>
+            <artifactId>neoemf-core</artifactId>
+            <version>1.0.2</version>
+        </dependency>
+
 
         <!-- Instrumentation -->
         <dependency>
