@@ -4,9 +4,7 @@ import com.tblf.Model.ModelFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.gmt.modisco.java.Model;
 import org.eclipse.gmt.modisco.java.Statement;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +36,7 @@ public class TraceParser implements Runnable {
      */
     public Statement findStatementUsingPosition(String qualifiedClass, String method, int startCol, int endCol) {
 
-        throw new NotImplementedException();
+        throw new RuntimeException("not implemented");
     }
 
     public com.tblf.Model.Model parse() {
@@ -59,7 +57,7 @@ public class TraceParser implements Runnable {
 
                         break;
                     case "!":
-                        throw new NotImplementedException();
+                        throw new RuntimeException("not implemented");
                 }
             }
 

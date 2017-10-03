@@ -4,7 +4,7 @@
 
     <groupId>com.tblf</groupId>
     <artifactId>DynamicAnalysis</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>DynamicAnalysis</name>
@@ -35,7 +35,7 @@
         <dependency>
             <groupId>com.tblf</groupId>
             <artifactId>DotCP</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
         </dependency>
 
         <dependency>
@@ -81,30 +81,31 @@
             <version>2.0.17.v201004271640</version>
         </dependency>
 
-        <!-- mvn install:install-file -Dfile=c:\org.eclipse.gmt.modisco.java_1.0.1.201702142048.jar -DgroupId=com.tblf -DartifactId=modisco -Dversion=1.0.1 -Dpackaging=jar -->
+        <!--Run the .sh script in order to mvn install:install-file those dependencies-->
         <dependency>
-            <groupId>com.tblf</groupId>
-            <artifactId>modisco</artifactId>
-            <version>1.0.1</version>
+            <groupId>org.eclipse.mdt</groupId>
+            <artifactId>org.eclipse.gmt.modisco.java</artifactId>
+            <version>1.0.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>
-            <groupId>com.tblf</groupId>
-            <artifactId>javaApplication</artifactId>
-            <version>1.0.1</version>
+            <groupId>org.eclipse.mdt</groupId>
+            <artifactId>org.eclipse.gmt.modisco.omg.kdm</artifactId>
+            <version>1.0.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>
-            <groupId>com.tblf</groupId>
-            <artifactId>kdm</artifactId>
-            <version>1.0.1</version>
+            <groupId>org.eclipse.mdt</groupId>
+            <artifactId>org.eclipse.modisco.java.composition</artifactId>
+            <version>1.0.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>
-            <groupId>com.tblf</groupId>
-            <artifactId>kdmSource</artifactId>
-            <version>1.0.1</version>
+            <groupId>org.eclipse.mdt</groupId>
+            <artifactId>org.eclipse.modisco.kdm.source.extension</artifactId>
+            <version>1.0.1-SNAPSHOT</version>
         </dependency>
+
 
         <!-- Instrumentation -->
         <dependency>
@@ -125,22 +126,17 @@
             <version>2.5</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.tblf</groupId>
-            <artifactId>Link</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-
         <!--Model building -->
         <dependency>
             <groupId>com.tblf</groupId>
             <artifactId>AnalysisModel</artifactId>
             <version>1.0.0</version>
         </dependency>
+
         <dependency>
             <groupId>com.tblf</groupId>
-            <artifactId>modisco</artifactId>
-            <version>1.0.1</version>
+            <artifactId>Link</artifactId>
+            <version>1.0.0</version>
         </dependency>
 
     </dependencies>
