@@ -14,6 +14,12 @@ import org.eclipse.gmt.modisco.java.ClassDeclaration;
 import org.eclipse.gmt.modisco.java.Model;
 import org.eclipse.gmt.modisco.java.Package;
 import org.eclipse.gmt.modisco.java.emf.JavaPackage;
+import org.eclipse.gmt.modisco.omg.kdm.kdm.KdmFactory;
+import org.eclipse.gmt.modisco.omg.kdm.kdm.KdmPackage;
+import org.eclipse.gmt.modisco.omg.kdm.source.InventoryModel;
+import org.eclipse.modisco.java.composition.javaapplication.Java2Directory;
+import org.eclipse.modisco.java.composition.javaapplication.JavaApplication;
+import org.eclipse.modisco.java.composition.javaapplication.JavaapplicationPackage;
 import org.eclipse.ocl.OCL;
 import org.eclipse.ocl.ParserException;
 import org.eclipse.ocl.Query;
@@ -23,6 +29,8 @@ import org.eclipse.ocl.helper.OCLHelper;
 import org.eclipse.ocl.options.ParsingOptions;
 
 import java.io.*;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.util.*;
 import java.util.logging.Logger;
@@ -41,8 +49,10 @@ public class ModelUtils {
 
     static
     {
-        System.out.println("Initializing MoDisco java package");
         JavaPackage.eINSTANCE.eClass();
+        JavaapplicationPackage.eINSTANCE.eClass();
+        KdmPackage.eINSTANCE.eClass();
+
         Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
         Map<String, Object> m = reg.getExtensionToFactoryMap();
         m.put("xmi", new XMIResourceFactoryImpl());
@@ -98,6 +108,45 @@ public class ModelUtils {
     }
 
     /**
+     * Load the JavaApplication model xmi
+     * @param f the directory containing the fragments
+     * @return the created {@link Resource} containing the model
+     * @throws IOException if the file is incorrect, or the xmi cannot be found
+     */
+    public static Resource loadJavaApplicationModel(File f) throws IOException {
+        if (f.exists() && f.isDirectory()) {
+            ResourceSet resourceSet = new ResourceSetImpl();
+
+            Files.walk(f.toPath()).filter(path -> path.toString().endsWith(".xmi")).forEach(path -> {
+                try {
+                    LOGGER.info("Adding the model "+path+" to the resourceSet");
+                    resourceSet.getResource(URI.createURI(path.toUri().toURL().toString()), true);
+                } catch (MalformedURLException e) {
+                    LOGGER.warning("Cannot load the xmi: "+path);
+                }
+            });
+
+            return resourceSet.getResources().stream().filter(resource -> resource.getURI().toString().endsWith("Package2Directory_java2kdm.xmi")).findFirst().get();
+        } else {
+            throw new NoSuchFileException("The file does not exist");
+        }
+    }
+
+    /**
+     * Takes a zipped older of java2kdm fragments and load it into a resourceSet
+     * @param zipFile
+     * @return
+     * @throws IOException
+     */
+    public static Resource loadJavaApplicationModelFromZip(File zipFile) throws IOException {
+        List<File> files = unzip(zipFile);
+
+        File directory = files.get(0).getParentFile();
+
+        return loadJavaApplicationModel(directory);
+    }
+
+    /**
      * Unzip a model zipped and return the list of all the files it contains.
      * (The zip could contain any kind of files, but we use it for xmi model compressed as zips)
      * @param zip
@@ -118,20 +167,26 @@ public class ModelUtils {
             LOGGER.info("Extracting: "+ zipEntry);
 
             File file = FileUtils.getFile(zip.getParentFile(), zipEntry.toString());
-            filesUnzipped.add(file);
 
-            int count;
-            byte data[] = new byte[BUFFER];
+            if (zipEntry.toString().endsWith("/")) {
+                file.mkdir();
+            } else {
+                filesUnzipped.add(file);
 
-            FileOutputStream fileOutputStream = new FileOutputStream(file);
-            bufferedOutputStream = new BufferedOutputStream(fileOutputStream, BUFFER);
+                int count;
+                byte data[] = new byte[BUFFER];
 
-            while ((count = zipInputStream.read(data, 0, BUFFER)) != -1) {
-                bufferedOutputStream.write(data,0, count);
+                FileOutputStream fileOutputStream = new FileOutputStream(file);
+                bufferedOutputStream = new BufferedOutputStream(fileOutputStream, BUFFER);
+
+                while ((count = zipInputStream.read(data, 0, BUFFER)) != -1) {
+                    bufferedOutputStream.write(data,0, count);
+                }
+
+                bufferedOutputStream.flush();
+                bufferedOutputStream.close();
             }
 
-            bufferedOutputStream.flush();
-            bufferedOutputStream.close();
         }
         zipInputStream.close();
 

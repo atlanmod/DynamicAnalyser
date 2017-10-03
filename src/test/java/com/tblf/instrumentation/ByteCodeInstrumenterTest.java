@@ -3,7 +3,9 @@ package com.tblf.instrumentation;
 import com.tblf.DotCP.DotCPParserBuilder;
 import com.tblf.Link.Calls;
 import com.tblf.classLoading.SingleURLClassLoader;
+import com.tblf.instrumentation.bytecode.ByteCodeInstrumenter;
 import com.tblf.parsing.ModelParser;
+import com.tblf.runner.RunnerUtils;
 import com.tblf.util.ModelUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.junit.Assert;
@@ -59,7 +61,7 @@ public class ByteCodeInstrumenterTest {
         SingleURLClassLoader.getInstance().addURLs(new URL[]{folder.toURI().toURL(), callDependency.toURI().toURL()});
 
         //Running the testClass instrumented with the Target instrumentation
-        JUnitCore.runClasses(aClass);
+        System.out.println(RunnerUtils.results(JUnitCore.runClasses(aClass)));
 
     }
 
@@ -134,4 +136,5 @@ public class ByteCodeInstrumenterTest {
         Assert.assertNotNull(SingleURLClassLoader.getInstance().getUrlClassLoader().loadClass("org.assertj.core.api.AbstractMapSizeAssert"));
         Assert.assertNotNull(SingleURLClassLoader.getInstance().getUrlClassLoader().loadClass("org.assertj.core.api.date.AbstractDateAssertWithOneIntArg_Test"));
     }
+
 }

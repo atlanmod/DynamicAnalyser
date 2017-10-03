@@ -1,9 +1,11 @@
-package com.tblf.instrumentation;
+package com.tblf.instrumentation.bytecode;
 
 import com.tblf.classLoading.InstURLClassLoader;
 import com.tblf.classLoading.SingleURLClassLoader;
-import com.tblf.instrumentation.visitors.TargetClassVisitor;
-import com.tblf.instrumentation.visitors.TestClassVisitor;
+import com.tblf.instrumentation.InstrumentationUtils;
+import com.tblf.instrumentation.Instrumenter;
+import com.tblf.instrumentation.bytecode.visitors.TargetClassVisitor;
+import com.tblf.instrumentation.bytecode.visitors.TestClassVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;

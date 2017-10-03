@@ -11,7 +11,10 @@ public class Apptest {
     @Test
     public void checkMain() {
         try {
+            long before = System.currentTimeMillis();
             App.main(new String[]{"src/test/resources/binaries/assertj/assertj-core_java.zip", "src/test/resources/binaries/assertj"});
+
+            System.out.println(System.currentTimeMillis() - before);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());

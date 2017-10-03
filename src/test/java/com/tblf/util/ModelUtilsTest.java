@@ -1,12 +1,19 @@
 package com.tblf.util;
 
 import com.tblf.parsing.ModelParser;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.gmt.modisco.java.ClassDeclaration;
 import org.eclipse.gmt.modisco.java.Model;
 import org.eclipse.gmt.modisco.java.Package;
 import org.eclipse.gmt.modisco.java.emf.JavaFactory;
 import org.eclipse.gmt.modisco.java.emf.JavaPackage;
+import org.eclipse.modisco.java.composition.javaapplication.Java2Directory;
+import org.eclipse.modisco.java.composition.javaapplication.Java2File;
+import org.eclipse.modisco.java.composition.javaapplication.JavaApplication;
+import org.eclipse.modisco.java.composition.javaapplication.JavaNodeSourceRegion;
 import org.eclipse.ocl.OCL;
 import org.eclipse.ocl.Query;
 import org.eclipse.ocl.ecore.EcoreEnvironmentFactory;
@@ -56,7 +63,7 @@ public class ModelUtilsTest {
     }
 
     @Test
-    public void getQualifiedNameTest() throws Exception {
+    public void checkGetQualifiedName() throws Exception {
 
         Model model = JavaFactory.eINSTANCE.createModel();
         model.setName("model");
@@ -84,7 +91,7 @@ public class ModelUtilsTest {
     }
 
     @Test
-    public void testZipModel() {
+    public void checkZipModel() {
         File modelAsZip = new File("src/test/resources/junit_java.zip");
 
         try {
@@ -96,4 +103,20 @@ public class ModelUtilsTest {
             Assert.fail(e.getMessage());
         }
     }
+
+    @Test
+    public void checkGetZippedJavaApplicationModel() throws IOException {
+        File rootModelFile = new File("src/test/resources/models/java2kdmFragments.zip");
+        Assert.assertTrue(rootModelFile.exists());
+
+        Resource resource = ModelUtils.loadJavaApplicationModelFromZip(rootModelFile);
+
+        Assert.assertNotNull(resource.getContents().get(0));
+
+        Java2Directory java2Directory = (Java2Directory) resource.getContents().get(0);
+
+        Assert.assertNotNull(java2Directory);
+    }
 }
+
+

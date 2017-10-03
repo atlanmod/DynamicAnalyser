@@ -1,12 +1,8 @@
-package com.tblf.instrumentation.visitors;
+package com.tblf.instrumentation.bytecode.visitors;
 
-import org.objectweb.asm.Handle;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.commons.AdviceAdapter;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by Thibault on 20/09/2017.

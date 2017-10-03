@@ -3,7 +3,7 @@ package com.tblf.main;
 import com.tblf.DotCP.DotCPParserBuilder;
 import com.tblf.Link.FileTracer;
 import com.tblf.classLoading.SingleURLClassLoader;
-import com.tblf.instrumentation.ByteCodeInstrumenter;
+import com.tblf.instrumentation.bytecode.ByteCodeInstrumenter;
 import com.tblf.parsing.ModelParser;
 import com.tblf.runner.JUnitRunner;
 import com.tblf.util.ModelUtils;

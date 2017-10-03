@@ -2,7 +2,6 @@ package com.tblf.instrumentation;
 
 import org.apache.commons.io.FileUtils;
 
-import javax.naming.event.ObjectChangeListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -38,7 +37,30 @@ public class InstrumentationUtils {
         if (file.exists()) {
             return file;
         } else {
-            throw new FileNotFoundException("Error while finding the class file: "+file.toURL());
+            throw new FileNotFoundException("Error while finding the class file: "+file.toString());
         }
+    }
+
+    /**
+     * From a folder, find the .java file corresponding to the qualified name
+     * @param rootFolder
+     * @param qualifiedName
+     * @return
+     */
+    public static File getSrcFile(File rootFolder, String qualifiedName) throws IOException {
+        if (!rootFolder.exists() || !rootFolder.isDirectory()) {
+            throw new IOException("The root directory does not exist or is empty");
+        }
+
+        String uri = qualifiedName.replace(".", "/").concat(".java");
+        File file = FileUtils.getFile(rootFolder, uri);
+
+        if (file.exists()) {
+            return file;
+        } else {
+            throw new FileNotFoundException("Error while finding the source file: "+file.toString());
+        }
+
+
     }
 }

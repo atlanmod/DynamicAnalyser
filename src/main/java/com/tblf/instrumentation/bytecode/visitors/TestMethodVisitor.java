@@ -1,4 +1,4 @@
-package com.tblf.instrumentation.visitors;
+package com.tblf.instrumentation.bytecode.visitors;
 
 import org.objectweb.asm.Attribute;
 import org.objectweb.asm.MethodVisitor;
