@@ -88,6 +88,24 @@
             <version>1.0.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.tblf</groupId>
+            <artifactId>javaApplication</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.tblf</groupId>
+            <artifactId>kdm</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.tblf</groupId>
+            <artifactId>kdmSource</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+
         <!-- Instrumentation -->
         <dependency>
             <groupId>org.ow2.asm</groupId>
@@ -96,10 +114,17 @@
         </dependency>
 
         <dependency>
+            <groupId>fr.inria.gforge.spoon</groupId>
+            <artifactId>spoon-core</artifactId>
+            <version>5.9.0</version>
+        </dependency>
+
+        <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.5</version>
         </dependency>
+
         <dependency>
             <groupId>com.tblf</groupId>
             <artifactId>Link</artifactId>
