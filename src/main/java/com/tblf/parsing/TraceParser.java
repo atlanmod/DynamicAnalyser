@@ -1,25 +1,40 @@
 package com.tblf.parsing;
 
+import com.tblf.Model.Analysis;
+import com.tblf.Model.Model;
 import com.tblf.Model.ModelFactory;
+import com.tblf.Model.ModelPackage;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.gmt.modisco.java.CompilationUnit;
 import org.eclipse.gmt.modisco.java.MethodDeclaration;
 import org.eclipse.gmt.modisco.java.Statement;
+import org.eclipse.gmt.modisco.java.emf.JavaPackage;
+import org.eclipse.gmt.modisco.omg.kdm.kdm.KdmPackage;
 import org.eclipse.modisco.java.composition.javaapplication.Java2Directory;
 import org.eclipse.modisco.java.composition.javaapplication.Java2File;
+import org.eclipse.modisco.java.composition.javaapplication.JavaapplicationPackage;
 import org.eclipse.modisco.kdm.source.extension.ASTNodeSourceRegion;
+import org.eclipse.modisco.kdm.source.extension.ExtensionPackage;
 import org.eclipse.ocl.OCL;
+import org.eclipse.ocl.ParserException;
 import org.eclipse.ocl.ecore.EcoreEnvironmentFactory;
+import org.eclipse.ocl.expressions.OCLExpression;
 import org.eclipse.ocl.helper.OCLHelper;
 import org.eclipse.ocl.options.ParsingOptions;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -28,17 +43,17 @@ import java.util.logging.Logger;
 public class TraceParser implements Runnable {
     private static final Logger LOGGER = Logger.getAnonymousLogger();
     private File file;
-    private com.tblf.Model.Model analysisModel;
+    private Model analysisModel;
     private static final ModelFactory MODEL_FACTORY = ModelFactory.eINSTANCE;
     private ResourceSet resourceSet;
     private OCLHelper OCL_HELPER;
     private OCL ocl;
 
     private String currentTestPackageQN;
-    private Java2Directory currentTestPackage;
+    private Resource currentTestPackage;
 
     private String currentTargetPackageQN;
-    private Java2Directory currentTargetPackage;
+    private Resource currentTargetPackage;
 
     private String currentTestQN;
     private Java2File currentTest;
@@ -60,27 +75,34 @@ public class TraceParser implements Runnable {
         this.resourceSet = resourceSet;
         this.analysisModel = MODEL_FACTORY.createModel();
 
-        ocl = OCL.newInstance(EcoreEnvironmentFactory.INSTANCE);
+        try {
+            Resource resource = resourceSet.createResource(URI.createURI(new File("src/test/resources/myOutputModel.xmi").toURI().toURL().toString()));
+            resource.getContents().add(analysisModel);
+
+            //FIXME: Must not be in this method !
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        JavaPackage.eINSTANCE.eClass();
+        JavaapplicationPackage.eINSTANCE.eClass();
+        ExtensionPackage.eINSTANCE.eClass();
+        KdmPackage.eINSTANCE.eClass();
+        ModelPackage.eINSTANCE.eClass();
+
+        Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
+        Map<String, Object> m = reg.getExtensionToFactoryMap();
+        m.put("xmi", new XMIResourceFactoryImpl());
+
+        EcoreEnvironmentFactory ecoreEnvironmentFactory = new EcoreEnvironmentFactory(EPackage.Registry.INSTANCE);
+
+        ocl = OCL.newInstance(ecoreEnvironmentFactory);
         OCL_HELPER = ocl.createOCLHelper();
 
         ParsingOptions.setOption(ocl.getEnvironment(),
                 ParsingOptions.implicitRootClass(ocl.getEnvironment()),
                 EcorePackage.Literals.EOBJECT);
-    }
 
-    /**
-     * With the resourceSet:
-     * Find the correct package model using the qualifiedName of the class
-     * Find the right class, then the right method, and finally the exact statement using position
-     * @param qualifiedClass
-     * @param method
-     * @param startCol
-     * @param endCol
-     * @return The statement corresponding to the parameters entered
-     */
-    public Statement findStatementUsingPosition(String qualifiedClass, String method, int startCol, int endCol) {
-
-        throw new RuntimeException("not implemented");
     }
 
     /**
@@ -101,13 +123,12 @@ public class TraceParser implements Runnable {
                         break;
 
                     case "%": //set the SUT
-
                         updateTarget(split[1], split[2]); // {qualifiedName; methodName}
-                        LOGGER.fine("Getting the target class: "+split[1]);
-
-                        LOGGER.fine("Getting the target method: "+split[2]);
                         break;
+
                     case "?": //get the statement using its line
+                        int lineNumber = Integer.parseInt(split[1]);
+                        updateStatementUsingLine(lineNumber);
 
                         break;
                     case "!": //get the statement using its position
@@ -116,6 +137,7 @@ public class TraceParser implements Runnable {
             }
 
             LineIterator.closeQuietly(lineIterator);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -134,12 +156,15 @@ public class TraceParser implements Runnable {
         // Refreshing the current package containing the test, to lighten the number of queries to the model
         if (currentTestPackage == null || ! currentTestPackageQN.equals(packageName)) {
             LOGGER.fine("Updating the current test package: "+packageName);
-            Resource resource = resourceSet
+            resourceSet.getResources().forEach(resource -> System.out.println("Resource: "+resource.getURI().toString()));
+
+            currentTestPackage = resourceSet
                     .getResources()
                     .stream()
                     .filter(r -> r.getURI().toString().contains(packageName))
                     .findFirst().get(); //Assuming the resource always exists. Will throw NPE otherwise
-            currentTestPackage = (Java2Directory) resource.getContents().get(0);
+
+            LOGGER.fine("Found the resource with URI: "+currentTestPackage.getURI());
             currentTestPackageQN = packageName;
         }
 
@@ -169,12 +194,11 @@ public class TraceParser implements Runnable {
         // Refreshing the current package containing the test, to lighten the number of queries to the model
         if (currentTargetPackage == null || ! currentTargetPackageQN.equals(packageName)) {
             LOGGER.fine("Updating the current target package: "+packageName);
-            Resource resource = resourceSet
+            currentTargetPackage = resourceSet
                     .getResources()
                     .stream()
                     .filter(r -> r.getURI().toString().contains(packageName))
                     .findFirst().get(); //Assuming the resource always exists. Will throw NPE otherwise
-            currentTargetPackage = (Java2Directory) resource.getContents().get(0);
             currentTargetPackageQN = packageName;
         }
 
@@ -187,16 +211,16 @@ public class TraceParser implements Runnable {
 
     /**
      * Parse the {@link Java2Directory} model in order to find a class using its qualified name
-     * @param java2Directory A {@link Java2Directory}
+     * @param resource A {@link Resource} containing {@link Java2File}s
      * @param name the name of the {@link org.eclipse.gmt.modisco.java.ClassDeclaration}
      * @return the {@link Java2File}
      */
-    private Java2File getJava2FileFromJava2Directory(Java2Directory java2Directory, String name) {
+    private Java2File getJava2FileFromJava2Directory(Resource resource, String name) {
         String finalName  = name.substring(name.lastIndexOf(".")+1);
-        return java2Directory.getJava2FileChildren() // get all the Java2File
+        return (Java2File) resource.getContents() // get all the Java2File
                 .stream() // as a stream
-                .filter(java2File -> ((CompilationUnit) java2File.getUnit()) // check that the compilation unit is the file corresponding to the
-                        .getName().endsWith(finalName.concat(".java"))) // defined class file
+                .filter(eObject -> (((Java2File)eObject).getJavaUnit().getName() // check that the compilation unit is the file corresponding to the
+                        .endsWith(finalName.concat(".java")))) // defined class file
                 .findFirst().orElse(null);
     }
 
@@ -221,6 +245,33 @@ public class TraceParser implements Runnable {
         }
 
         return methodDeclaration;
+    }
+
+    private Statement updateStatementUsingLine(int lineNumber) {
+        OCL_HELPER.setContext(JavaapplicationPackage.eINSTANCE.getEClassifier("Java2File"));
+
+        try {
+            String queryAsString = "JavaNodeSourceRegion.allInstances() -> select (startLine = " +
+                    lineNumber +
+                    " and endLine = " +
+                    lineNumber +
+                    " and node.oclIsKindOf(java::Statement))";
+            System.out.println(queryAsString);
+            OCLExpression query = OCL_HELPER.createQuery(queryAsString);
+            Set<ASTNodeSourceRegion> nodes = (Set<ASTNodeSourceRegion>) ocl.createQuery(query).evaluate(currentTarget);
+            nodes.parallelStream().forEach(astNodeSourceRegion -> {
+                Analysis analysis = ModelFactory.eINSTANCE.createAnalysis();
+                analysis.setName("runby");
+                analysis.setSource(astNodeSourceRegion.getNode());
+                analysis.setTarget(currentTestMethod);
+                analysisModel.eResource().getContents().add(analysis);
+            });
+
+        } catch (ParserException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     @Override
