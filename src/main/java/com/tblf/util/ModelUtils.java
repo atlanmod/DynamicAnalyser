@@ -16,6 +16,7 @@ import org.eclipse.gmt.modisco.java.Package;
 import org.eclipse.gmt.modisco.java.emf.JavaPackage;
 import org.eclipse.gmt.modisco.omg.kdm.kdm.KdmPackage;
 import org.eclipse.modisco.java.composition.javaapplication.JavaapplicationPackage;
+import org.eclipse.modisco.kdm.source.extension.ExtensionPackage;
 import org.eclipse.ocl.OCL;
 import org.eclipse.ocl.ParserException;
 import org.eclipse.ocl.Query;
@@ -47,6 +48,7 @@ public class ModelUtils {
     {
         JavaPackage.eINSTANCE.eClass();
         JavaapplicationPackage.eINSTANCE.eClass();
+        ExtensionPackage.eINSTANCE.eClass();
         KdmPackage.eINSTANCE.eClass();
 
         Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
