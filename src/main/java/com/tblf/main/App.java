@@ -33,7 +33,7 @@ public class App
      */
     public static void main( String[] args ) throws Exception {
         //Checking the inputs
-        if (args.length != 2) {
+        if (args.length < 2) {
             LOGGER.warning("Incorrect arguments. Expecting [modelUri, binariesUri]");
             return;
         }
@@ -78,7 +78,7 @@ public class App
             URL url = null;
             try {
                 url = file.toURI().toURL();
-            } catch (MalformedURLException e) {
+            } catch (MalformedURLException ignored) {
 
             } finally {
                 return url;
@@ -99,6 +99,6 @@ public class App
 
         //Analyzing the traces
         File file = ((FileTracer) FileTracer.getInstance()).getFile();
-        System.out.println(file.getAbsolutePath());
+        LOGGER.info("Full execution trace located at: " + file.getAbsolutePath());
     }
 }

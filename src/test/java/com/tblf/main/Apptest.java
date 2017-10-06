@@ -14,7 +14,7 @@ public class Apptest {
             long before = System.currentTimeMillis();
             App.main(new String[]{"src/test/resources/binaries/assertj/assertj-core_java.zip", "src/test/resources/binaries/assertj"});
 
-            System.out.println(System.currentTimeMillis() - before);
+            System.out.println("Elapsed time: " + String.valueOf(System.currentTimeMillis() - before)+" ms");
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());

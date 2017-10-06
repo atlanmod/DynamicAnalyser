@@ -76,7 +76,9 @@ public class TraceParserTest {
         m.put("xmi", new XMIResourceFactoryImpl());
 
         File file = new File("src/test/resources/models/simpleProject");
-        Files.walk(file.toPath()).filter(path -> path.toString().endsWith(".xmi")).forEach(path -> {
+        Files.walk(file.toPath())
+                .filter(path -> path.toString().endsWith(".xmi") && !path.toString().endsWith("_kdm.xmi"))
+                .forEach(path -> {
 
             System.out.println("now adding: "+path.getFileName().toString());
             try {
@@ -94,22 +96,19 @@ public class TraceParserTest {
 
     @Test
     public void checkParse() throws IOException {
-        TraceParser traceParser = new TraceParser(trace, resourceSet);
-        Model model = traceParser.parse();
-
         File file = new File("src/test/resources/myAnalysisModel.xmi");
-
-        if (file.exists()) {
+        if (file.exists())
             file.delete();
-        }
 
         file.createNewFile();
-        Resource resource = resourceSet.createResource(URI.createURI(file.toURI().toURL().toString()));
 
-        resource.getContents().add(model);
+        TraceParser traceParser = new TraceParser(trace, file, resourceSet);
+        Resource resource = traceParser.parse();
 
-        model.getAnalyses().forEach(System.out::println);
         resource.save(Collections.EMPTY_MAP);
+        Assert.assertTrue(file.exists());
+
+        Assert.assertTrue(resource.getContents().size() == 2);
     }
 
 }

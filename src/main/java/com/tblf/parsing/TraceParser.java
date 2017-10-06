@@ -32,6 +32,7 @@ import org.eclipse.ocl.options.ParsingOptions;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -43,8 +44,8 @@ import java.util.logging.Logger;
 public class TraceParser implements Runnable {
     private static final Logger LOGGER = Logger.getAnonymousLogger();
     private File file;
-    private Model analysisModel;
-    private static final ModelFactory MODEL_FACTORY = ModelFactory.eINSTANCE;
+    private Resource outputModelResource;
+
     private ResourceSet resourceSet;
     private OCLHelper OCL_HELPER;
     private OCL ocl;
@@ -67,19 +68,15 @@ public class TraceParser implements Runnable {
 
     /**
      *
-     * @param file the file containing the execution trace
+     * @param traceFile the file containing the execution trace
      * @param resourceSet a resource set containing the fragments
      */
-    public TraceParser(File file, ResourceSet resourceSet) {
-        this.file = file;
+    public TraceParser(File traceFile, File outputModel, ResourceSet resourceSet) {
+        this.file = traceFile;
         this.resourceSet = resourceSet;
-        this.analysisModel = MODEL_FACTORY.createModel();
 
         try {
-            Resource resource = resourceSet.createResource(URI.createURI(new File("src/test/resources/myOutputModel.xmi").toURI().toURL().toString()));
-            resource.getContents().add(analysisModel);
-
-            //FIXME: Must not be in this method !
+            outputModelResource = resourceSet.createResource(URI.createURI(outputModel.toURI().toURL().toString()));
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
@@ -110,7 +107,7 @@ public class TraceParser implements Runnable {
      * Depending of the trace type, will either find the test being executed, or the SUT being executed, or the statement being executed
      * @return a impact analysis model
      */
-    public com.tblf.Model.Model parse() {
+    public Resource parse() {
         try {
             LineIterator lineIterator = FileUtils.lineIterator(file);
             while (lineIterator.hasNext()) {
@@ -142,7 +139,7 @@ public class TraceParser implements Runnable {
             e.printStackTrace();
         }
 
-        return this.analysisModel;
+        return outputModelResource;
     }
 
     /**
@@ -247,7 +244,11 @@ public class TraceParser implements Runnable {
         return methodDeclaration;
     }
 
-    private Statement updateStatementUsingLine(int lineNumber) {
+    /**
+     * Create an impact relation between a statement and a test method, using the statement line number ot find the statement in the model
+     * @param lineNumber the line number
+     */
+    private void updateStatementUsingLine(int lineNumber) {
         OCL_HELPER.setContext(JavaapplicationPackage.eINSTANCE.getEClassifier("Java2File"));
 
         try {
@@ -264,14 +265,13 @@ public class TraceParser implements Runnable {
                 analysis.setName("runby");
                 analysis.setSource(astNodeSourceRegion.getNode());
                 analysis.setTarget(currentTestMethod);
-                analysisModel.eResource().getContents().add(analysis);
+                outputModelResource.getContents().add(analysis);
             });
 
         } catch (ParserException e) {
-            e.printStackTrace();
+            LOGGER.warning("Couldn't create the OCL request to find the statement in the model " + e.getStackTrace());
         }
 
-        return null;
     }
 
     @Override
