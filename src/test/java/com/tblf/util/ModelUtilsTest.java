@@ -1,24 +1,11 @@
 package com.tblf.util;
 
-import com.tblf.parsing.ModelParser;
-import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.gmt.modisco.java.ClassDeclaration;
 import org.eclipse.gmt.modisco.java.Model;
 import org.eclipse.gmt.modisco.java.Package;
 import org.eclipse.gmt.modisco.java.emf.JavaFactory;
-import org.eclipse.gmt.modisco.java.emf.JavaPackage;
 import org.eclipse.modisco.java.composition.javaapplication.Java2Directory;
-import org.eclipse.modisco.java.composition.javaapplication.Java2File;
-import org.eclipse.modisco.java.composition.javaapplication.JavaApplication;
-import org.eclipse.modisco.java.composition.javaapplication.JavaNodeSourceRegion;
-import org.eclipse.ocl.OCL;
-import org.eclipse.ocl.Query;
-import org.eclipse.ocl.ecore.EcoreEnvironmentFactory;
-import org.eclipse.ocl.expressions.OCLExpression;
-import org.eclipse.ocl.helper.OCLHelper;
 import org.junit.Assert;
 import org.junit.Test;
 

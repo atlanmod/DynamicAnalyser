@@ -4,7 +4,6 @@ import com.tblf.util.ModelUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.gmt.modisco.java.ClassDeclaration;
 import org.eclipse.gmt.modisco.java.Model;
-import org.eclipse.ocl.ParserException;
 
 import java.io.File;
 import java.util.Collection;
