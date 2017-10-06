@@ -1,7 +1,6 @@
 package com.tblf.parsing;
 
 import com.tblf.Model.Analysis;
-import com.tblf.Model.Model;
 import com.tblf.Model.ModelFactory;
 import com.tblf.Model.ModelPackage;
 import org.apache.commons.io.FileUtils;
@@ -12,9 +11,7 @@ import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
-import org.eclipse.gmt.modisco.java.CompilationUnit;
 import org.eclipse.gmt.modisco.java.MethodDeclaration;
-import org.eclipse.gmt.modisco.java.Statement;
 import org.eclipse.gmt.modisco.java.emf.JavaPackage;
 import org.eclipse.gmt.modisco.omg.kdm.kdm.KdmPackage;
 import org.eclipse.modisco.java.composition.javaapplication.Java2Directory;
@@ -32,7 +29,7 @@ import org.eclipse.ocl.options.ParsingOptions;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -129,7 +126,10 @@ public class TraceParser implements Runnable {
 
                         break;
                     case "!": //get the statement using its position
-                        throw new RuntimeException("not implemented");
+                        int startPos = Integer.parseInt(split[1]);
+                        int endPos = Integer.parseInt(split[2]);
+                        
+                        updateStatementUsingPosition(startPos, endPos);
                 }
             }
 
@@ -245,7 +245,7 @@ public class TraceParser implements Runnable {
     }
 
     /**
-     * Create an impact relation between a statement and a test method, using the statement line number ot find the statement in the model
+     * Create an impact relation between a statement and a test method, using the statement line number after finding the statement in the model
      * @param lineNumber the line number
      */
     private void updateStatementUsingLine(int lineNumber) {
@@ -269,9 +269,42 @@ public class TraceParser implements Runnable {
             });
 
         } catch (ParserException e) {
-            LOGGER.warning("Couldn't create the OCL request to find the statement in the model " + e.getStackTrace());
+            LOGGER.warning("Couldn't create the OCL request to find the statement in the model " + Arrays.toString(e.getStackTrace()));
         }
 
+    }
+
+
+    /**
+     * Create an impact relation between a statement and a test method using the statement position, after finding the statement in the model
+     * This approach is way more accurate than the line one, since we can only have 1 statement with the specified position, when we could find multiple
+     * statements on the same line
+     * @param startPos the start position inside the file, of the statement looked for
+     * @param endPos the end position inside the class file of the statement looked for*
+     */
+    private void updateStatementUsingPosition(int startPos, int endPos) {
+        OCL_HELPER.setContext(JavaapplicationPackage.eINSTANCE.getEClassifier("Java2File"));
+
+        try {
+            String queryAsString = "JavaNodeSourceRegion.allInstances() -> select (startPosition = " +
+                    startPos +
+                    " and endPosition = " +
+                    endPos +
+                    " and node.oclIsKindOf(java::Statement))";
+            System.out.println(queryAsString);
+            OCLExpression query = OCL_HELPER.createQuery(queryAsString);
+            Set<ASTNodeSourceRegion> nodes = (Set<ASTNodeSourceRegion>) ocl.createQuery(query).evaluate(currentTarget);
+            nodes.parallelStream().forEach(astNodeSourceRegion -> {
+                Analysis analysis = ModelFactory.eINSTANCE.createAnalysis();
+                analysis.setName("runby");
+                analysis.setSource(astNodeSourceRegion.getNode());
+                analysis.setTarget(currentTestMethod);
+                outputModelResource.getContents().add(analysis);
+            });
+
+        } catch (ParserException e) {
+            LOGGER.warning("Couldn't create the OCL request to find the statement in the model " + Arrays.toString(e.getStackTrace()));
+        }
     }
 
     @Override

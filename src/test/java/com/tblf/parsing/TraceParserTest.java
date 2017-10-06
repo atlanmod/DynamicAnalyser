@@ -1,25 +1,16 @@
 package com.tblf.parsing;
 
-import com.tblf.Model.Model;
-import com.tblf.Model.ModelFactory;
 import com.tblf.Model.ModelPackage;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
-import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
-import org.eclipse.gmt.modisco.java.*;
-import org.eclipse.gmt.modisco.java.Package;
-import org.eclipse.gmt.modisco.java.emf.JavaFactory;
 import org.eclipse.gmt.modisco.java.emf.JavaPackage;
 import org.eclipse.gmt.modisco.omg.kdm.kdm.KdmPackage;
 import org.eclipse.gmt.modisco.omg.kdm.source.SourcePackage;
-import org.eclipse.modisco.java.composition.javaapplication.*;
-import org.eclipse.modisco.kdm.source.extension.ASTNodeSourceRegion;
-import org.eclipse.modisco.kdm.source.extension.CodeUnit2File;
-import org.eclipse.modisco.kdm.source.extension.ExtensionPackage;
+import org.eclipse.modisco.java.composition.javaapplication.JavaapplicationPackage;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,8 +20,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -53,17 +42,6 @@ public class TraceParserTest {
         for (Handler h : rootLogger.getHandlers()) {
             h.setLevel(Level.FINE);
         }
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("&:com.tblf.SimpleProject.AppTest:<init>\n");
-        sb.append("&:com.tblf.SimpleProject.AppTest:testApp\n");
-        sb.append("%:com.tblf.SimpleProject.App:method\n");
-        sb.append("?:5\n");
-        sb.append("?:6");
-
-        trace = File.createTempFile("tmpTrace", ".extr");
-
-        Files.write(trace.toPath(), sb.toString().getBytes());
 
         EPackage.Registry.INSTANCE.put(JavaPackage.eNS_URI, JavaPackage.eINSTANCE);
         EPackage.Registry.INSTANCE.put(JavaapplicationPackage.eNS_URI, JavaapplicationPackage.eINSTANCE);
@@ -95,7 +73,46 @@ public class TraceParserTest {
     }
 
     @Test
-    public void checkParse() throws IOException {
+    public void checkParseLineAccuracy() throws IOException {
+        StringBuilder sb = new StringBuilder();
+        sb.append("&:com.tblf.SimpleProject.AppTest:<init>\n");
+        sb.append("&:com.tblf.SimpleProject.AppTest:testApp\n");
+        sb.append("%:com.tblf.SimpleProject.App:method\n");
+        sb.append("?:5\n");
+        sb.append("?:6");
+
+        trace = File.createTempFile("tmpTrace", ".extr");
+
+        Files.write(trace.toPath(), sb.toString().getBytes());
+
+        File file = new File("src/test/resources/myAnalysisModel.xmi");
+        if (file.exists())
+            file.delete();
+
+        file.createNewFile();
+
+        TraceParser traceParser = new TraceParser(trace, file, resourceSet);
+        Resource resource = traceParser.parse();
+
+        resource.save(Collections.EMPTY_MAP);
+        Assert.assertTrue(file.exists());
+
+        Assert.assertTrue(resource.getContents().size() == 2);
+    }
+
+    @Test
+    public void checkParsePositionAccuracy() throws IOException {
+        StringBuilder sb = new StringBuilder();
+        sb.append("&:com.tblf.SimpleProject.AppTest:<init>\n");
+        sb.append("&:com.tblf.SimpleProject.AppTest:testApp\n");
+        sb.append("%:com.tblf.SimpleProject.App:method\n");
+        sb.append("!:97:130\n");
+        sb.append("!:134:172");
+
+        trace = File.createTempFile("tmpTrace", ".extr");
+
+        Files.write(trace.toPath(), sb.toString().getBytes());
+
         File file = new File("src/test/resources/myAnalysisModel.xmi");
         if (file.exists())
             file.delete();
