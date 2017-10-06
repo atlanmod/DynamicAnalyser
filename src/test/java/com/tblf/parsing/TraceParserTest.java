@@ -96,7 +96,6 @@ public class TraceParserTest {
 
         resource.save(Collections.EMPTY_MAP);
         Assert.assertTrue(file.exists());
-
         Assert.assertTrue(resource.getContents().size() == 2);
     }
 
