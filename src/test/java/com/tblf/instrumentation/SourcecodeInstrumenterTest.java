@@ -1,44 +1,37 @@
 package com.tblf.instrumentation;
 
 import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
+import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.stream.Collectors;
 
 public class SourcecodeInstrumenterTest {
 
     @Test
-    public void checkInstrument() {
-        Collection<String> targets = new HashSet<>();
-        targets.add("com.tblf.SimpleProject.App");
+    public void checkInstrumentMaven() throws IOException {
+        File proj = new File("src/test/resources/sources/SimpleProject/");
+        File binOut = new File(proj, "binOut");
 
-        Collection<String> tests = new HashSet<>();
-        tests.add("com.tblf.SimpleProject.AppTest");
+        if (binOut.exists())
+            FileUtils.deleteDirectory(binOut);
 
-        File srcFolder = new File("src/test/resources/sources/simpleProject/src/main/java");
-        File testFolder = new File("src/test/resources/sources/simpleProject/src/test/java");
-        File srcOutFolder = new File("src/test/resources/sources/simpleProject/output/src");
-        File binOutFolder = new File("src/test/resources/sources/simpleProject/output/bin");
+        Assert.assertTrue(proj.exists());
+        SourceCodeInstrumenter instrumenter = new SourceCodeInstrumenter(proj);
+        instrumenter.setBinDirectory(binOut);
 
-        if (srcOutFolder.exists()) {
-            srcOutFolder.delete();
-        }
+        instrumenter.instrumentMavenProject(proj);
 
-        if (binOutFolder.exists()) {
-            binOutFolder.delete();
-        }
+        //All classes have been compiled
+        Assert.assertTrue(
+                Files.walk((binOut.toPath())).filter(path -> path.toString().endsWith(".class")).collect(Collectors.toList()).size()
+        >= Files.walk(proj.toPath()).filter(path -> path.toString().endsWith(".java")).collect(Collectors.toList()).size());
 
-        Assert.assertTrue(srcFolder.exists() && testFolder.exists());
-
-        SourceCodeInstrumenter instrumenter = new SourceCodeInstrumenter(srcFolder, testFolder, new ArrayList<>());
-        instrumenter.setBinDirectory(binOutFolder);
-        instrumenter.setSrcDirectory(srcOutFolder);
-
-        instrumenter.instrument(targets, tests);
-
+        FileUtils.deleteDirectory(binOut);
     }
+
 }
