@@ -1,16 +1,22 @@
 package com.tblf.instrumentation;
 
+import com.tblf.classLoading.InstURLClassLoader;
+import com.tblf.classLoading.SingleURLClassLoader;
 import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.JUnitCore;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-public class SourcecodeInstrumenterTest {
+public class SourceCodeInstrumenterTest {
 
     @Test
     public void checkInstrumentMaven() throws IOException {
@@ -24,12 +30,19 @@ public class SourcecodeInstrumenterTest {
         SourceCodeInstrumenter instrumenter = new SourceCodeInstrumenter(proj);
         instrumenter.setBinDirectory(binOut);
 
-        instrumenter.instrumentMavenProject(proj);
+        instrumenter.instrument(new ArrayList<>(), new ArrayList<>());
 
         //All classes have been compiled
         Assert.assertTrue(
                 Files.walk((binOut.toPath())).filter(path -> path.toString().endsWith(".class")).collect(Collectors.toList()).size()
         >= Files.walk(proj.toPath()).filter(path -> path.toString().endsWith(".java")).collect(Collectors.toList()).size());
+
+        try {
+            Class clazz = SingleURLClassLoader.getInstance().getUrlClassLoader().loadClass("com.tblf.SimpleProject.AppTest");
+            JUnitCore.runClasses(clazz);
+        } catch (Throwable e) {
+            Assert.fail(e.toString());
+        }
 
         FileUtils.deleteDirectory(binOut);
     }

@@ -1,5 +1,6 @@
 package com.tblf.instrumentation.sourcecode;
 
+import com.tblf.classLoading.SingleURLClassLoader;
 import com.tblf.instrumentation.Instrumenter;
 import com.tblf.instrumentation.sourcecode.processors.TargetProcessor;
 import com.tblf.instrumentation.sourcecode.processors.TestProcessor;
@@ -8,6 +9,10 @@ import spoon.Launcher;
 import spoon.MavenLauncher;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,12 +25,12 @@ public class SourceCodeInstrumenter implements Instrumenter {
     private File testDirectory;
 
     private File binDirectory;
-    private File srcDirectory;
 
     private Collection<File> dependencies;
 
     public SourceCodeInstrumenter(File directory) {
         this.directory = directory;
+        dependencies = new ArrayList<>();
     }
 
     @Override
@@ -56,20 +61,22 @@ public class SourceCodeInstrumenter implements Instrumenter {
         spoonLauncher.addProcessor(new TargetProcessor());
 
         spoonLauncher.run();
-    }
 
-    /**
-     * Instrument a maven project
-     * @param mvnProj
-     */
-    public void instrumentMavenProject(File mvnProj) {
-        MavenLauncher mavenLauncher = new MavenLauncher(mvnProj.getAbsolutePath(), MavenLauncher.SOURCE_TYPE.ALL_SOURCE);
-        mavenLauncher.addProcessor(new TargetProcessor());
-        mavenLauncher.addProcessor(new TestProcessor());
-        //mavenLauncher.setSourceOutputDirectory(srcDirectory);
-        mavenLauncher.setBinaryOutputDirectory(binDirectory);
-        mavenLauncher.getEnvironment().setShouldCompile(true);
-        mavenLauncher.run();
+        File file = new File("spooned");
+
+        if (file.exists()) {
+            try {
+                FileUtils.deleteDirectory(file);
+            } catch (IOException e) {
+                LOGGER.warning("Cannot delete the temp files created by the instrumentation at URI: "+file.getAbsolutePath());
+            }
+        }
+
+        try {
+            SingleURLClassLoader.getInstance().addURLs(new URL[]{binDirectory.toURI().toURL()});
+        } catch (MalformedURLException e) {
+            LOGGER.warning("Cannot add the instrumented classes to the classpath: "+e.getMessage());
+        }
     }
 
     private void addDependencies() {
@@ -110,14 +117,6 @@ public class SourceCodeInstrumenter implements Instrumenter {
 
     public void setBinDirectory(File binDirectory) {
         this.binDirectory = binDirectory;
-    }
-
-    public File getSrcDirectory() {
-        return srcDirectory;
-    }
-
-    public void setSrcDirectory(File srcDirectory) {
-        this.srcDirectory = srcDirectory;
     }
 
     public Collection<File> getDependencies() {
