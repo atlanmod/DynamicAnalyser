@@ -9,7 +9,7 @@ public class TargetProcessor extends AbstractProcessor<CtStatement> {
     @Override
     public void process(CtStatement ctStatement) {
 
-            if (!ctStatement.isImplicit() && ! (ctStatement instanceof CtBlock)) {
+            if (!ctStatement.isImplicit() && ! (ctStatement instanceof CtBlock) && !(ctStatement instanceof CtCodeSnippetStatement)) {
                 //The ctStatement is not a super(). we can insert an other just before it
                 String value = String.format("\"%s - %s\"", ctStatement.getPosition().getSourceStart(), ctStatement.getPosition().getSourceEnd());
                 String toAdd = "System.out.println(" + value + ")";
