@@ -131,6 +131,26 @@ public class ModelUtils {
     }
 
     /**
+     * Load all the xmi of a folder except the _kdm model. Indeed, This model is enormous and
+     * @param file the root folder
+     * @return the {@link ResourceSet}
+     */
+    public static ResourceSet addJavaApplicationModelFragments(File file, ResourceSet resourceSet) throws IOException {
+        Files.walk(file.toPath(), 2)
+                .filter(path -> path.toString().endsWith("java2kdm.xmi"))
+                .forEach(path -> {
+            try {
+                LOGGER.info("Adding the model "+path+" to the resourceSet");
+                resourceSet.getResource(URI.createURI(path.toUri().toURL().toString()), true);
+            } catch (MalformedURLException e) {
+                LOGGER.warning("Cannot load the xmi: "+path);
+            }
+        });
+
+        return resourceSet;
+    }
+
+    /**
      * Takes a zipped older of java2kdm fragments and load it into a resourceSet
      * @param zipFile
      * @return
@@ -239,7 +259,6 @@ public class ModelUtils {
         }
         return ((Collection<ClassDeclaration>) ocl.createQuery(query).evaluate(model)).stream().collect(Collectors.toSet());
     }
-
 
     /**
      * Check if an @{@link Annotation} is a test annotation.
