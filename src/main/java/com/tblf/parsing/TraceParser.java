@@ -72,9 +72,13 @@ public class TraceParser implements Runnable {
         this.file = traceFile;
         this.resourceSet = resourceSet;
 
+
         try {
+            if (! outputModel.exists()) {
+                outputModel.createNewFile();
+            }
             outputModelResource = resourceSet.createResource(URI.createURI(outputModel.toURI().toURL().toString()));
-        } catch (MalformedURLException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
