@@ -4,6 +4,7 @@ import com.tblf.classLoading.SingleURLClassLoader;
 import com.tblf.instrumentation.Instrumenter;
 import com.tblf.instrumentation.sourcecode.processors.TargetProcessor;
 import com.tblf.instrumentation.sourcecode.processors.TestProcessor;
+import com.tblf.util.Configuration;
 import org.apache.commons.io.FileUtils;
 import spoon.Launcher;
 import spoon.MavenLauncher;
@@ -33,6 +34,7 @@ public class SourceCodeInstrumenter implements Instrumenter {
     public SourceCodeInstrumenter(File directory) {
         this.directory = directory;
         dependencies = new ArrayList<>();
+        binDirectory = new File(directory, Configuration.getProperty("binaries"));
     }
 
     @Override
