@@ -13,9 +13,11 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class SourceCodeInstrumenter implements Instrumenter {
     private static final Logger LOGGER = Logger.getLogger("Instrumenter");
@@ -39,15 +41,25 @@ public class SourceCodeInstrumenter implements Instrumenter {
         addDependencies();
         if (FileUtils.getFile(directory, "pom.xml").exists()) {
             spoonLauncher = new MavenLauncher(directory.getAbsolutePath(), MavenLauncher.SOURCE_TYPE.ALL_SOURCE);
+
+            //Add to the dependencies all the deps computed by spoon from the pom.xml
+            dependencies.addAll(
+                    Arrays.stream(spoonLauncher.getEnvironment().getSourceClasspath())
+                            .map(File::new)
+                            .collect(Collectors.toList())
+            );
+
             //maven spoon launcher. automatically fetches the dependencies using the pom.xml
             LOGGER.info("pom.xml found ! Will be used to compute the dependencies of the application under instrumentation");
         } else {
             spoonLauncher = new Launcher(); //Standard spoon launcher. needs to define the dependencies by hand
             spoonLauncher.addInputResource(testDirectory.getAbsolutePath());
             spoonLauncher.addInputResource(sutDirectory.getAbsolutePath());
-            spoonLauncher.getEnvironment().setSourceClasspath(dependencies.stream().map(File::getAbsolutePath).toArray(String[]::new));
             LOGGER.info("pom.xml not found ! Dependencies have to be specified. ");
         }
+
+        //Add all the dependencies, more specifically the one needed by the instrumentation to the spoon classpath
+        spoonLauncher.getEnvironment().setSourceClasspath(dependencies.stream().map(File::getAbsolutePath).toArray(String[]::new));
 
         //TODO use hashsets instead of standard lists to optimize the contains() method
         spoonLauncher.getEnvironment().setLevel(String.valueOf(Level.ALL));
@@ -57,8 +69,8 @@ public class SourceCodeInstrumenter implements Instrumenter {
 
         spoonLauncher.setBinaryOutputDirectory(binDirectory);
 
-        spoonLauncher.addProcessor(new TestProcessor());
-        spoonLauncher.addProcessor(new TargetProcessor());
+        spoonLauncher.addProcessor(new TestProcessor(tests));
+        spoonLauncher.addProcessor(new TargetProcessor(targets));
 
         spoonLauncher.run();
 

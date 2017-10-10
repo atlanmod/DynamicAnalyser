@@ -1,6 +1,5 @@
 package com.tblf.instrumentation;
 
-import com.tblf.classLoading.InstURLClassLoader;
 import com.tblf.classLoading.SingleURLClassLoader;
 import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
 import org.apache.commons.io.FileUtils;
@@ -10,10 +9,10 @@ import org.junit.runner.JUnitCore;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.stream.Collectors;
 
 public class SourceCodeInstrumenterTest {
@@ -30,7 +29,7 @@ public class SourceCodeInstrumenterTest {
         SourceCodeInstrumenter instrumenter = new SourceCodeInstrumenter(proj);
         instrumenter.setBinDirectory(binOut);
 
-        instrumenter.instrument(new ArrayList<>(), new ArrayList<>());
+        instrumenter.instrument(Collections.singletonList("com.tblf.SimpleProject.App"), Collections.singletonList("com.tblf.SimpleProject.AppTest"));
 
         //All classes have been compiled
         Assert.assertTrue(
