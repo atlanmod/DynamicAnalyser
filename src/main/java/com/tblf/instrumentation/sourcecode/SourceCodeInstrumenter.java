@@ -34,7 +34,7 @@ public class SourceCodeInstrumenter implements Instrumenter {
     public SourceCodeInstrumenter(File directory) {
         this.directory = directory;
         dependencies = new ArrayList<>();
-        binDirectory = new File(directory, Configuration.getProperty("binaries"));
+        binDirectory = new File(directory, Configuration.getProperty("instrumentedBinaries"));
     }
 
     @Override

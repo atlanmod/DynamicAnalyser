@@ -1,7 +1,10 @@
 package com.tblf.classLoading;
 
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by Thibault on 19/09/2017.
@@ -13,6 +16,8 @@ import java.net.URLClassLoader;
 public class SingleURLClassLoader {
 
     private static SingleURLClassLoader INSTANCE;
+    private static final Logger LOGGER = Logger.getLogger("SingleURLClassLoader");
+
     private URLClassLoader urlClassLoader;
 
     private SingleURLClassLoader() {
@@ -45,5 +50,17 @@ public class SingleURLClassLoader {
 
     public void setUrlClassLoader(URLClassLoader urlClassLoader) {
         this.urlClassLoader = urlClassLoader;
+    }
+
+    /**
+     * Empty the loaded classes contained in this classloader
+     */
+    public void clear() {
+        try {
+            this.getUrlClassLoader().close();
+            urlClassLoader = new InstURLClassLoader(new URL[]{}, this.getClass().getClassLoader());
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Cannot clear the classLoader", e);
+        }
     }
 }

@@ -29,10 +29,8 @@ import org.eclipse.ocl.options.ParsingOptions;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -103,6 +101,11 @@ public class TraceParser implements Runnable {
 
     }
 
+    @Override
+    public void run() {
+        parse();
+    }
+
     /**
      * Parse the trace file line by line.
      * Depending of the trace type, will either find the test being executed, or the SUT being executed, or the statement being executed
@@ -143,6 +146,13 @@ public class TraceParser implements Runnable {
             e.printStackTrace();
         }
 
+        try {
+            outputModelResource.save(Collections.EMPTY_MAP);
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Could not save the analysis model", e);
+        }
+
+        LOGGER.info("Model available at URI: "+outputModelResource.getURI());
         return outputModelResource;
     }
 
@@ -261,10 +271,13 @@ public class TraceParser implements Runnable {
                     " and endLine = " +
                     lineNumber +
                     " and node.oclIsKindOf(java::Statement))";
-            System.out.println(queryAsString);
+
+            LOGGER.fine("Executing the following query: "+queryAsString);
+
             OCLExpression query = OCL_HELPER.createQuery(queryAsString);
             Set<ASTNodeSourceRegion> nodes = (Set<ASTNodeSourceRegion>) ocl.createQuery(query).evaluate(currentTarget);
             nodes.parallelStream().forEach(astNodeSourceRegion -> {
+                LOGGER.fine("Found a node. Creating an object in the output model");
                 Analysis analysis = ModelFactory.eINSTANCE.createAnalysis();
                 analysis.setName("runby");
                 analysis.setSource(astNodeSourceRegion.getNode());
@@ -299,6 +312,7 @@ public class TraceParser implements Runnable {
             OCLExpression query = OCL_HELPER.createQuery(queryAsString);
             Set<ASTNodeSourceRegion> nodes = (Set<ASTNodeSourceRegion>) ocl.createQuery(query).evaluate(currentTarget);
             nodes.parallelStream().forEach(astNodeSourceRegion -> {
+                LOGGER.fine("Found a node. Creating an object in the output model");
                 Analysis analysis = ModelFactory.eINSTANCE.createAnalysis();
                 analysis.setName("runby");
                 analysis.setSource(astNodeSourceRegion.getNode());
@@ -309,11 +323,8 @@ public class TraceParser implements Runnable {
         } catch (ParserException e) {
             LOGGER.warning("Couldn't create the OCL request to find the statement in the model " + Arrays.toString(e.getStackTrace()));
         }
-    }
 
-    @Override
-    public void run() {
-        parse();
+
     }
 
     public Resource getOutputModelResource() {

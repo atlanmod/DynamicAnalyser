@@ -1,6 +1,7 @@
 package com.tblf.business;
 
 import com.tblf.Link.FileTracer;
+import com.tblf.classLoading.InstURLClassLoader;
 import com.tblf.classLoading.SingleURLClassLoader;
 import com.tblf.instrumentation.InstrumentationType;
 import com.tblf.instrumentation.Instrumenter;
@@ -13,13 +14,16 @@ import com.tblf.util.Configuration;
 import com.tblf.util.ModelUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.junit.Before;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 /**
@@ -30,16 +34,27 @@ public class Manager {
     private static final Logger LOGGER = Logger.getLogger("Manager");
     private File trace;
     private ResourceSet resourceSet;
+
+    @Before
+    public void setUp() {
+        Logger rootLogger = LogManager.getLogManager().getLogger("");
+        rootLogger.setLevel(Level.FINE);
+        for (Handler h : rootLogger.getHandlers()) {
+            h.setLevel(Level.INFO);
+        }
+    }
+
     /**
      * Build the traces of a project by instrumenting and running the tests
      * @param project
      * @return
      */
     public File buildTraces(File project) {
-
+        ((FileTracer) FileTracer.getInstance()).reset();
+        SingleURLClassLoader.getInstance().clear();
         // getting the xmi model file
         Optional<Path> pathOptional = null;
-        File model = null;
+        File model;
         Resource resource = null;
 
         try {
@@ -47,9 +62,7 @@ public class Manager {
 
             if (pathOptional.isPresent()) {
                 model = pathOptional.get().toFile();
-            } else {
-                throw new IOException("Couldn't find the MoDisco model !");
-            }
+            } else throw new IOException("Couldn't find the MoDisco model !");
 
             //Loading the model
             if (model.toString().endsWith(".xmi")) {
@@ -63,16 +76,18 @@ public class Manager {
         }
 
 
-        //Parsing the model
+
+        //Parsing the model to differentiate the SUT from the tests
         ModelParser modelParser = new ModelParser();
         modelParser.parse(resource);
 
         if (modelParser.getTests().isEmpty() || modelParser.getTargets().isEmpty()) {
             LOGGER.warning("Could not find test or SUT classes");
-            System.exit(1);
+            return null;
         }
 
-        Instrumenter instrumenter = null;
+        //Instrumenting the project
+        Instrumenter instrumenter;
         String mode = Configuration.getProperty("mode");
         switch(InstrumentationType.valueOf(mode)){
 
@@ -84,8 +99,7 @@ public class Manager {
                 break;
             default:
                 LOGGER.warning("No instrumentation chosen");
-                System.exit(1);
-                break;
+                return null;
         }
 
         instrumenter.instrument(modelParser.getTargets().keySet(), modelParser.getTests().keySet());
@@ -96,6 +110,7 @@ public class Manager {
         jUnitRunner.runTests(modelParser.getTests().keySet());
 
         ((FileTracer) FileTracer.getInstance()).endTrace();
+
         //Analyzing the traces
         trace = ((FileTracer) FileTracer.getInstance()).getFile();
         LOGGER.info("Full execution trace located at: " + trace.getAbsolutePath());
@@ -119,8 +134,8 @@ public class Manager {
         }
 
         TraceParser traceParser = new TraceParser(trace, outputModel, resourceSet);
-        new Thread(traceParser).start(); //Paralleled
-
+        //new Thread(traceParser).start(); //Paralleled
+        traceParser.parse();
         //get the model at the end
     }
 }

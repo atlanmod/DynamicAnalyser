@@ -5,11 +5,12 @@ import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCodeSnippetStatement;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtClass;
-import spoon.reflect.declaration.CtType;
 
 import java.util.Collection;
+import java.util.logging.Logger;
 
 public class TargetProcessor extends AbstractProcessor<CtStatement> {
+    private static final Logger LOGGER = Logger.getLogger("TargetProcessor");
 
     private Collection targets;
 
@@ -34,6 +35,7 @@ public class TargetProcessor extends AbstractProcessor<CtStatement> {
      */
     private void instrumentStatement(CtStatement ctStatement) {
         if (!ctStatement.isImplicit() && !(ctStatement instanceof CtBlock) && !(ctStatement instanceof CtCodeSnippetStatement)) {
+            System.out.println("Instrumenting the SUT Statement: "+ctStatement.getPosition().getLine());
             //The ctStatement is not a super(). we can insert an other just before it
             CtCodeSnippetStatement ctCodeSnippetStatement = getFactory().Core().createCodeSnippetStatement();
             // source end +1 to match MoDisco

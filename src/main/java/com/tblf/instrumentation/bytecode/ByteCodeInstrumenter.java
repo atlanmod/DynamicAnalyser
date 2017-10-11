@@ -23,6 +23,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -33,10 +34,15 @@ public class ByteCodeInstrumenter implements Instrumenter {
 
     private static final Logger LOGGER = Logger.getAnonymousLogger();
 
-    /**
-     * The folder containing the binaries to instrument
+        /**
+     * The folder containing the SUT binaries
      */
-    private File binFolder;
+    private File sutBinFolder;
+
+    /**
+     * The folder containing the test binaries
+     */
+    private File testBinFolder;
 
     /**
      * The directory containing the project
@@ -50,7 +56,8 @@ public class ByteCodeInstrumenter implements Instrumenter {
 
     public ByteCodeInstrumenter(File project) {
         this.projectFolder = project;
-        this.binFolder = new File(project, Configuration.getProperty("binaries"));
+        this.testBinFolder = new File(project, Configuration.getProperty("testBinaries"));
+        this.sutBinFolder = new File(project, Configuration.getProperty("sutBinaries"));
     }
 
     @Override
@@ -59,12 +66,12 @@ public class ByteCodeInstrumenter implements Instrumenter {
         try {
             getDependencies();
         } catch (Exception e) {
-            LOGGER.warning("Couldn't load the dependencies");
+            LOGGER.log(Level.WARNING, "Could not load the dependencies", e);
         }
 
         targets.forEach(t -> {
             try {
-                File target = InstrumentationUtils.getClassFile(binFolder, t);
+                File target = InstrumentationUtils.getClassFile(sutBinFolder, t);
                 LOGGER.fine("Instrumenting class "+t+" of classFile "+target.toString());
                 byte[] targetAsByte = instrumentTargetClass(target, t);
                 ((InstURLClassLoader) SingleURLClassLoader.getInstance().getUrlClassLoader()).loadBytes(targetAsByte);
@@ -79,7 +86,7 @@ public class ByteCodeInstrumenter implements Instrumenter {
 
         tests.forEach(t -> {
             try {
-                File target = InstrumentationUtils.getClassFile(binFolder, t);
+                File target = InstrumentationUtils.getClassFile(testBinFolder, t);
                 byte[] targetAsByte = instrumentTestClass(target, t);
                 ((InstURLClassLoader) SingleURLClassLoader.getInstance().getUrlClassLoader()).loadBytes(targetAsByte);
                 scores[2]++;
@@ -90,14 +97,6 @@ public class ByteCodeInstrumenter implements Instrumenter {
         });
 
         LOGGER.info(scores[0]+" targets loaded "+ scores[1]+ " target fails "+ scores[2]+" test loaded "+scores[3]+" test fails ");
-    }
-
-    public File getBinFolder() {
-        return binFolder;
-    }
-
-    public void setBinFolder(File binFolder) {
-        this.binFolder = binFolder;
     }
 
     private byte[] instrumentTargetClass(File target, String qualifiedName) throws IOException {
@@ -128,12 +127,17 @@ public class ByteCodeInstrumenter implements Instrumenter {
     private void getDependencies() throws ParserConfigurationException, SAXException, IOException {
         //Getting the dependencies from the .classpath file, assuming it is located in the same folder as the zip
         File dotCP = FileUtils.getFile(projectFolder, ".classpath");
+        if (! dotCP.exists()) {
+            throw new IOException("no .classpath file in the folder: load this project within an Eclipse application or run the goal 'mvn eclipse:eclipse'");
+        }
+
         List<File> dependencies = new DotCPParserBuilder().create().parse(dotCP);
 
         LOGGER.info("Adding the following dependencies to the classpath: "+dependencies.toString());
 
         dependencies.add(new File("libs/Link-1.0.0.jar"));
-        dependencies.add(binFolder); //This is necessary to add the classes before instrumentation.
+        dependencies.add(sutBinFolder); //This is necessary to add the SUT classes before instrumentation.
+        dependencies.add(testBinFolder); //This is necessary to add the test classes before instrumentation.
 
         URL[] dependencyArray = dependencies.stream().map(file -> {
             URL url = null;

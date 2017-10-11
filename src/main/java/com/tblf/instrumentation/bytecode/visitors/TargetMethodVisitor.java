@@ -27,6 +27,7 @@ public class TargetMethodVisitor extends AdviceAdapter {
     @Override
     public void visitLineNumber(int i, Label label) {
         currentLine = i;
+        trace(i);
         super.visitLineNumber(i, label);
     }
 
@@ -49,7 +50,6 @@ public class TargetMethodVisitor extends AdviceAdapter {
 
     private void traceEnter() {
         mv.visitCode();
-
         mv.visitLdcInsn(className); //put the method class name in the stack
         mv.visitLdcInsn(name); //put the method name in the stack
         mv.visitMethodInsn(INVOKESTATIC, "com/tblf/Link/Calls", "setTargetMethod", "(Ljava/lang/String;Ljava/lang/String;)V", false);

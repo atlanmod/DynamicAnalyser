@@ -182,7 +182,7 @@ public class ModelUtils {
         final int BUFFER = 2048;
 
         while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-            LOGGER.info("Extracting: "+ zipEntry);
+            LOGGER.fine("Extracting: "+ zipEntry);
 
             File file = FileUtils.getFile(zip.getParentFile(), zipEntry.toString());
 
