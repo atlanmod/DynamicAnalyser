@@ -313,6 +313,14 @@ public class TraceParser implements Runnable {
 
     @Override
     public void run() {
+        parse();
+    }
 
+    public Resource getOutputModelResource() {
+        return outputModelResource;
+    }
+
+    public void setOutputModelResource(Resource outputModelResource) {
+        this.outputModelResource = outputModelResource;
     }
 }
