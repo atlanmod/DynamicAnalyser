@@ -1,36 +1,28 @@
 package com.tblf.business;
 
 import com.tblf.util.Configuration;
+import com.tblf.util.ModelUtils;
+import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
+import java.io.IOException;
 
 public class ManagerTest {
 
-    @Before
-    public void setUp() {
-        Logger rootLogger = LogManager.getLogManager().getLogger("");
-        rootLogger.setLevel(Level.FINE);
-        for (Handler h : rootLogger.getHandlers()) {
-            h.setLevel(Level.FINE);
-        }
-    }
-
     @Test
-    public void checkManagerBCI() {
+    public void checkManagerBCI() throws IOException {
+        ModelUtils.unzip(new File("src/test/resources/binaries/assertj.zip"));
+
+        File project = new File("src/test/resources/binaries/assertj");
         Configuration.setProperty("mode", "BYTECODE");
-        Configuration.setProperty("binaries", "/");
-
+        Configuration.setProperty("sutBinaries", "/");
+        Configuration.setProperty("testBinaries", "/");
         Manager manager = new Manager();
         try {
             long before = System.currentTimeMillis();
-            File trace = manager.buildTraces(new File("src/test/resources/binaries/assertj"));
+            File trace = manager.buildTraces(project);
 
             System.out.println("Elapsed time: " + String.valueOf(System.currentTimeMillis() - before)+" ms");
 
@@ -39,16 +31,22 @@ public class ManagerTest {
             e.printStackTrace();
             Assert.fail(e.getMessage());
         }
+
+        FileUtils.deleteDirectory(project);
     }
 
     @Test
-    public void checkManagerSCI() {
+    public void checkManagerSCI() throws IOException {
+        File zip = new File("src/test/resources/fullProject/SimpleProject.zip");
+        ModelUtils.unzip(zip);
+
         Configuration.setProperty("mode", "SOURCECODE");
         Manager manager = new Manager();
 
+        File file = new File("src/test/resources/fullProject/SimpleProject");
         try {
             long before = System.currentTimeMillis();
-            File trace = manager.buildTraces(new File("src/test/resources/fullProject/SimpleProject"));
+            File trace = manager.buildTraces(file);
 
             System.out.println("Elapsed time: " + String.valueOf(System.currentTimeMillis() - before)+" ms");
 
@@ -57,26 +55,64 @@ public class ManagerTest {
             e.printStackTrace();
             Assert.fail(e.getMessage());
         }
+
+        FileUtils.deleteDirectory(file);
     }
 
     @Test
-    public void checkParse() {
+    public void checkParseSCI() throws IOException {
+        File zip = new File("src/test/resources/fullProject/SimpleProject.zip");
+        ModelUtils.unzip(zip);
+
         Configuration.setProperty("mode", "SOURCECODE");
         Manager manager = new Manager();
 
+        File file = new File("src/test/resources/fullProject/SimpleProject");
         try {
             long before = System.currentTimeMillis();
-            File trace = manager.buildTraces(new File("src/test/resources/fullProject/SimpleProject"));
+            File trace = manager.buildTraces(file);
 
             System.out.println("Elapsed time: " + String.valueOf(System.currentTimeMillis() - before)+" ms");
 
             Assert.assertNotNull(trace);
 
-            manager.parseTraces(new File("src/test/resources/fullProject/SimpleProject"));
+            manager.parseTraces(file);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
         }
+
+        FileUtils.deleteDirectory(file);
+    }
+
+    @Test
+    public void checkParseBCI() throws IOException {
+
+        File zip = new File("src/test/resources/fullProject/SimpleProject.zip");
+        ModelUtils.unzip(zip);
+
+        Configuration.setProperty("mode", "BYTECODE");
+        Configuration.setProperty("sutBinaries", "/target/classes");
+        Configuration.setProperty("testBinaries", "/target/test-classes");
+
+        Manager manager = new Manager();
+        File file = new File("src/test/resources/fullProject/SimpleProject");
+
+        try {
+            long before = System.currentTimeMillis();
+            File trace = manager.buildTraces(file);
+
+            System.out.println("Elapsed time: " + String.valueOf(System.currentTimeMillis() - before)+" ms");
+
+            Assert.assertNotNull(trace);
+
+            manager.parseTraces(file);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Assert.fail(e.getMessage());
+        }
+
+        FileUtils.deleteDirectory(file);
     }
 
 }

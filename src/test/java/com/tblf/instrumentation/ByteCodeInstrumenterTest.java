@@ -6,7 +6,9 @@ import com.tblf.classLoading.SingleURLClassLoader;
 import com.tblf.instrumentation.bytecode.ByteCodeInstrumenter;
 import com.tblf.parsing.ModelParser;
 import com.tblf.runner.RunnerUtils;
+import com.tblf.util.Configuration;
 import com.tblf.util.ModelUtils;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.junit.Assert;
 import org.junit.Before;
@@ -15,6 +17,7 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -30,6 +33,7 @@ import java.util.stream.Collectors;
 /**
  * Created by Thibault on 21/09/2017.
  * Test the BCI on multiple classes and projects
+ * By default the projects are stored as zip. This lighten a lot the size of the app, and do not mess with the classloading step of the mvn surefire plugin
  */
 
 public class ByteCodeInstrumenterTest {
@@ -37,16 +41,20 @@ public class ByteCodeInstrumenterTest {
     @Before
     public void setup() {
         Logger rootLogger = LogManager.getLogManager().getLogger("");
-        rootLogger.setLevel(Level.FINE);
+        rootLogger.setLevel(Level.INFO);
         for (Handler h : rootLogger.getHandlers()) {
-            h.setLevel(Level.FINE);
+            h.setLevel(Level.INFO);
         }
     }
 
     @Test
-    public void checkInstrumentTarget() throws ClassNotFoundException, MalformedURLException {
+    public void checkInstrumentTarget() throws ClassNotFoundException, IOException {
+        File file = new File("src/test/resources/binaries/junit.zip");
+        ModelUtils.unzip(file);
 
-        File folder = new File("src/test/resources/binaries/junit/bin");
+        File folder = new File("src/test/resources/binaries/junit");
+        Configuration.setProperty("sutBinaries", "/bin");
+        Configuration.setProperty("testBinaries", "/bin");
 
         //Getting a TestClass
         ByteCodeInstrumenter byteCodeInstrumenter = new ByteCodeInstrumenter(folder);
@@ -63,10 +71,16 @@ public class ByteCodeInstrumenterTest {
         //Running the testClass instrumented with the Target instrumentation
         System.out.println(RunnerUtils.results(JUnitCore.runClasses(aClass)));
 
+        FileUtils.deleteDirectory(folder);
     }
 
     @Test
-    public void checkInstrumentTest() throws ClassNotFoundException, MalformedURLException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+    public void checkInstrumentTest() throws ClassNotFoundException, IOException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+        Configuration.setProperty("sutBinaries", "/");
+        Configuration.setProperty("testBinaries", "/");
+        File zip = new File("src/test/resources/binaries/simpleProj.zip");
+        ModelUtils.unzip(zip);
+
         File folder = new File("src/test/resources/binaries/simpleProj");
 
         File callDependency = new File("libs/Link-1.0.0.jar");
@@ -91,10 +105,16 @@ public class ByteCodeInstrumenterTest {
                 result.wasSuccessful());
 
         Calls.end();
+
+        FileUtils.deleteDirectory(folder);
     }
 
     @Test
     public void checkInstrumentModel() throws Exception {
+
+        File assertJZip = new File("src/test/resources/binaries/assertj.zip");
+        ModelUtils.unzip(assertJZip);
+
         Resource model = ModelUtils.loadModelFromZip(new File("src/test/resources/binaries/assertj/assertj-core_java.zip"));
         ModelParser modelParser = new ModelParser();
         modelParser.parse(model);
@@ -103,6 +123,9 @@ public class ByteCodeInstrumenterTest {
         Assert.assertFalse(modelParser.getTests().isEmpty());
 
         File assertJFolder = new File("src/test/resources/binaries/assertj");
+        Configuration.setProperty("sutBinaries", "/");
+        Configuration.setProperty("testBinaries", "/");
+
         File DotCP = new File("src/test/resources/binaries/assertj/.classpath");
         Assert.assertTrue(assertJFolder.exists() && DotCP.exists());
 
@@ -111,8 +134,6 @@ public class ByteCodeInstrumenterTest {
 
         jars.add(assertJFolder);
 
-        jars.forEach(f -> System.out.println(f));
-
         URL[] urls = jars.stream().map(file -> {
             try {
                 return file.toURI().toURL();
@@ -120,7 +141,7 @@ public class ByteCodeInstrumenterTest {
                 e.printStackTrace();
                 return null;
             }
-        }).collect(Collectors.toList()).stream().toArray(URL[]::new);
+        }).collect(Collectors.toList()).toArray(new URL[0]);
 
         SingleURLClassLoader.getInstance().addURLs(urls);
 
@@ -135,6 +156,8 @@ public class ByteCodeInstrumenterTest {
 
         Assert.assertNotNull(SingleURLClassLoader.getInstance().getUrlClassLoader().loadClass("org.assertj.core.api.AbstractMapSizeAssert"));
         Assert.assertNotNull(SingleURLClassLoader.getInstance().getUrlClassLoader().loadClass("org.assertj.core.api.date.AbstractDateAssertWithOneIntArg_Test"));
+
+        FileUtils.deleteDirectory(assertJFolder);
     }
 
 }

@@ -43,6 +43,7 @@ public class TestProcessor extends AbstractProcessor<CtType<?>> {
         ctType.getMethods().forEach(ctMethod -> {
             CtBlock ctBlock = ctMethod.getBody();
             if (ctBlock != null) {
+                System.out.println("Instrumenting the test");
                 CtCodeSnippetStatement ctCodeSnippetStatement = getFactory().Core().createCodeSnippetStatement();
                 ctCodeSnippetStatement.setValue(String.format("com.tblf.Link.Calls.setTestMethod(\"%s\", \"%s\")", ctType.getQualifiedName(), ctMethod.getSimpleName()));
                 ctBlock.insertBegin(ctCodeSnippetStatement);
@@ -59,6 +60,7 @@ public class TestProcessor extends AbstractProcessor<CtType<?>> {
         ctType.getMethods().forEach(ctMethod -> {
             CtBlock ctBlock = ctMethod.getBody();
             if (ctBlock != null) {
+                System.out.println("Instrumenting the target");
                 CtCodeSnippetStatement ctCodeSnippetStatement = getFactory().Core().createCodeSnippetStatement();
                 ctCodeSnippetStatement.setValue(String.format("com.tblf.Link.Calls.setTargetMethod(\"%s\", \"%s\")", ctType.getQualifiedName(), ctMethod.getSimpleName()));
                 ctBlock.insertBegin(ctCodeSnippetStatement);

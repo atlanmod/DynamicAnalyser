@@ -3,6 +3,7 @@ package com.tblf.classLoading;
 import com.tblf.parsing.ModelParser;
 import com.tblf.util.ModelUtils;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
+import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -39,7 +40,9 @@ public class ByteCodeUrlClassLoaderTest {
     }
 
     @Test
-    public void loadSingleClassFileWithNoDependency() throws MalformedURLException {
+    public void loadSingleClassFileWithNoDependency() throws IOException {
+        ModelUtils.unzip(new File("src/test/resources/binaries/main.zip"));
+
         File file = new File("src/test/resources/binaries/main");
 
         if (!file.exists()) {
@@ -56,10 +59,14 @@ public class ByteCodeUrlClassLoaderTest {
         } catch (ClassNotFoundException c) {
             Assert.fail("Can't find the class");
         }
+
+        FileUtils.deleteDirectory(file);
     }
 
     @Test
     public void loadJUnitBins() throws Exception {
+        ModelUtils.unzip(new File("src/test/resources/binaries/junit.zip"));
+
         File file = new File("src/test/resources/binaries/junit/bin");
         if (! file.exists()){
             Assert.fail("Cannot find the junit binaries");
@@ -91,6 +98,8 @@ public class ByteCodeUrlClassLoaderTest {
                 System.out.println("cannot find "+s);
             }
         });
+
+        FileUtils.deleteDirectory(new File("src/test/resources/binaries/junit"));
     }
 
 }

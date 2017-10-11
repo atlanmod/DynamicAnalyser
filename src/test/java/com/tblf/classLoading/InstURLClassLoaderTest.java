@@ -1,5 +1,7 @@
 package com.tblf.classLoading;
 
+import com.tblf.util.ModelUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -20,7 +22,12 @@ public class InstURLClassLoaderTest {
     @Test
     public void checkLoadBytes() throws IOException, ClassNotFoundException {
         InstURLClassLoader instURLClassLoader = new InstURLClassLoader(new URL[]{});
-        File file = new File("src/test/resources/binaries/main/Main/Main.class");
+        File zip = new File("src/test/resources/binaries/main.zip");
+        ModelUtils.unzip(zip);
+
+        File directory = new File("src/test/resources/binaries/main");
+
+        File file = new File(directory, "Main/Main.class");
         if (!file.exists()){
             Assert.fail();
         }
@@ -32,19 +39,31 @@ public class InstURLClassLoaderTest {
 
         Assert.assertNotNull(instURLClassLoader.loadClass("Main.Main"));
         Assert.assertEquals("Main.Main", instURLClassLoader.loadClass("Main.Main").getName());
+
+        FileUtils.deleteDirectory(directory);
     }
 
     @Test
     public void testLoadAllFolder() throws IOException, ClassNotFoundException {
+        File zip = new File("src/test/resources/binaries/assertj.zip");
+        ModelUtils.unzip(zip);
+
         File file = new File("src/test/resources/binaries/assertj");
         InstURLClassLoader instURLClassLoader = new InstURLClassLoader(new URL[]{file.toURI().toURL()});
 
-        System.out.println(instURLClassLoader.loadClass("org.assertj.core.api.AbstractArrayAssert"));
+        Assert.assertNotNull(instURLClassLoader.loadClass("org.assertj.core.api.AbstractArrayAssert"));
+
+        FileUtils.deleteDirectory(file);
     }
 
     @Test
     public void testLoadByteBufferNoName() throws IOException, ClassNotFoundException {
-        File file = new File("src/test/resources/binaries/assertj/org/assertj/core/api/ArraySortedAssert.class");
+        File zip = new File("src/test/resources/binaries/assertj.zip");
+        ModelUtils.unzip(zip);
+
+        File directory = new File("src/test/resources/binaries/assertj");
+
+        File file = new File(directory, "org/assertj/core/api/ArraySortedAssert.class");
         Assert.assertTrue(file.exists());
 
         FileChannel roChannel = new RandomAccessFile(file, "r").getChannel();
@@ -54,18 +73,28 @@ public class InstURLClassLoaderTest {
         instURLClassLoader.loadBytes(bb);
 
         Assert.assertNotNull(instURLClassLoader.loadClass("org.assertj.core.api.ArraySortedAssert"));
+
+        FileUtils.deleteDirectory(directory);
     }
 
 
     @Test
     public void testLoadByteNoName() throws IOException, ClassNotFoundException {
-        File file = new File("src/test/resources/binaries/assertj/org/assertj/core/api/ArraySortedAssert.class");
+        File zip = new File("src/test/resources/binaries/assertj.zip");
+        ModelUtils.unzip(zip);
+
+        File directory = new File("src/test/resources/binaries/assertj");
+
+        File file = new File(directory, "org/assertj/core/api/ArraySortedAssert.class");
+
         Assert.assertTrue(file.exists());
 
         InstURLClassLoader instURLClassLoader = new InstURLClassLoader(new URL[]{}, ClassLoader.getSystemClassLoader());
         instURLClassLoader.loadBytes(IOUtils.toByteArray(new FileInputStream(file)), null);
 
         Assert.assertNotNull(instURLClassLoader.loadClass("org.assertj.core.api.ArraySortedAssert"));
+
+        FileUtils.deleteDirectory(directory);
     }
 
 }

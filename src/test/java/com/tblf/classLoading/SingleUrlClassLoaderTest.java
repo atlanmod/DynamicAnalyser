@@ -1,9 +1,12 @@
 package com.tblf.classLoading;
 
+import com.tblf.util.ModelUtils;
+import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -34,9 +37,17 @@ public class SingleUrlClassLoaderTest {
     }
 
     @Test
-    public void loadMultipleClasses() throws MalformedURLException {
-        File file = new File("src/test/resources/binaries/junit/bin");
+    public void loadMultipleClasses() throws IOException {
+        File zip1 = new File("src/test/resources/binaries/junit.zip");
+        File zip2 = new File("src/test/resources/binaries/main.zip");
+
+        ModelUtils.unzip(zip1);
+        ModelUtils.unzip(zip2);
+        File directory1 = new File("src/test/resources/binaries/junit");
+
+        File file = new File(directory1, "bin");
         File file2 = new File("src/test/resources/binaries/main");
+
         if (!file.exists() ||!file2.exists()) {
             Assert.fail("Can't find the folders");
         }
@@ -62,5 +73,8 @@ public class SingleUrlClassLoaderTest {
         } catch (Throwable t) {
             Assert.fail(t.toString());
         }
+
+        FileUtils.deleteDirectory(directory1);
+        FileUtils.deleteDirectory(file2);
     }
 }
