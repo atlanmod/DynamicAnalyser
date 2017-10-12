@@ -58,7 +58,7 @@ public class SingleURLClassLoader {
     public void clear() {
         try {
             this.getUrlClassLoader().close();
-            urlClassLoader = new InstURLClassLoader(new URL[]{}, this.getClass().getClassLoader());
+            this.urlClassLoader = new InstURLClassLoader(new URL[]{}, this.getClass().getClassLoader());
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Cannot clear the classLoader", e);
         }

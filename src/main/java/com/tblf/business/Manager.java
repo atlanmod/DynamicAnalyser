@@ -1,7 +1,6 @@
 package com.tblf.business;
 
 import com.tblf.Link.FileTracer;
-import com.tblf.classLoading.InstURLClassLoader;
 import com.tblf.classLoading.SingleURLClassLoader;
 import com.tblf.instrumentation.InstrumentationType;
 import com.tblf.instrumentation.Instrumenter;
@@ -51,6 +50,7 @@ public class Manager {
      */
     public File buildTraces(File project) {
         ((FileTracer) FileTracer.getInstance()).reset();
+        
         SingleURLClassLoader.getInstance().clear();
         // getting the xmi model file
         Optional<Path> pathOptional = null;

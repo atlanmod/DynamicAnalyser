@@ -55,6 +55,7 @@ public class SourceCodeInstrumenter implements Instrumenter {
             LOGGER.info("pom.xml found ! Will be used to compute the dependencies of the application under instrumentation");
         } else {
             spoonLauncher = new Launcher(); //Standard spoon launcher. needs to define the dependencies by hand
+            //FIXME test&sut directory not initialized
             spoonLauncher.addInputResource(testDirectory.getAbsolutePath());
             spoonLauncher.addInputResource(sutDirectory.getAbsolutePath());
             LOGGER.info("pom.xml not found ! Dependencies have to be specified. ");
