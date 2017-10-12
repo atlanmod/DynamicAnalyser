@@ -6,7 +6,6 @@ import spoon.reflect.code.CtCodeSnippetStatement;
 import spoon.reflect.declaration.CtType;
 
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 public class TestProcessor extends AbstractProcessor<CtType<?>> {
@@ -43,9 +42,8 @@ public class TestProcessor extends AbstractProcessor<CtType<?>> {
         ctType.getMethods().forEach(ctMethod -> {
             CtBlock ctBlock = ctMethod.getBody();
             if (ctBlock != null) {
-                System.out.println("Instrumenting the test");
                 CtCodeSnippetStatement ctCodeSnippetStatement = getFactory().Core().createCodeSnippetStatement();
-                ctCodeSnippetStatement.setValue(String.format("com.tblf.Link.Calls.setTestMethod(\"%s\", \"%s\")", ctType.getQualifiedName(), ctMethod.getSimpleName()));
+                ctCodeSnippetStatement.setValue(String.format("System.out.println(\"test\");\ncom.tblf.Link.Calls.setTestMethod(\"%s\", \"%s\")", ctType.getQualifiedName(), ctMethod.getSimpleName()));
                 ctBlock.insertBegin(ctCodeSnippetStatement);
             }
         });
@@ -60,9 +58,8 @@ public class TestProcessor extends AbstractProcessor<CtType<?>> {
         ctType.getMethods().forEach(ctMethod -> {
             CtBlock ctBlock = ctMethod.getBody();
             if (ctBlock != null) {
-                System.out.println("Instrumenting the target");
                 CtCodeSnippetStatement ctCodeSnippetStatement = getFactory().Core().createCodeSnippetStatement();
-                ctCodeSnippetStatement.setValue(String.format("com.tblf.Link.Calls.setTargetMethod(\"%s\", \"%s\")", ctType.getQualifiedName(), ctMethod.getSimpleName()));
+                ctCodeSnippetStatement.setValue(String.format("System.out.println(\"target\");\ncom.tblf.Link.Calls.setTargetMethod(\"%s\", \"%s\")", ctType.getQualifiedName(), ctMethod.getSimpleName()));
                 ctBlock.insertBegin(ctCodeSnippetStatement);
             }
         });
