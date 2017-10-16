@@ -277,11 +277,22 @@ public class TraceParser implements Runnable {
             Set<ASTNodeSourceRegion> nodes = (Set<ASTNodeSourceRegion>) ocl.createQuery(query).evaluate(currentTarget);
             nodes.parallelStream().forEach(astNodeSourceRegion -> {
                 LOGGER.fine("Found a node. Creating an object in the output model");
-                Analysis analysis = ModelFactory.eINSTANCE.createAnalysis();
-                analysis.setName("runby");
-                analysis.setSource(astNodeSourceRegion.getNode());
-                analysis.setTarget(currentTestMethod);
-                outputModelResource.getContents().add(analysis);
+
+                //Is there already an analysis Object in the node pointing from the Statement to the current test ?
+                if (astNodeSourceRegion.getAnalysis()
+                        .stream()
+                        .noneMatch(eObject -> (eObject instanceof Analysis) &&
+                                ((Analysis) eObject).getTarget().equals(currentTestMethod))) {
+                    Analysis analysis = ModelFactory.eINSTANCE.createAnalysis();
+                    analysis.setName("runby");
+                    analysis.setSource(astNodeSourceRegion.getNode());
+                    analysis.setTarget(currentTestMethod);
+                    astNodeSourceRegion.getAnalysis().add(analysis);
+                    outputModelResource.getContents().add(analysis);
+                    LOGGER.fine("Added the link.");
+                } else {
+                    LOGGER.fine("Link already existing. Not adding.");
+                }
             });
 
         } catch (ParserException e) {
@@ -312,18 +323,28 @@ public class TraceParser implements Runnable {
             Set<ASTNodeSourceRegion> nodes = (Set<ASTNodeSourceRegion>) ocl.createQuery(query).evaluate(currentTarget);
             nodes.parallelStream().forEach(astNodeSourceRegion -> {
                 LOGGER.fine("Found a node. Creating an object in the output model");
-                Analysis analysis = ModelFactory.eINSTANCE.createAnalysis();
-                analysis.setName("runby");
-                analysis.setSource(astNodeSourceRegion.getNode());
-                analysis.setTarget(currentTestMethod);
-                outputModelResource.getContents().add(analysis);
+
+                //Is there already an analysis Object in the node pointing from the Statement to the current test ?
+                if (astNodeSourceRegion.getAnalysis()
+                        .stream()
+                        .noneMatch(eObject -> (eObject instanceof Analysis) &&
+                                ((Analysis) eObject).getTarget().equals(currentTestMethod))) {
+                    Analysis analysis = ModelFactory.eINSTANCE.createAnalysis();
+                    analysis.setName("runby");
+                    analysis.setSource(astNodeSourceRegion.getNode());
+                    analysis.setTarget(currentTestMethod);
+                    astNodeSourceRegion.getAnalysis().add(analysis);
+                    outputModelResource.getContents().add(analysis);
+                    LOGGER.fine("Added the link.");
+                } else {
+                    LOGGER.fine("Link already existing. Not adding.");
+                }
+
             });
 
         } catch (ParserException e) {
             LOGGER.warning("Couldn't create the OCL request to find the statement in the model " + Arrays.toString(e.getStackTrace()));
         }
-
-
     }
 
     public Resource getOutputModelResource() {
