@@ -5,7 +5,14 @@ import com.github.javaparser.ParseProblemException;
 import com.github.javaparser.Position;
 import com.github.javaparser.Range;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.tblf.Model.Analysis;
+import com.tblf.parsing.ParserUtils;
+import com.tblf.util.ModelUtils;
+import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.gmt.modisco.java.ClassDeclaration;
+import org.eclipse.gmt.modisco.java.MethodDeclaration;
+import org.eclipse.gmt.modisco.java.Statement;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
@@ -14,12 +21,13 @@ import org.eclipse.jgit.diff.RawTextComparator;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.patch.FileHeader;
-import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.modisco.java.composition.javaapplication.Java2File;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -39,6 +47,7 @@ public class GitCaller {
     private RevTree newTree;
 
     private ResourceSet resourceSet;
+    private Java2File java2File;
 
     /**
      * Constructor initializing the {@link Git}
@@ -91,6 +100,20 @@ public class GitCaller {
         diffEntries.forEach(diffEntry -> {
             try {
                 FileHeader fileHeader = diffFormatter.toFileHeader(diffEntry);
+                String pkg = ParserUtils.getPackageQNFromSUTFile(new File(diffEntry.getOldPath()));
+
+                if (java2File == null) {
+                    Resource sutPackage = ModelUtils.getPackageResource(pkg, resourceSet);
+                    java2File = (Java2File) sutPackage.getContents()
+                            .stream()
+                            .filter(eObject -> eObject instanceof Java2File
+                                    && ((Java2File) eObject).getJavaUnit().getOriginalFilePath().endsWith(fileHeader.getOldPath()))
+                            .findFirst().orElseThrow(() -> new IOException("The DiffEntry does not concern a Java file"));
+
+
+                    LOGGER.info("Java File currently analysed :"+java2File.getJavaUnit().getName());
+                }
+
                 diffFormatter.format(diffEntry);
                 fileHeader.toEditList().forEach(edit -> {
 
@@ -137,6 +160,20 @@ public class GitCaller {
                         " from "+statement.getRange().get().begin.column+
                         " to "+statement.getRange().get().end.column+
                         " is changed");
+
+                java2File.getChildren()
+                        .stream()
+                        .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof Statement
+                                && astNodeSourceRegion.getStartLine() == statement.getRange().get().begin.line
+                                && astNodeSourceRegion.getEndLine() == statement.getRange().get().end.line
+                                && !astNodeSourceRegion.getAnalysis().isEmpty())
+                        .forEach(node -> node.getAnalysis().forEach(eObject -> {
+                            Analysis analysis = (Analysis) eObject;
+                            MethodDeclaration methodDeclaration = (MethodDeclaration) analysis.getTarget();
+                            ClassDeclaration classDeclaration = (ClassDeclaration) methodDeclaration.eContainer();
+                            System.out.println("The test method: "+methodDeclaration.getName()+" of the test class "+classDeclaration.getName()+ " is impacted by this modification");
+                            //TODO: return
+                        }));
             }
         });
 
