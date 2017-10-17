@@ -3,6 +3,7 @@ package com.tblf.business;
 import com.tblf.util.Configuration;
 import com.tblf.util.ModelUtils;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.emf.ecore.resource.Resource;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -76,7 +77,8 @@ public class ManagerTest {
 
             Assert.assertNotNull(trace);
 
-            manager.parseTraces(trace);
+            Resource resource = manager.parseTraces(trace);
+            Assert.assertNotNull(resource);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
