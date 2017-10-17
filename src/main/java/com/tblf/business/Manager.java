@@ -13,16 +13,14 @@ import com.tblf.util.Configuration;
 import com.tblf.util.ModelUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.junit.Before;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Optional;
-import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 /**
@@ -31,17 +29,8 @@ import java.util.logging.Logger;
 public class Manager {
 
     private static final Logger LOGGER = Logger.getLogger("Manager");
-    private File trace;
+    private File project;
     private ResourceSet resourceSet;
-
-    @Before
-    public void setUp() {
-        Logger rootLogger = LogManager.getLogManager().getLogger("");
-        rootLogger.setLevel(Level.FINE);
-        for (Handler h : rootLogger.getHandlers()) {
-            h.setLevel(Level.INFO);
-        }
-    }
 
     /**
      * Build the traces of a project by instrumenting and running the tests
@@ -50,10 +39,12 @@ public class Manager {
      */
     public File buildTraces(File project) {
         ((FileTracer) FileTracer.getInstance()).reset();
-        
         SingleURLClassLoader.getInstance().clear();
+
         // getting the xmi model file
-        Optional<Path> pathOptional = null;
+        Optional<Path> pathOptional;
+
+        this.project = project;
         File model;
         Resource resource = null;
 
@@ -112,18 +103,18 @@ public class Manager {
         ((FileTracer) FileTracer.getInstance()).endTrace();
 
         //Analyzing the traces
-        trace = ((FileTracer) FileTracer.getInstance()).getFile();
+        File trace = ((FileTracer) FileTracer.getInstance()).getFile();
         LOGGER.info("Full execution trace located at: " + trace.getAbsolutePath());
 
         return trace;
-
     }
 
     /**
      * parses the traces in an external thread
-     * @param project
+     * @param trace the {@link File} containing the trace
+     * @return Resource a {@link Resource}
      */
-    public void parseTraces(File project) {
+    public Resource parseTraces(File trace) {
         File outputModel = new File(project, Configuration.getProperty("outputModel")+"."+Configuration.getProperty("outputFormat"));
 
         try {
@@ -135,7 +126,14 @@ public class Manager {
 
         TraceParser traceParser = new TraceParser(trace, outputModel, resourceSet);
         //new Thread(traceParser).start(); //Paralleled
-        traceParser.parse();
+        Resource resource = traceParser.parse();
+        try {
+            resource.save(Collections.EMPTY_MAP);
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Couldn't save the execution traces model", e);
+        }
+
+        return resource;
         //get the model at the end
     }
 }

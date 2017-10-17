@@ -76,7 +76,7 @@ public class ManagerTest {
 
             Assert.assertNotNull(trace);
 
-            manager.parseTraces(file);
+            manager.parseTraces(trace);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
@@ -106,7 +106,7 @@ public class ManagerTest {
 
             Assert.assertNotNull(trace);
 
-            manager.parseTraces(file);
+            manager.parseTraces(trace);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
