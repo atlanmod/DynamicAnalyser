@@ -305,4 +305,13 @@ public class ModelUtils {
         return getQualifiedName(eObject.eContainer())+currentName;
     }
 
+    /**
+     * Iterate over a resourceSet to find the JavaApplication model corresponding to the package qualified name
+     * @param pkgQualifiedName the Package qualified name as a {@link String}
+     * @param resourceSet a {@link ResourceSet}
+     * @return the {@link Resource}
+     */
+    public static Resource getPackageResource(String pkgQualifiedName, ResourceSet resourceSet) throws IOException {
+        return resourceSet.getResources().stream().filter(resource -> resource.getURI().lastSegment().contains(pkgQualifiedName)).findFirst().orElseThrow(() -> new IOException("Cannot find the package "+pkgQualifiedName+" in the Model"));
+    }
 }
