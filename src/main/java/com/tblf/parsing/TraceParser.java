@@ -3,6 +3,7 @@ package com.tblf.parsing;
 import com.tblf.Model.Analysis;
 import com.tblf.Model.ModelFactory;
 import com.tblf.Model.ModelPackage;
+import com.tblf.util.Configuration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.eclipse.emf.common.util.URI;
@@ -44,6 +45,8 @@ public class TraceParser implements Runnable {
     private OCLHelper OCL_HELPER;
     private OCL ocl;
 
+    private Map<String, Resource> packages;
+
     private String currentTestPackageQN;
     private Resource currentTestPackage;
 
@@ -68,7 +71,6 @@ public class TraceParser implements Runnable {
     public TraceParser(File traceFile, File outputModel, ResourceSet resourceSet) {
         this.file = traceFile;
         this.resourceSet = resourceSet;
-
 
         try {
             if (! outputModel.exists()) {
@@ -98,6 +100,10 @@ public class TraceParser implements Runnable {
                 ParsingOptions.implicitRootClass(ocl.getEnvironment()),
                 EcorePackage.Literals.EOBJECT);
 
+        packages = new HashMap<>();
+        resourceSet.getResources().stream()
+                .filter(resource -> resource.getURI().segment(resource.getURI().segmentCount() - 2).equals(Configuration.getProperty("fragmentFolder")))
+                .forEach(resource -> packages.put(resource.getURI().lastSegment().replace("_java2kdm.xmi", ""), resource));
     }
 
     @Override
@@ -166,13 +172,14 @@ public class TraceParser implements Runnable {
         // Refreshing the current package containing the test, to lighten the number of queries to the model
         if (currentTestPackage == null || ! currentTestPackageQN.equals(packageName)) {
             LOGGER.fine("Updating the current test package: "+packageName);
-            resourceSet.getResources().forEach(resource -> System.out.println("Resource: "+resource.getURI().toString()));
 
-            currentTestPackage = resourceSet
+            currentTestPackage = packages.get(packageName);
+
+            /*currentTestPackage = resourceSet
                     .getResources()
                     .stream()
                     .filter(r -> r.getURI().toString().contains(packageName))
-                    .findFirst().get(); //Assuming the resource always exists. Will throw NPE otherwise
+                    .findFirst().get(); //Assuming the resource always exists. Will throw NPE otherwise*/
 
             LOGGER.fine("Found the resource with URI: "+currentTestPackage.getURI());
             currentTestPackageQN = packageName;
@@ -204,11 +211,15 @@ public class TraceParser implements Runnable {
         // Refreshing the current package containing the test, to lighten the number of queries to the model
         if (currentTargetPackage == null || ! currentTargetPackageQN.equals(packageName)) {
             LOGGER.fine("Updating the current target package: "+packageName);
-            currentTargetPackage = resourceSet
+
+            currentTargetPackage = packages.get(packageName);
+
+/*            currentTargetPackage = resourceSet
                     .getResources()
                     .stream()
                     .filter(r -> r.getURI().toString().contains(packageName))
-                    .findFirst().get(); //Assuming the resource always exists. Will throw NPE otherwise
+                    .findFirst().get(); //Assuming the resource always exists. Will throw NPE otherwise*/
+
             currentTargetPackageQN = packageName;
         }
 

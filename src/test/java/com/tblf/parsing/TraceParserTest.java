@@ -129,6 +129,7 @@ public class TraceParserTest {
         Assert.assertTrue(file.exists());
 
         Assert.assertTrue(resource.getContents().size() == 2);
+
     }
 
     @Test
