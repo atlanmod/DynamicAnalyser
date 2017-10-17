@@ -4,6 +4,7 @@ Class A {
     public static void main(String[] args) {
         System.out.println("Heyyy ");
         System.out.print("Hello, ");System.out.println("world! ");
+        System.out.println("blabla");
         System.out.println("how are you, ");System.out.println("world?");
     }
 }
