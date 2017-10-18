@@ -1,5 +1,6 @@
 package com.tblf.parsing;
 
+import com.github.javaparser.ast.stmt.Statement;
 import com.tblf.util.Configuration;
 
 import java.io.File;
@@ -46,5 +47,21 @@ public class ParserUtils {
         }
 
         return pathList.stream().collect(Collectors.joining("."));
+    }
+
+    /**
+     * Parse a statement to create a string to display out of it
+     * @param statement the {@link Statement}
+     * @return a {@link String}
+     */
+    public static String statementToString(Statement statement) {
+        String toString;
+        if (statement.getRange().isPresent()) {
+            toString = String.format(" %s : line %s, from %s, to %s", statement, statement.getRange().get().begin.line,statement.getRange().get().begin.column, statement.getRange().get().end.column);
+        } else {
+            toString = statement.toString();
+        }
+
+        return toString;
     }
 }
