@@ -51,10 +51,13 @@ public class GitCaller {
     private ResourceSet resourceSet;
     private Java2File java2File;
 
+    private Set<MethodDeclaration> testToRun;
+
     /**
      * Constructor initializing the {@link Git}
      *
-     * @param pomFolder
+     * @param pomFolder a {@link File} directory containing a pom.xml mvn file
+     * @param set a {@link ResourceSet}
      */
     public GitCaller(File pomFolder, ResourceSet set) {
         try {
@@ -96,9 +99,11 @@ public class GitCaller {
 
     /**
      * Iterate over a {@link DiffEntry} list and, get the impacted test cases out of it
-     * @param diffEntries
+     * @param diffEntries a {@link List} of {@link DiffEntry}
      */
     private void analyseDiffs(List<DiffEntry> diffEntries) {
+        testToRun = new HashSet<>();
+
         diffEntries.forEach(diffEntry -> {
             try {
                 FileHeader fileHeader = diffFormatter.toFileHeader(diffEntry);
@@ -118,13 +123,13 @@ public class GitCaller {
                 }
 
                 diffFormatter.format(diffEntry);
-                fileHeader.toEditList().forEach(edit -> {
-                   manageEdit(diffEntry, edit);
-                });
+                fileHeader.toEditList().forEach(edit -> manageEdit(diffEntry, edit));
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, "Couldn't analyze the diffEntry", e);
             }
         });
+
+        testToRun.forEach(methodDeclaration -> LOGGER.fine("The test method: " + methodDeclaration.getName() + " of the test class " + ((ClassDeclaration) methodDeclaration.eContainer()).getName() + " is impacted by this modification"));
     }
 
 
@@ -144,9 +149,7 @@ public class GitCaller {
         blockStmtBefore.getStatements().forEach(statement -> {
             if (! blockStmtAfter.getStatements().contains(statement) && statement.getRange().isPresent()) {
                 LOGGER.info("In file "+diffEntry.getOldPath()+ParserUtils.statementToString(statement)+" modified.");
-                getImpacts(java2File, statement);
-
-                //TODO: return
+                testToRun.addAll(getImpacts(java2File, statement));
             }
         });
 
@@ -155,11 +158,35 @@ public class GitCaller {
             if (! blockStmtBefore.getStatements().contains(statement) && statement.getRange().isPresent()) {
                 LOGGER.info("In file "+diffEntry.getNewPath()+ParserUtils.statementToString(statement)+" added");
                 //Get the impacts at the method level
-
-                //TODO
+                testToRun.addAll(getMethodImpacts(java2File, statement));
             }
         });
+    }
 
+    /**
+     * Find all the impacts of the method containing the {@link com.github.javaparser.ast.stmt.Statement}
+     * @param java2File the file in which the {@link com.github.javaparser.ast.stmt.Statement} will be found
+     * @param statement the {@link com.github.javaparser.ast.stmt.Statement} that will be found in the {@link Java2File}
+     * @return all the test {@link MethodDeclaration} impacted by the {@link com.github.javaparser.ast.stmt.Statement}
+     */
+    private Collection<MethodDeclaration> getMethodImpacts(Java2File java2File, com.github.javaparser.ast.stmt.Statement statement) {
+        Set<MethodDeclaration> methodDeclarationSet = new HashSet<>();
+        java2File.getChildren()
+                .stream()
+                //Iterating over the nodes of the Java2File to find the method
+                .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof MethodDeclaration
+                        && statement.getRange().isPresent()
+                        && astNodeSourceRegion.getStartLine() <= statement.getRange().get().begin.line
+                        && astNodeSourceRegion.getEndLine() >= statement.getRange().get().end.line
+                        && !astNodeSourceRegion.getAnalysis().isEmpty())
+                //For each method modified, find the impacts
+                .forEach(node -> node.getAnalysis().forEach(eObject -> {
+                    Analysis analysis = (Analysis) eObject;
+                    MethodDeclaration methodDeclaration = (MethodDeclaration) analysis.getTarget();
+                    methodDeclarationSet.add(methodDeclaration);
+                }));
+
+        return methodDeclarationSet;
     }
 
     /**
@@ -183,8 +210,6 @@ public class GitCaller {
                 .forEach(node -> node.getAnalysis().forEach(eObject -> {
                     Analysis analysis = (Analysis) eObject;
                     MethodDeclaration methodDeclaration = (MethodDeclaration) analysis.getTarget();
-                    ClassDeclaration classDeclaration = (ClassDeclaration) methodDeclaration.eContainer();
-                    LOGGER.fine("The test method: " + methodDeclaration.getName() + " of the test class " + classDeclaration.getName() + " is impacted by this modification");
                     methodDeclarationSet.add(methodDeclaration);
                 }));
 
@@ -200,26 +225,19 @@ public class GitCaller {
     private BlockStmt getStatementsFromOldPath(DiffEntry diffEntry, Edit edit) {
         BlockStmt blockStmtBefore = new BlockStmt();
         for (AtomicInteger i = new AtomicInteger(edit.getBeginA()); i.get() < edit.getEndA(); i.incrementAndGet()) {
-
             String line = null;
             try {
+                //Getting the line of the original File
                 line = DiffUtils.getLineFromFile(DiffUtils.getFileContentFromCommit(repository, oldTree, diffEntry.getOldPath()), i.get());
-            } catch (IOException e) {
-                LOGGER.log(Level.FINE, "Couldn't get the statements of the following line: "+line, e);
-            }
 
-            try {
+                //Computing the statements inside this line
                 BlockStmt blockStmt = JavaParser.parseBlock("{"+line+"}");
-
-                blockStmt.getStatements().forEach(statement -> {
-                    Position begin = new Position(i.get(), statement.getBegin().get().column);
-                    Position end = new Position(i.get(), statement.getEnd().get().column);
-                    statement.setRange(new Range(begin, end));
-                });
-
+                setBlockLines(i.get(), blockStmt);
                 blockStmtBefore.getStatements().addAll(blockStmt.getStatements());
             } catch (ParseProblemException e) {
                 LOGGER.log(Level.FINE, "Couldn't get the statements of the following line: "+line, e);
+            } catch (IOException e) {
+                LOGGER.log(Level.FINE, "Couldn't get the statements of the following line: "+i.get(), e);
             }
         }
 
@@ -236,28 +254,38 @@ public class GitCaller {
         BlockStmt blockStmtAfter = new BlockStmt();
         for (AtomicInteger i = new AtomicInteger(edit.getBeginB()); i.get() < edit.getEndB(); i.incrementAndGet()) {
             String line = null;
-
             try {
+                //Getting the line of the original File
                 line = DiffUtils.getLineFromFile(DiffUtils.getFileContentFromCommit(repository, newTree, diffEntry.getNewPath()), i.get());
-            } catch (IOException e) {
-                LOGGER.log(Level.FINE, "Couldn't get the following line: "+i, e);
-            }
 
-            try {
+                //Computing the statements inside this line
                 BlockStmt blockStmt = JavaParser.parseBlock("{"+line+"}");
-
-                blockStmt.getStatements().forEach(statement -> {
-                    Position begin = new Position(i.get(), statement.getBegin().get().column);
-                    Position end = new Position(i.get(), statement.getEnd().get().column);
-                    statement.setRange(new Range(begin, end));
-                });
-
+                setBlockLines(i.get(), blockStmt);
                 blockStmtAfter.getStatements().addAll(blockStmt.getStatements());
             } catch (ParseProblemException e) {
                 LOGGER.log(Level.FINE, "Couldn't get the statements of the following line: "+line, e);
+            } catch (IOException e) {
+                LOGGER.log(Level.FINE, "Couldn't get the following line: "+i, e);
             }
         }
 
         return blockStmtAfter;
+    }
+
+    /**
+     * Set the line number of every statement in a block.
+     * Since we're parsing only a line of code, the line number will be 1 for all the statements in this line.
+     * Instead, we set the correct line number according to the compilation unit, instead of the block itself.
+     * @param line the line number
+     * @param blockStmt a {@link BlockStmt} containing statements located on a single line of code
+     */
+    private void setBlockLines(int line, BlockStmt blockStmt) {
+        blockStmt.getStatements().forEach(statement -> {
+            if (statement.getRange().isPresent()) {
+                Position begin = new Position(line, statement.getRange().get().begin.column);
+                Position end = new Position(line, statement.getRange().get().end.column);
+                statement.setRange(new Range(begin, end));
+            }
+        });
     }
 }
