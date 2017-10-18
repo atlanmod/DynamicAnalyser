@@ -27,8 +27,10 @@ import org.eclipse.modisco.java.composition.javaapplication.Java2File;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -108,7 +110,8 @@ public class GitCaller {
                             .stream()
                             .filter(eObject -> eObject instanceof Java2File
                                     && ((Java2File) eObject).getJavaUnit().getOriginalFilePath().endsWith(fileHeader.getOldPath()))
-                            .findFirst().orElseThrow(() -> new IOException("The DiffEntry does not concern a Java file"));
+                            .findFirst()
+                            .orElseThrow(() -> new IOException("The DiffEntry does not concern a Java file"));
 
 
                     LOGGER.info("Java File currently analysed :"+java2File.getJavaUnit().getName());
@@ -116,21 +119,7 @@ public class GitCaller {
 
                 diffFormatter.format(diffEntry);
                 fileHeader.toEditList().forEach(edit -> {
-
-                    switch (edit.getType()) {
-                        case INSERT:
-                            manageInsert(diffEntry, edit);
-                            break;
-                        case DELETE:
-                            manageDelete(diffEntry, edit);
-                            break;
-                        case REPLACE:
-                            manageReplace(diffEntry, edit);
-                            break;
-                        default:
-                            //TODO
-                            break;
-                    }
+                   manageEdit(diffEntry, edit);
                 });
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, "Couldn't analyze the diffEntry", e);
@@ -144,102 +133,62 @@ public class GitCaller {
      * @param diffEntry a {@link DiffEntry}
      * @param edit an {@link Edit}
      */
-    private void manageReplace(DiffEntry diffEntry, Edit edit) {
+    private void manageEdit(DiffEntry diffEntry, Edit edit) {
 
         BlockStmt blockStmtBefore = getStatementsFromOldPath(diffEntry, edit);
         BlockStmt blockStmtAfter = getStatementsFromNewPath(diffEntry, edit);
 
         LOGGER.fine(blockStmtBefore.getStatements().size()+ " statements before and "+blockStmtAfter.getStatements().size()+" after. Now comparing.");
 
+        //Statement modified or removed
         blockStmtBefore.getStatements().forEach(statement -> {
             if (! blockStmtAfter.getStatements().contains(statement) && statement.getRange().isPresent()) {
-                LOGGER.info(statement+
-                        " file: "+
-                        diffEntry.getOldPath()+
-                        " line: "+statement.getRange().get().begin.line+
-                        " from "+statement.getRange().get().begin.column+
-                        " to "+statement.getRange().get().end.column+
-                        " is changed");
+                LOGGER.info("In file "+diffEntry.getOldPath()+ParserUtils.statementToString(statement)+" modified.");
+                getImpacts(java2File, statement);
 
-                java2File.getChildren()
-                        .stream()
-                        .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof Statement
-                                && astNodeSourceRegion.getStartLine() == statement.getRange().get().begin.line
-                                && astNodeSourceRegion.getEndLine() == statement.getRange().get().end.line
-                                && !astNodeSourceRegion.getAnalysis().isEmpty())
-                        .forEach(node -> node.getAnalysis().forEach(eObject -> {
-                            Analysis analysis = (Analysis) eObject;
-                            MethodDeclaration methodDeclaration = (MethodDeclaration) analysis.getTarget();
-                            ClassDeclaration classDeclaration = (ClassDeclaration) methodDeclaration.eContainer();
-                            System.out.println("The test method: "+methodDeclaration.getName()+" of the test class "+classDeclaration.getName()+ " is impacted by this modification");
-                            //TODO: return
-                        }));
+                //TODO: return
             }
         });
 
+        //New statements
         blockStmtAfter.getStatements().forEach(statement -> {
             if (! blockStmtBefore.getStatements().contains(statement) && statement.getRange().isPresent()) {
-                LOGGER.info(statement+
-                        " file: "+
-                        diffEntry.getNewPath()+
-                        " line: "+statement.getRange().get().begin.line+
-                        " from "+statement.getRange().get().begin.column+
-                        " to "+statement.getRange().get().end.column+
-                        " is new");
+                LOGGER.info("In file "+diffEntry.getNewPath()+ParserUtils.statementToString(statement)+" added");
+                //Get the impacts at the method level
+
+                //TODO
             }
         });
 
     }
 
-
     /**
-     * Iterate over the statements deleted in the old compilation unit and get the coordinates, in order to find them in the impact analysis model
-     * @param diffEntry the {@link DiffEntry}
-     * @param edit the {@link Edit}
-     *             @TODO Add a return value
+     * Find all the impacts of the specified {@link com.github.javaparser.ast.stmt.Statement} on the tests
+     * @param java2File the file in which the {@link com.github.javaparser.ast.stmt.Statement} will be found
+     * @param statement the {@link com.github.javaparser.ast.stmt.Statement} that will be found in the {@link Java2File}
+     * @return all the test {@link MethodDeclaration} impacted by the {@link com.github.javaparser.ast.stmt.Statement}
      */
-    private void manageDelete(DiffEntry diffEntry, Edit edit) {
-        try {
-            //Using an AtomicInteger for the For loop
-            for (AtomicInteger line = new AtomicInteger(edit.getBeginA()); line.get() <= edit.getEndA(); line.incrementAndGet()) {
-                //Getting the deleted line in the old version of the file
-                String sourceLine = DiffUtils.getLineFromFile(DiffUtils.getFileContentFromCommit(repository, oldTree, diffEntry.getOldPath()), line.get());
+    private Collection<MethodDeclaration> getImpacts(Java2File java2File, com.github.javaparser.ast.stmt.Statement statement) {
+        Set<MethodDeclaration> methodDeclarationSet = new HashSet<>();
 
-                //Computing the statements present in the file
-                BlockStmt blockStmt = JavaParser.parseBlock("{" + sourceLine + "}");
+        java2File.getChildren()
+                .stream()
+                //Iterating over the Java2File children
+                .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof Statement
+                        && statement.getRange().isPresent()
+                        && astNodeSourceRegion.getStartLine() == statement.getRange().get().begin.line
+                        && astNodeSourceRegion.getEndLine() == statement.getRange().get().end.line
+                        && !astNodeSourceRegion.getAnalysis().isEmpty()) //The node is a java statement with the same statement position
+                //Iterating over the statement's analysis to get the impacts
+                .forEach(node -> node.getAnalysis().forEach(eObject -> {
+                    Analysis analysis = (Analysis) eObject;
+                    MethodDeclaration methodDeclaration = (MethodDeclaration) analysis.getTarget();
+                    ClassDeclaration classDeclaration = (ClassDeclaration) methodDeclaration.eContainer();
+                    LOGGER.fine("The test method: " + methodDeclaration.getName() + " of the test class " + classDeclaration.getName() + " is impacted by this modification");
+                    methodDeclarationSet.add(methodDeclaration);
+                }));
 
-                //Getting the coordinates of each statements
-                blockStmt.getStatements().forEach(statement -> System.out.println("Statement line " + line.get() + " from " + statement.getBegin().get().column + " to " + statement.getEnd().get().column + " deleted"));
-
-                //FIXME: Return the values
-            }
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Couldn't get the deleted statements in file "+diffEntry.getOldPath(), e);
-        }
-    }
-
-    /**
-     * Iterate over the new statements in the new compilation unit and find their coordinates.
-     * The goal would be to add those in the model without having to re-instrument everything
-     * @param diffEntry a {@link DiffEntry}
-     * @param edit an {@link Edit}
-     */
-    private void manageInsert(DiffEntry diffEntry, Edit edit) {
-        try {
-            //Uses AtomicInteger for the for loop, because it's final (and not int)
-            for (AtomicInteger line = new AtomicInteger(edit.getBeginA()); line.get() <= edit.getEndA(); line.incrementAndGet()) {
-                //getting the line in the new compilation unit
-                String sourceLine = DiffUtils.getLineFromFile(DiffUtils.getFileContentFromCommit(repository, newTree, diffEntry.getNewPath()), edit.getBeginB());
-
-                //computing the statements present in that line
-                BlockStmt blockStmt = JavaParser.parseBlock("{" + sourceLine + "}");
-
-                //getting the coordinates of each new statement
-                blockStmt.getStatements().forEach(statement -> System.out.println("Statement line " + line.get() + " from " + statement.getBegin().get().column + " to " + statement.getEnd().get().column + " added"));
-            }
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Couldn't get the new statements in file "+diffEntry.getNewPath(), e);
-        }
+        return methodDeclarationSet;
     }
 
     /**

@@ -1,6 +1,5 @@
 package com.tblf.diff;
 
-import com.tblf.Model.Analysis;
 import com.tblf.business.Manager;
 import com.tblf.util.Configuration;
 import com.tblf.util.ModelUtils;
@@ -14,7 +13,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
