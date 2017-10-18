@@ -99,7 +99,7 @@ public class TraceParserTest {
 
         resource.save(Collections.EMPTY_MAP);
         Assert.assertTrue(file.exists());
-        Assert.assertTrue(resource.getContents().size() == 2);
+        Assert.assertEquals(3, resource.getContents().size());
     }
 
     @Test
@@ -128,7 +128,7 @@ public class TraceParserTest {
         resource.save(Collections.EMPTY_MAP);
         Assert.assertTrue(file.exists());
 
-        Assert.assertTrue(resource.getContents().size() == 2);
+        Assert.assertEquals(3, resource.getContents().size());
 
     }
 
@@ -161,7 +161,7 @@ public class TraceParserTest {
         resource.save(Collections.EMPTY_MAP);
         Assert.assertTrue(file.exists());
 
-        Assert.assertTrue(resource.getContents().size() == 2);
+        Assert.assertEquals(3, resource.getContents().size());
     }
 
 }
