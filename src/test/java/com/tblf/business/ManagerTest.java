@@ -84,7 +84,7 @@ public class ManagerTest {
             Assert.fail(e.getMessage());
         }
 
-        //FileUtils.deleteDirectory(file);
+        FileUtils.deleteDirectory(file);
     }
 
     @Test

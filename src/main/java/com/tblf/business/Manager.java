@@ -134,6 +134,5 @@ public class Manager {
         }
 
         return resource;
-        //get the model at the end
     }
 }
