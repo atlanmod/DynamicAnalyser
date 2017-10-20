@@ -35,7 +35,7 @@ public class TargetProcessor extends AbstractProcessor<CtStatement> {
      */
     private void instrumentStatement(CtStatement ctStatement) {
         if (!ctStatement.isImplicit() && !(ctStatement instanceof CtBlock) && !(ctStatement instanceof CtCodeSnippetStatement)) {
-            System.out.println("Instrumenting the SUT Statement: "+ctStatement.getPosition().getLine());
+            LOGGER.fine("Instrumenting the SUT Statement: "+ctStatement.getPosition().getLine());
             //The ctStatement is not a super(). we can insert an other just before it
             CtCodeSnippetStatement ctCodeSnippetStatement = getFactory().Core().createCodeSnippetStatement();
             // source end +1 to match MoDisco
