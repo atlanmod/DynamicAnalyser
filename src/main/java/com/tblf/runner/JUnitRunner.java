@@ -11,8 +11,10 @@ import java.util.logging.Logger;
  */
 public class JUnitRunner {
     private ClassLoader classLoader;
-    private static final Logger LOGGER = Logger.getAnonymousLogger();
-
+    private static final Logger LOGGER = Logger.getLogger("JUnitRunner");
+    private int success;
+    private int failure;
+    private int ignore;
     public JUnitRunner() {
         classLoader = ClassLoader.getSystemClassLoader();
     }
@@ -29,17 +31,22 @@ public class JUnitRunner {
 
         LOGGER.info("Running "+tests.size()+" test suites");
         JUnitCore jUnitCore = new JUnitCore();
-
+        success = 0;
+        failure = 0;
+        ignore = 0;
         tests.forEach(s -> {
             try {
                 LOGGER.info("Running test "+s);
                 Result result = jUnitCore.run(classLoader.loadClass(s));
+                failure += result.getFailureCount();
+                success += result.getRunCount() - result.getFailureCount();
+                ignore += result.getIgnoreCount();
                 LOGGER.info(RunnerUtils.results(result));
             } catch (Throwable e) {
                 LOGGER.warning("Couldn't run the tests of class: "+s+" : "+e.getMessage());
             }
         });
 
-
+        LOGGER.info((failure + success) + " tests run : "+success+ " succeeded - "+failure+" failed - "+ignore+" ignored");
     }
 }
