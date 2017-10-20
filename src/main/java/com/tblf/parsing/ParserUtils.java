@@ -4,9 +4,14 @@ import com.github.javaparser.ast.stmt.Statement;
 import com.tblf.util.Configuration;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.LineNumberReader;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -63,5 +68,55 @@ public class ParserUtils {
         }
 
         return toString;
+    }
+
+    /**
+     * Print the progression of the parsing
+     * @param total
+     * @param current
+     */
+    public static void printProgress(long startTime, long total, long current) {
+        long eta = current == 0 ? 0 :
+                (total - current) * (System.currentTimeMillis() - startTime) / current;
+
+        String etaHms = current == 0 ? "N/A" :
+                String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(eta),
+                        TimeUnit.MILLISECONDS.toMinutes(eta) % TimeUnit.HOURS.toMinutes(1),
+                        TimeUnit.MILLISECONDS.toSeconds(eta) % TimeUnit.MINUTES.toSeconds(1));
+
+        StringBuilder string = new StringBuilder(140);
+        int percent = (int) (current * 100 / total);
+
+        string
+                .append('\r')
+                .append(String.join("", Collections.nCopies(percent == 0 ? 2 : 2 - (int) (Math.log10(percent)), " ")))
+                .append(String.format(" %d%% [", percent))
+                .append(String.join("", Collections.nCopies(percent, "=")))
+                .append('>')
+                .append(String.join("", Collections.nCopies(100 - percent, " ")))
+                .append(']')
+              //  .append(String.join("", Collections.nCopies((int) (Math.log10(total)) - (int) (Math.log10(current)), " ")))
+                .append(String.format(" %d/%d, ETA: %s", current, total, etaHms));
+
+        System.out.print(string);
+    }
+
+    /**
+     * Get the number of line in a file
+     * @param file
+     * @return a {@link Long} with the number of lines
+     */
+    public static long getLineNumber(File file) {
+        long lineNumber = 0;
+        try {
+            LineNumberReader lineNumberReader = new LineNumberReader(new FileReader(file));
+            lineNumberReader.skip(Long.MAX_VALUE);
+            lineNumber = lineNumberReader.getLineNumber();
+            lineNumberReader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return lineNumber;
     }
 }

@@ -1,5 +1,6 @@
 package com.tblf.parsing;
 
+import com.google.common.io.LineReader;
 import com.tblf.Model.Analysis;
 import com.tblf.Model.ModelFactory;
 import com.tblf.Model.ModelPackage;
@@ -13,7 +14,9 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.gmt.modisco.java.ClassDeclaration;
+import org.eclipse.gmt.modisco.java.CompilationUnit;
 import org.eclipse.gmt.modisco.java.MethodDeclaration;
+import org.eclipse.gmt.modisco.java.Statement;
 import org.eclipse.gmt.modisco.java.emf.JavaPackage;
 import org.eclipse.gmt.modisco.omg.kdm.kdm.KdmPackage;
 import org.eclipse.modisco.java.composition.javaapplication.Java2Directory;
@@ -28,8 +31,7 @@ import org.eclipse.ocl.expressions.OCLExpression;
 import org.eclipse.ocl.helper.OCLHelper;
 import org.eclipse.ocl.options.ParsingOptions;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,11 +40,12 @@ import java.util.logging.Logger;
  * Created by Thibault on 26/09/2017.
  */
 public class TraceParser implements Runnable {
-    private static final Logger LOGGER = Logger.getAnonymousLogger();
+    private static final Logger LOGGER = Logger.getLogger("TraceParser");
     private File file;
     private Resource outputModelResource;
 
-    private ResourceSet resourceSet;
+    private static final String ANALYSIS_NAME = Configuration.getProperty("analysisName");
+
     private OCLHelper OCL_HELPER;
     private OCL ocl;
 
@@ -72,7 +75,6 @@ public class TraceParser implements Runnable {
      */
     public TraceParser(File traceFile, File outputModel, ResourceSet resourceSet) {
         this.file = traceFile;
-        this.resourceSet = resourceSet;
 
         try {
             if (!outputModel.exists()) {
@@ -80,7 +82,7 @@ public class TraceParser implements Runnable {
             }
             outputModelResource = resourceSet.createResource(URI.createURI(outputModel.toURI().toURL().toString()));
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Cannot load the traces", e);
         }
 
         JavaPackage.eINSTANCE.eClass();
@@ -120,12 +122,17 @@ public class TraceParser implements Runnable {
      * @return a impact analysis model
      */
     public Resource parse() {
+        long startTime = System.currentTimeMillis();
+        long currLine = 0;
+        long maxLine = ParserUtils.getLineNumber(file);
+
         try {
             LineIterator lineIterator = FileUtils.lineIterator(file);
             while (lineIterator.hasNext()) {
                 String line = lineIterator.nextLine();
+                ParserUtils.printProgress(startTime, maxLine, currLine);
+                currLine += 1;
                 String[] split = line.split(":");
-
                 switch (split[0]) {
                     case "&": //set the test
                         updateTest(split[1], split[2]); // {qualifiedName; methodName}
@@ -138,7 +145,6 @@ public class TraceParser implements Runnable {
                     case "?": //get the statement using its line
                         int lineNumber = Integer.parseInt(split[1]);
                         updateStatementUsingLine(lineNumber);
-
                         break;
                     case "!": //get the statement using its position
                         int startPos = Integer.parseInt(split[1]);
@@ -193,6 +199,10 @@ public class TraceParser implements Runnable {
             LOGGER.fine("Updating the current test method: " + fullMethodQN);
             currentTestMethod = getMethodFromJava2File(currentTest, method);
             currentTestMethodQN = fullMethodQN;
+
+            if (currentTestMethod == null) {
+                currentTestMethod = getClassFromJava2File(currentTest, ((CompilationUnit) currentTest.getUnit()).getName().replace(".java", ""));
+            }
         }
     }
 
@@ -225,6 +235,7 @@ public class TraceParser implements Runnable {
             currentTargetMethodQN = method;
             createRunByAnalysis(currentTargetMethod, currentTestMethod);
         }
+
     }
 
     /**
@@ -250,7 +261,13 @@ public class TraceParser implements Runnable {
      * @return the {@link Java2File}
      */
     private Java2File getJava2FileFromJava2Directory(Resource resource, String name) {
-        String finalName = name.substring(name.lastIndexOf(".") + 1);
+        name = name.substring(name.lastIndexOf(".") + 1); //We only keep the last part of the qualified name of the class
+
+        if (name.contains("$")) { //This is an internal class
+            name = name.substring(0, name.lastIndexOf("$")); //We remove the sub class part to find the right compilation unit
+        }
+
+        String finalName = name;
         return (Java2File) resource.getContents() // get all the Java2File
                 .stream() // as a stream
                 .filter(eObject -> (((Java2File) eObject).getJavaUnit().getName() // check that the compilation unit is the file corresponding to the
@@ -276,32 +293,53 @@ public class TraceParser implements Runnable {
     }
 
     /**
+     * Parse the {@link org.eclipse.gmt.modisco.java.ASTNode} of a {@link Java2File} to find a specific {@link org.eclipse.gmt.modisco.java.ClassDeclaration}
+     *
+     * @param java2File a {@link Java2File}
+     * @param className the name of the {@link org.eclipse.gmt.modisco.java.ClassDeclaration}
+     * @return the {@link org.eclipse.gmt.modisco.java.ClassDeclaration}
+     */
+    private ASTNodeSourceRegion getClassFromJava2File(Java2File java2File, String className) {
+        return java2File
+                .getChildren() //Get all the node source region
+                .stream() // as a stream
+                .filter(astNodeSourceRegion -> (astNodeSourceRegion.getNode() instanceof ClassDeclaration) // get the method declaration nodes
+                        && (className.equals(((ClassDeclaration) astNodeSourceRegion.getNode()).getName()))) // with the name 'methodName'
+                .findFirst() // and return the first one found
+                .orElse(null);
+    }
+
+    /**
      * Create an impact relation between a statement and a test method, using the statement line number after finding the statement in the model
      *
      * @param lineNumber the line number
      */
     private void updateStatementUsingLine(int lineNumber) {
-        OCL_HELPER.setContext(JavaapplicationPackage.eINSTANCE.getEClassifier("Java2File"));
-
+/*        OCL_HELPER.setContext(JavaapplicationPackage.eINSTANCE.getEClassifier("Java2File"));
         try {
-            String queryAsString = "JavaNodeSourceRegion.allInstances() -> select (startLine = " +
+            String queryAsString = "self.children -> select (startLine = " +
                     lineNumber +
-                    " and endLine = " +
+                    ") -> select (endLine = " +
                     lineNumber +
-                    " and node.oclIsKindOf(java::Statement))";
+                    ") -> select (node.oclIsKindOf(java::Statement))";
 
             LOGGER.fine("Executing the following query: " + queryAsString);
-
             OCLExpression query = OCL_HELPER.createQuery(queryAsString);
             Set<ASTNodeSourceRegion> nodes = (Set<ASTNodeSourceRegion>) ocl.createQuery(query).evaluate(currentTarget);
-            nodes.parallelStream().forEach(astNodeSourceRegion -> {
+            nodes.stream().forEach(astNodeSourceRegion -> {
                 LOGGER.fine("Found a node. Creating an object in the output model");
                 createRunByAnalysis(astNodeSourceRegion, currentTestMethod);
             });
-
         } catch (ParserException e) {
             LOGGER.warning("Couldn't create the OCL request to find the statement in the model " + Arrays.toString(e.getStackTrace()));
-        }
+        }*/
+
+        currentTarget.getChildren().stream()
+                .filter(astNodeSourceRegion ->
+                    astNodeSourceRegion.getStartLine() == lineNumber &&
+                    astNodeSourceRegion.getEndLine() == lineNumber &&
+                    astNodeSourceRegion.getNode() instanceof Statement )
+                .forEach(astNodeSourceRegion -> createRunByAnalysis(astNodeSourceRegion, currentTestMethod));
     }
 
     /**
@@ -313,24 +351,30 @@ public class TraceParser implements Runnable {
      * @param endPos   the end position inside the class file of the statement looked for*
      */
     private void updateStatementUsingPosition(int startPos, int endPos) {
-        OCL_HELPER.setContext(JavaapplicationPackage.eINSTANCE.getEClassifier("Java2File"));
+/*        OCL_HELPER.setContext(JavaapplicationPackage.eINSTANCE.getEClassifier("Java2File"));
 
         try {
-            String queryAsString = "JavaNodeSourceRegion.allInstances() -> select (startPosition = " +
+            String queryAsString = "self.children -> select (startPosition = " +
                     startPos +
                     " and endPosition = " +
                     endPos +
                     " and node.oclIsKindOf(java::Statement))";
             OCLExpression query = OCL_HELPER.createQuery(queryAsString);
             Set<ASTNodeSourceRegion> nodes = (Set<ASTNodeSourceRegion>) ocl.createQuery(query).evaluate(currentTarget);
-            nodes.parallelStream().forEach(astNodeSourceRegion -> {
+            nodes.stream().forEach(astNodeSourceRegion -> {
                 LOGGER.fine("Found a node. Creating an object in the output model");
                 createRunByAnalysis(astNodeSourceRegion, currentTestMethod);
             });
 
         } catch (ParserException e) {
             LOGGER.warning("Couldn't create the OCL request to find the statement in the model " + Arrays.toString(e.getStackTrace()));
-        }
+        }*/
+        currentTarget.getChildren().stream()
+                .filter(astNodeSourceRegion ->
+                    astNodeSourceRegion.getStartPosition() == startPos &&
+                    astNodeSourceRegion.getEndPosition() == endPos &&
+                    astNodeSourceRegion.getNode() instanceof Statement )
+                .findFirst().ifPresent(astNodeSourceRegion -> createRunByAnalysis(astNodeSourceRegion, currentTestMethod));
     }
 
     /**
@@ -344,9 +388,9 @@ public class TraceParser implements Runnable {
      */
     private void createRunByAnalysis(ASTNodeSourceRegion source, ASTNodeSourceRegion target) {
         //We create an analysis if it does not already exist.
-        if (source.getAnalysis().stream().noneMatch(eObject -> ((Analysis) eObject).getTarget().equals(target.getNode()))) {
+        if (source != null && target != null && source.getAnalysis().stream().noneMatch(eObject -> ((Analysis) eObject).getTarget().equals(target.getNode()))) {
             Analysis analysis = ModelFactory.eINSTANCE.createAnalysis();
-            analysis.setName("runby"); //TODO set an externally configurable name
+            analysis.setName(ANALYSIS_NAME);
             analysis.setSource(source.getNode());
             analysis.setTarget(target.getNode());
             source.getAnalysis().add(analysis);

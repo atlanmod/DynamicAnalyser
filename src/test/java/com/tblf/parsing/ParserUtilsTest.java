@@ -23,4 +23,13 @@ public class ParserUtilsTest {
         String packageQN = ParserUtils.getPackageQNFromSUTFile(file);
         Assert.assertEquals("com.tblf.SimpleProject", packageQN);
     }
+
+    @Test
+    public void checkPrintProgress() throws InterruptedException {
+        long time = System.currentTimeMillis();
+        for (int i = 0; i <= 100; ++i) {
+            ParserUtils.printProgress(time,100, i);
+            Thread.sleep(50);
+        }
+    }
 }
