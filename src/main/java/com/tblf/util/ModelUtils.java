@@ -30,6 +30,7 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -272,8 +273,8 @@ public class ModelUtils {
 
     /**
      * get the source file of the {@link ClassDeclaration} using its {@link org.eclipse.gmt.modisco.java.CompilationUnit}
-     * @param classDeclaration
-     * @return
+     * @param classDeclaration a {@link ClassDeclaration}
+     * @return the {@link File}
      */
     public static File getSrcFromClass(ClassDeclaration classDeclaration) {
         return new File(classDeclaration.getOriginalCompilationUnit().getOriginalFilePath());
@@ -282,8 +283,8 @@ public class ModelUtils {
     /**
      * From an {@link EObject} recursively analyse the eContainer in order to build the full qualified name of a
      * {@link ClassDeclaration}. Packages separated with the '.' character, and internal classes using the "$" character
-     * @param eObject
-     * @return
+     * @param eObject an {@link EObject}
+     * @return the qualifiedName as a {@link String}
      */
     public static String getQualifiedName(EObject eObject) {
         EStructuralFeature eStructuralFeature =  eObject.eClass().getEStructuralFeature("name");
@@ -306,12 +307,38 @@ public class ModelUtils {
     }
 
     /**
+     * Iterate over a folder files to add all the xmi inside a single resource set
+     * @param folder the folder as a {@link File} where isDirectory = true
+     * @return the {@link ResourceSet}
+     */
+    public static ResourceSet buildResourceSet(File folder) {
+        ResourceSet resourceSet = new ResourceSetImpl();
+        try {
+            Files.walk(folder.toPath()).filter(path -> path.toString().endsWith(".xmi")).forEach(path -> {
+                try {
+                    resourceSet.getResource(URI.createURI(path.toUri().toURL().toString()), true);
+                } catch (MalformedURLException e) {
+                    LOGGER.log(Level.WARNING, "Cannot load the resource "+path.toString(), e);
+                }
+            });
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Couldn't load the resources", e);
+        }
+
+        return resourceSet;
+    }
+
+    /**
      * Iterate over a resourceSet to find the JavaApplication model corresponding to the package qualified name
      * @param pkgQualifiedName the Package qualified name as a {@link String}
      * @param resourceSet a {@link ResourceSet}
      * @return the {@link Resource}
      */
     public static Resource getPackageResource(String pkgQualifiedName, ResourceSet resourceSet) throws IOException {
-        return resourceSet.getResources().stream().filter(resource -> resource.getURI().lastSegment().contains(pkgQualifiedName)).findFirst().orElseThrow(() -> new IOException("Cannot find the package "+pkgQualifiedName+" in the Model"));
+        return resourceSet.getResources()
+                .stream()
+                .filter(resource -> resource.getURI().lastSegment().contains(pkgQualifiedName+"_java2kdm"))
+                .findFirst()
+                .orElseThrow(() -> new IOException("Cannot find the package "+pkgQualifiedName+" in the Model"));
     }
 }
