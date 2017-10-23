@@ -101,6 +101,21 @@ public class ParserUtils {
         System.out.print(string);
     }
 
+
+    public static void endProgress(long maxLine) {
+        StringBuilder stringBuilder = new StringBuilder(140);
+        int percent = 100;
+        stringBuilder
+                .append('\r')
+                .append(String.format(" %d%% [", percent))
+                .append(String.join("", Collections.nCopies(percent, "=")))
+                .append('>')
+                .append(String.join("", Collections.nCopies(100 - percent, " ")))
+                .append(']')
+                //  .append(String.join("", Collections.nCopies((int) (Math.log10(total)) - (int) (Math.log10(current)), " ")))
+                .append(String.format(" %d/%d, ETA: %s", maxLine, maxLine, "00:00:00"));
+    }
+
     /**
      * Get the number of line in a file
      * @param file
@@ -119,4 +134,5 @@ public class ParserUtils {
 
         return lineNumber;
     }
+
 }

@@ -1,6 +1,5 @@
 package com.tblf.parsing;
 
-import com.google.common.io.LineReader;
 import com.tblf.Model.Analysis;
 import com.tblf.Model.ModelFactory;
 import com.tblf.Model.ModelPackage;
@@ -26,12 +25,14 @@ import org.eclipse.modisco.kdm.source.extension.ASTNodeSourceRegion;
 import org.eclipse.modisco.kdm.source.extension.ExtensionPackage;
 import org.eclipse.ocl.OCL;
 import org.eclipse.ocl.ParserException;
+import org.eclipse.ocl.Query;
 import org.eclipse.ocl.ecore.EcoreEnvironmentFactory;
 import org.eclipse.ocl.expressions.OCLExpression;
 import org.eclipse.ocl.helper.OCLHelper;
 import org.eclipse.ocl.options.ParsingOptions;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,9 +46,6 @@ public class TraceParser implements Runnable {
     private Resource outputModelResource;
 
     private static final String ANALYSIS_NAME = Configuration.getProperty("analysisName");
-
-    private OCLHelper OCL_HELPER;
-    private OCL ocl;
 
     private Map<String, Resource> packages;
 
@@ -68,6 +66,8 @@ public class TraceParser implements Runnable {
 
     private String currentTargetMethodQN;
     private ASTNodeSourceRegion currentTargetMethod;
+
+    private OCLStatementQuery oclStatementQuery;
 
     /**
      * @param traceFile   the file containing the execution trace
@@ -95,19 +95,12 @@ public class TraceParser implements Runnable {
         Map<String, Object> m = reg.getExtensionToFactoryMap();
         m.put("xmi", new XMIResourceFactoryImpl());
 
-        EcoreEnvironmentFactory ecoreEnvironmentFactory = new EcoreEnvironmentFactory(EPackage.Registry.INSTANCE);
-
-        ocl = OCL.newInstance(ecoreEnvironmentFactory);
-        OCL_HELPER = ocl.createOCLHelper();
-
-        ParsingOptions.setOption(ocl.getEnvironment(),
-                ParsingOptions.implicitRootClass(ocl.getEnvironment()),
-                EcorePackage.Literals.EOBJECT);
-
         packages = new HashMap<>();
         resourceSet.getResources().stream()
                 .filter(resource -> resource.getURI().segment(resource.getURI().segmentCount() - 2).equals(Configuration.getProperty("fragmentFolder")))
                 .forEach(resource -> packages.put(resource.getURI().lastSegment().replace("_java2kdm.xmi", ""), resource));
+
+        oclStatementQuery = new OCLStatementQuery();
     }
 
     @Override
@@ -124,7 +117,7 @@ public class TraceParser implements Runnable {
     public Resource parse() {
         long startTime = System.currentTimeMillis();
         long currLine = 0;
-        long maxLine = ParserUtils.getLineNumber(file);
+        long maxLine = ParserUtils.getLineNumber(file); //We iterate starting from 0
 
         try {
             LineIterator lineIterator = FileUtils.lineIterator(file);
@@ -153,10 +146,12 @@ public class TraceParser implements Runnable {
                         updateStatementUsingPosition(startPos, endPos);
                 }
             }
+
+            ParserUtils.endProgress(maxLine);
             LineIterator.closeQuietly(lineIterator);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Couldn't parse the traces", e);
         }
 
         try {
@@ -315,31 +310,8 @@ public class TraceParser implements Runnable {
      * @param lineNumber the line number
      */
     private void updateStatementUsingLine(int lineNumber) {
-/*        OCL_HELPER.setContext(JavaapplicationPackage.eINSTANCE.getEClassifier("Java2File"));
-        try {
-            String queryAsString = "self.children -> select (startLine = " +
-                    lineNumber +
-                    ") -> select (endLine = " +
-                    lineNumber +
-                    ") -> select (node.oclIsKindOf(java::Statement))";
-
-            LOGGER.fine("Executing the following query: " + queryAsString);
-            OCLExpression query = OCL_HELPER.createQuery(queryAsString);
-            Set<ASTNodeSourceRegion> nodes = (Set<ASTNodeSourceRegion>) ocl.createQuery(query).evaluate(currentTarget);
-            nodes.stream().forEach(astNodeSourceRegion -> {
-                LOGGER.fine("Found a node. Creating an object in the output model");
-                createRunByAnalysis(astNodeSourceRegion, currentTestMethod);
-            });
-        } catch (ParserException e) {
-            LOGGER.warning("Couldn't create the OCL request to find the statement in the model " + Arrays.toString(e.getStackTrace()));
-        }*/
-
-        currentTarget.getChildren().stream()
-                .filter(astNodeSourceRegion ->
-                    astNodeSourceRegion.getStartLine() == lineNumber &&
-                    astNodeSourceRegion.getEndLine() == lineNumber &&
-                    astNodeSourceRegion.getNode() instanceof Statement )
-                .forEach(astNodeSourceRegion -> createRunByAnalysis(astNodeSourceRegion, currentTestMethod));
+        Collection<ASTNodeSourceRegion> astNodeSourceRegions = oclStatementQuery.queryLine(lineNumber, lineNumber, currentTarget);
+        astNodeSourceRegions.forEach(astNodeSourceRegion -> createRunByAnalysis(astNodeSourceRegion, currentTestMethod));
     }
 
     /**
@@ -351,30 +323,8 @@ public class TraceParser implements Runnable {
      * @param endPos   the end position inside the class file of the statement looked for*
      */
     private void updateStatementUsingPosition(int startPos, int endPos) {
-/*        OCL_HELPER.setContext(JavaapplicationPackage.eINSTANCE.getEClassifier("Java2File"));
-
-        try {
-            String queryAsString = "self.children -> select (startPosition = " +
-                    startPos +
-                    " and endPosition = " +
-                    endPos +
-                    " and node.oclIsKindOf(java::Statement))";
-            OCLExpression query = OCL_HELPER.createQuery(queryAsString);
-            Set<ASTNodeSourceRegion> nodes = (Set<ASTNodeSourceRegion>) ocl.createQuery(query).evaluate(currentTarget);
-            nodes.stream().forEach(astNodeSourceRegion -> {
-                LOGGER.fine("Found a node. Creating an object in the output model");
-                createRunByAnalysis(astNodeSourceRegion, currentTestMethod);
-            });
-
-        } catch (ParserException e) {
-            LOGGER.warning("Couldn't create the OCL request to find the statement in the model " + Arrays.toString(e.getStackTrace()));
-        }*/
-        currentTarget.getChildren().stream()
-                .filter(astNodeSourceRegion ->
-                    astNodeSourceRegion.getStartPosition() == startPos &&
-                    astNodeSourceRegion.getEndPosition() == endPos &&
-                    astNodeSourceRegion.getNode() instanceof Statement )
-                .findFirst().ifPresent(astNodeSourceRegion -> createRunByAnalysis(astNodeSourceRegion, currentTestMethod));
+        Collection<ASTNodeSourceRegion> astNodeSourceRegions = oclStatementQuery.queryPosition(startPos, endPos, currentTarget);
+        astNodeSourceRegions.forEach(astNodeSourceRegion -> createRunByAnalysis(astNodeSourceRegion, currentTestMethod));
     }
 
     /**
