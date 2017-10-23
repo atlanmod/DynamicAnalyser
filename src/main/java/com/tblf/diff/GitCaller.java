@@ -7,6 +7,7 @@ import com.github.javaparser.Range;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.tblf.Model.Analysis;
 import com.tblf.parsing.ParserUtils;
+import com.tblf.util.Configuration;
 import com.tblf.util.ModelUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
@@ -107,7 +108,14 @@ public class GitCaller {
         diffEntries.forEach(diffEntry -> {
             try {
                 FileHeader fileHeader = diffFormatter.toFileHeader(diffEntry);
-                String pkg = ParserUtils.getPackageQNFromSUTFile(new File(diffEntry.getOldPath()));
+
+                String pkg;
+
+                if (diffEntry.getOldPath().startsWith(Configuration.getProperty("sut"))) {
+                    pkg = ParserUtils.getPackageQNFromSUTFile(new File(diffEntry.getOldPath()));
+                } else {
+                    pkg = ParserUtils.getPackageQNFromTestFile(new File(diffEntry.getOldPath()));
+                }
 
                 if (java2File == null) {
                     Resource sutPackage = ModelUtils.getPackageResource(pkg, resourceSet);
@@ -116,7 +124,7 @@ public class GitCaller {
                             .filter(eObject -> eObject instanceof Java2File
                                     && ((Java2File) eObject).getJavaUnit().getOriginalFilePath().endsWith(fileHeader.getOldPath()))
                             .findFirst()
-                            .orElseThrow(() -> new IOException("The DiffEntry does not concern a Java file"));
+                            .orElseThrow(() -> new IOException("The DiffEntry does not concern a Java file but: "+fileHeader.getOldPath()));
 
 
                     LOGGER.info("Java File currently analysed :"+java2File.getJavaUnit().getName());

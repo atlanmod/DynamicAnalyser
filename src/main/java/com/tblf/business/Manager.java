@@ -34,7 +34,7 @@ public class Manager {
 
     /**
      * Build the traces of a project by instrumenting and running the tests
-     * @param project
+     * @param project the F
      * @return
      */
     public File buildTraces(File project) {
@@ -61,7 +61,8 @@ public class Manager {
             } else if (model.toString().endsWith(".zip")) {
                 resource = ModelUtils.loadModelFromZip(model);
             }
-            this.resourceSet = resource.getResourceSet();
+            this.resourceSet = resource != null ? resource.getResourceSet() : null;
+
         } catch (IOException e) {
             LOGGER.log(Level.WARNING,"Could not parse the project", e);
         }
