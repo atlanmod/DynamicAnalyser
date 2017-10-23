@@ -195,6 +195,8 @@ public class TraceParser implements Runnable {
             currentTestMethod = getMethodFromJava2File(currentTest, method);
             currentTestMethodQN = fullMethodQN;
 
+            currentTargetMethod = null; //We reset the current SUT
+
             if (currentTestMethod == null) {
                 currentTestMethod = getClassFromJava2File(currentTest, ((CompilationUnit) currentTest.getUnit()).getName().replace(".java", ""));
             }

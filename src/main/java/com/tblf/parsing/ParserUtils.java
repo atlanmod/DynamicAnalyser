@@ -114,6 +114,8 @@ public class ParserUtils {
                 .append(']')
                 //  .append(String.join("", Collections.nCopies((int) (Math.log10(total)) - (int) (Math.log10(current)), " ")))
                 .append(String.format(" %d/%d, ETA: %s", maxLine, maxLine, "00:00:00"));
+
+        System.out.println(stringBuilder);
     }
 
     /**

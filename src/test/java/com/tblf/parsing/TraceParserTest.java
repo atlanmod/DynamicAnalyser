@@ -1,5 +1,6 @@
 package com.tblf.parsing;
 
+import com.tblf.Model.Analysis;
 import com.tblf.Model.ModelPackage;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EPackage;
@@ -7,6 +8,7 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
+import org.eclipse.gmt.modisco.java.Statement;
 import org.eclipse.gmt.modisco.java.emf.JavaPackage;
 import org.eclipse.gmt.modisco.omg.kdm.kdm.KdmPackage;
 import org.eclipse.gmt.modisco.omg.kdm.source.SourceFactory;
@@ -23,6 +25,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -134,7 +138,6 @@ public class TraceParserTest {
 
     @Test
     public void checkParsePositionAccuracyMultipleIdenticalStatements() throws IOException {
-
         StringBuilder sb = new StringBuilder();
         sb.append("&:com.tblf.SimpleProject.AppTest:<init>\n");
         sb.append("&:com.tblf.SimpleProject.AppTest:testApp\n");
@@ -162,6 +165,51 @@ public class TraceParserTest {
         Assert.assertTrue(file.exists());
 
         Assert.assertEquals(3, resource.getContents().size());
+    }
+
+    @Test
+    public void checkParseLineMultipleAnalysis() throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("&:com.tblf.SimpleProject.AppTest:<init>\n");
+        sb.append("&:com.tblf.SimpleProject.AppTest:testApp\n");
+        sb.append("%:com.tblf.SimpleProject.App:method\n");
+        sb.append("?:5\n");
+        sb.append("?:6\n");
+        sb.append("&:com.tblf.SimpleProject.AppTest:testApp2\n");
+        sb.append("%:com.tblf.SimpleProject.App:method\n");
+        sb.append("?:5\n");
+        sb.append("?:6");
+
+        trace = File.createTempFile("tmpTrace", ".extr");
+
+        Files.write(trace.toPath(), sb.toString().getBytes());
+
+        File file = new File("src/test/resources/myAnalysisModel.xmi");
+        if (file.exists())
+            file.delete();
+
+        file.createNewFile();
+
+        TraceParser traceParser = new TraceParser(trace, file, resourceSet);
+        Resource resource = traceParser.parse();
+
+        resource.getContents().forEach(eObject -> {
+            Analysis analysis = (Analysis) eObject;
+            System.out.println(analysis.getSource()+" -> "+analysis.getTarget());
+        });
+
+        Map<Statement, Integer> impacts = new HashMap<>();
+        resource.getContents().forEach(eObject -> {
+            Analysis analysis = (Analysis) eObject;
+            if (analysis.getSource() instanceof Statement) {
+                Statement statement = (Statement) analysis.getSource();
+                impacts.merge(statement, 1, (a, b) -> a + b);
+            }
+        });
+
+        Map.Entry entry = impacts.entrySet().stream().max(Comparator.comparingInt(Map.Entry::getValue)).orElseThrow(() -> new Exception("Couldn't find anything"));
+
+        System.out.println(entry.getKey()+" has "+entry.getValue()+" impacts ");
     }
 
 }
