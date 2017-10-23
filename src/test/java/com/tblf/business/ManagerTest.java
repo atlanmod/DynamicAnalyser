@@ -79,6 +79,8 @@ public class ManagerTest {
 
             Resource resource = manager.parseTraces(trace);
             Assert.assertNotNull(resource);
+
+            Assert.assertEquals(6, resource.getContents().size());
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
@@ -108,7 +110,8 @@ public class ManagerTest {
 
             Assert.assertNotNull(trace);
 
-            manager.parseTraces(trace);
+            Resource resource = manager.parseTraces(trace);
+            Assert.assertEquals(6, resource.getContents().size());
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
