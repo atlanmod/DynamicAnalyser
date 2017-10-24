@@ -34,6 +34,7 @@ public class Manager {
 
     /**
      * Build the traces of a project by instrumenting and running the tests
+     *
      * @param project the F
      * @return
      */
@@ -49,7 +50,7 @@ public class Manager {
         Resource resource = null;
 
         try {
-            pathOptional = Files.walk(project.toPath(), 1).filter(path -> path.toString().endsWith("_java."+ Configuration.getProperty("modelFormat"))).findFirst();
+            pathOptional = Files.walk(project.toPath(), 1).filter(path -> path.toString().endsWith("_java." + Configuration.getProperty("modelFormat"))).findFirst();
 
             if (pathOptional.isPresent()) {
                 model = pathOptional.get().toFile();
@@ -64,9 +65,8 @@ public class Manager {
             this.resourceSet = resource != null ? resource.getResourceSet() : null;
 
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING,"Could not parse the project", e);
+            LOGGER.log(Level.WARNING, "Could not parse the project", e);
         }
-
 
 
         //Parsing the model to differentiate the SUT from the tests
@@ -81,7 +81,7 @@ public class Manager {
         //Instrumenting the project
         Instrumenter instrumenter;
         String mode = Configuration.getProperty("mode");
-        switch(InstrumentationType.valueOf(mode)){
+        switch (InstrumentationType.valueOf(mode)) {
 
             case BYTECODE:
                 instrumenter = new ByteCodeInstrumenter(project);
@@ -112,11 +112,12 @@ public class Manager {
 
     /**
      * parses the traces in an external thread
+     *
      * @param trace the {@link File} containing the trace
      * @return Resource a {@link Resource}
      */
     public Resource parseTraces(File trace) {
-        File outputModel = new File(project, Configuration.getProperty("outputModel")+"."+Configuration.getProperty("outputFormat"));
+        File outputModel = new File(project, Configuration.getProperty("outputModel") + "." + Configuration.getProperty("outputFormat"));
 
         try {
             ModelUtils.addJavaApplicationModelFragments(project, this.resourceSet);
@@ -128,11 +129,13 @@ public class Manager {
         TraceParser traceParser = new TraceParser(trace, outputModel, resourceSet);
         //new Thread(traceParser).start(); //Paralleled
         Resource resource = traceParser.parse();
+
         try {
             resource.save(Collections.EMPTY_MAP);
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Couldn't save the execution traces model", e);
+            LOGGER.log(Level.WARNING, "Couldn't save the model", e);
         }
+
 
         return resource;
     }
