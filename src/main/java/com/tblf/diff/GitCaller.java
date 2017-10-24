@@ -90,6 +90,7 @@ public class GitCaller {
             diffFormatter.setDiffComparator(RawTextComparator.WS_IGNORE_ALL);
             diffFormatter.setRepository(repository);
             diffFormatter.setDetectRenames(true);
+            testToRun = new HashSet<>();
 
             List<DiffEntry> diffEntryList = diffFormatter.scan(previous, current);
             analyseDiffs(diffEntryList);
@@ -103,7 +104,6 @@ public class GitCaller {
      * @param diffEntries a {@link List} of {@link DiffEntry}
      */
     private void analyseDiffs(List<DiffEntry> diffEntries) {
-        testToRun = new HashSet<>();
 
         diffEntries.forEach(diffEntry -> {
             try {
@@ -124,20 +124,23 @@ public class GitCaller {
                             .filter(eObject -> eObject instanceof Java2File
                                     && ((Java2File) eObject).getJavaUnit().getOriginalFilePath().endsWith(fileHeader.getOldPath()))
                             .findFirst()
-                            .orElseThrow(() -> new IOException("The DiffEntry does not concern a Java file but: "+fileHeader.getOldPath()));
+                            .orElseThrow(() -> new NonJavaFileException("The DiffEntry does not concern a Java file but: " + fileHeader.getOldPath()+" No impact computed from it"));
 
 
-                    LOGGER.info("Java File currently analysed :"+java2File.getJavaUnit().getName());
+                    LOGGER.info("Java File currently analysed :" + java2File.getJavaUnit().getName());
                 }
 
                 diffFormatter.format(diffEntry);
                 fileHeader.toEditList().forEach(edit -> manageEdit(diffEntry, edit));
+
+            } catch (NonJavaFileException e) {
+                LOGGER.log(Level.INFO, e.toString());
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, "Couldn't analyze the diffEntry", e);
             }
         });
 
-        testToRun.forEach(methodDeclaration -> LOGGER.fine("The test method: " + methodDeclaration.getName() + " of the test class " + ((ClassDeclaration) methodDeclaration.eContainer()).getName() + " is impacted by this modification"));
+        testToRun.forEach(methodDeclaration -> LOGGER.info("The test method: " + methodDeclaration.getName() + " of the test class " + ((ClassDeclaration) methodDeclaration.eContainer()).getName() + " is impacted by this modification"));
     }
 
 
@@ -157,6 +160,7 @@ public class GitCaller {
         blockStmtBefore.getStatements().forEach(statement -> {
             if (! blockStmtAfter.getStatements().contains(statement) && statement.getRange().isPresent()) {
                 LOGGER.info("In file "+diffEntry.getOldPath()+ParserUtils.statementToString(statement)+" modified.");
+                //Get the impacts at the statement level
                 testToRun.addAll(getImpacts(java2File, statement));
             }
         });
@@ -193,7 +197,6 @@ public class GitCaller {
                     MethodDeclaration methodDeclaration = (MethodDeclaration) analysis.getTarget();
                     methodDeclarationSet.add(methodDeclaration);
                 }));
-
         return methodDeclarationSet;
     }
 
@@ -232,7 +235,7 @@ public class GitCaller {
      */
     private BlockStmt getStatementsFromOldPath(DiffEntry diffEntry, Edit edit) {
         BlockStmt blockStmtBefore = new BlockStmt();
-        for (AtomicInteger i = new AtomicInteger(edit.getBeginA()); i.get() < edit.getEndA(); i.incrementAndGet()) {
+        for (AtomicInteger i = new AtomicInteger(edit.getBeginA()); i.get() <= edit.getEndA(); i.incrementAndGet()) {
             String line = null;
             try {
                 //Getting the line of the original File
@@ -260,7 +263,7 @@ public class GitCaller {
      */
     private BlockStmt getStatementsFromNewPath(DiffEntry diffEntry, Edit edit) {
         BlockStmt blockStmtAfter = new BlockStmt();
-        for (AtomicInteger i = new AtomicInteger(edit.getBeginB()); i.get() < edit.getEndB(); i.incrementAndGet()) {
+        for (AtomicInteger i = new AtomicInteger(edit.getBeginB()); i.get() <= edit.getEndB(); i.incrementAndGet()) {
             String line = null;
             try {
                 //Getting the line of the original File
@@ -295,5 +298,21 @@ public class GitCaller {
                 statement.setRange(new Range(begin, end));
             }
         });
+    }
+
+    /**
+     * Gets testToRun
+     * @return value of testToRun
+     */
+    public Set<MethodDeclaration> getTestToRun() {
+        return testToRun;
+    }
+
+    /**
+     * Sets testToRun
+     * @param testToRun a {@link Set} of {@link MethodDeclaration}
+     */
+    public void setTestToRun(Set<MethodDeclaration> testToRun) {
+        this.testToRun = testToRun;
     }
 }
