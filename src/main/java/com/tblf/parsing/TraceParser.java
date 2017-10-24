@@ -7,15 +7,12 @@ import com.tblf.util.Configuration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.EPackage;
-import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.gmt.modisco.java.ClassDeclaration;
 import org.eclipse.gmt.modisco.java.CompilationUnit;
 import org.eclipse.gmt.modisco.java.MethodDeclaration;
-import org.eclipse.gmt.modisco.java.Statement;
 import org.eclipse.gmt.modisco.java.emf.JavaPackage;
 import org.eclipse.gmt.modisco.omg.kdm.kdm.KdmPackage;
 import org.eclipse.modisco.java.composition.javaapplication.Java2Directory;
@@ -23,17 +20,13 @@ import org.eclipse.modisco.java.composition.javaapplication.Java2File;
 import org.eclipse.modisco.java.composition.javaapplication.JavaapplicationPackage;
 import org.eclipse.modisco.kdm.source.extension.ASTNodeSourceRegion;
 import org.eclipse.modisco.kdm.source.extension.ExtensionPackage;
-import org.eclipse.ocl.OCL;
-import org.eclipse.ocl.ParserException;
-import org.eclipse.ocl.Query;
-import org.eclipse.ocl.ecore.EcoreEnvironmentFactory;
-import org.eclipse.ocl.expressions.OCLExpression;
-import org.eclipse.ocl.helper.OCLHelper;
-import org.eclipse.ocl.options.ParsingOptions;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -226,11 +219,10 @@ public class TraceParser implements Runnable {
             currentTargetQN = targetQn;
         }
 
-        if (currentTargetMethod == null || !currentTargetMethodQN.equals(method)) {
+        if (currentTargetMethod == null || !method.equals(currentTargetMethodQN)) {
             LOGGER.fine("Updating the current target method: " + method);
-            currentTargetMethod = getMethodASTNodeFromJava2File(currentTarget, method);
             currentTargetMethodQN = method;
-            createRunByAnalysis(currentTargetMethod, currentTestMethod);
+            currentTargetMethod = null;
         }
 
     }
@@ -239,13 +231,14 @@ public class TraceParser implements Runnable {
      * Parse the {@link Java2File} children to file the node corresponding to the {@link MethodDeclaration} with the name given as a parameter
      *
      * @param java2File  a {@link Java2File}
-     * @param methodName a {@link String}
+     * @param lineNumber a {@link Integer} contained inside the method block
      * @return the {@link org.eclipse.gmt.modisco.java.ASTNode} with the given {@link MethodDeclaration} name
      */
-    private ASTNodeSourceRegion getMethodASTNodeFromJava2File(Java2File java2File, String methodName) {
+    private ASTNodeSourceRegion getMethodASTNodeFromJava2File(Java2File java2File, int lineNumber) {
         return java2File.getChildren().stream()
-                .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof MethodDeclaration
-                        && ((MethodDeclaration) astNodeSourceRegion.getNode()).getName().equals(methodName))
+                .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof MethodDeclaration &&
+                        astNodeSourceRegion.getStartLine() <= lineNumber &&
+                        astNodeSourceRegion.getEndLine() >= lineNumber)
                 .findFirst()
                 .orElse(null);
     }
@@ -313,7 +306,14 @@ public class TraceParser implements Runnable {
      */
     private void updateStatementUsingLine(int lineNumber) {
         Collection<ASTNodeSourceRegion> astNodeSourceRegions = oclStatementQuery.queryLine(lineNumber, lineNumber, currentTarget);
-        astNodeSourceRegions.forEach(astNodeSourceRegion -> createRunByAnalysis(astNodeSourceRegion, currentTestMethod));
+        astNodeSourceRegions.forEach(astNodeSourceRegion -> {
+            if (currentTargetMethod == null || !(currentTargetMethod.getStartLine() <= lineNumber && currentTargetMethod.getEndLine() >= lineNumber)) {
+                currentTargetMethod = getMethodASTNodeFromJava2File(currentTarget, lineNumber);
+                createRunByAnalysis(currentTargetMethod, currentTestMethod);
+            }
+
+            createRunByAnalysis(astNodeSourceRegion, currentTestMethod);
+        });
     }
 
     /**
