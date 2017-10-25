@@ -28,13 +28,11 @@ import org.eclipse.modisco.java.composition.javaapplication.Java2File;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * This class call basic git methods using the JGit library
@@ -103,7 +101,7 @@ public class GitCaller {
      * Iterate over a {@link DiffEntry} list and, get the impacted test cases out of it
      * @param diffEntries a {@link List} of {@link DiffEntry}
      */
-    private void analyseDiffs(List<DiffEntry> diffEntries) {
+    private Collection<Map.Entry<String, String>> analyseDiffs(List<DiffEntry> diffEntries) {
 
         diffEntries.forEach(diffEntry -> {
             try {
@@ -140,7 +138,8 @@ public class GitCaller {
             }
         });
 
-        testToRun.forEach(methodDeclaration -> LOGGER.info("The test method: " + methodDeclaration.getName() + " of the test class " + ((ClassDeclaration) methodDeclaration.eContainer()).getName() + " is impacted by this modification"));
+        testToRun.forEach(methodDeclaration -> LOGGER.fine("The test method: " + methodDeclaration.getName() + " of the test class " + ((ClassDeclaration) methodDeclaration.eContainer()).getName() + " is impacted by this modification"));
+        return testToRun.stream().map(methodDeclaration -> new AbstractMap.SimpleEntry<>(methodDeclaration.getName(), ((ClassDeclaration) methodDeclaration.eContainer()).getName())).collect(Collectors.toList());
     }
 
 

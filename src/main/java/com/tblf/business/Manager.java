@@ -36,7 +36,7 @@ public class Manager {
      * Build the traces of a project by instrumenting and running the tests
      *
      * @param project the F
-     * @return
+     * @return the file containing the execution trace
      */
     public File buildTraces(File project) {
         ((FileTracer) FileTracer.getInstance()).reset();
@@ -136,7 +136,8 @@ public class Manager {
             LOGGER.log(Level.WARNING, "Couldn't save the model", e);
         }
 
-
         return resource;
     }
+
+
 }
