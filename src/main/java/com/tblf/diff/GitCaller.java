@@ -64,7 +64,7 @@ public class GitCaller {
             repository = git.getRepository();
             resourceSet = set;
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Cannot load the git repository", e);
         }
     }
 
