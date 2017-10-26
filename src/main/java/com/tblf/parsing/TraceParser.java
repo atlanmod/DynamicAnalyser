@@ -70,8 +70,8 @@ public class TraceParser implements Runnable {
         this.file = traceFile;
 
         try {
-            if (!outputModel.exists()) {
-                outputModel.createNewFile();
+            if (!outputModel.exists() && !outputModel.createNewFile()) {
+                throw new IOException("Cannot create the output model");
             }
             outputModelResource = resourceSet.createResource(URI.createURI(outputModel.toURI().toURL().toString()));
         } catch (IOException e) {
@@ -219,30 +219,13 @@ public class TraceParser implements Runnable {
             currentTargetQN = targetQn;
         }
 
-        if (currentTargetMethod == null || !method.equals(currentTargetMethodQN)) {
+        if (!method.equals(currentTargetMethodQN)) {
             LOGGER.fine("Updating the current target method: " + method);
             currentTargetMethodQN = method;
             currentTargetMethod = null;
         }
 
     }
-
-    /**
-     * Parse the {@link Java2File} children to file the node corresponding to the {@link MethodDeclaration} with the name given as a parameter
-     *
-     * @param java2File  a {@link Java2File}
-     * @param lineNumber a {@link Integer} contained inside the method block
-     * @return the {@link org.eclipse.gmt.modisco.java.ASTNode} with the given {@link MethodDeclaration} name
-     */
-    private ASTNodeSourceRegion getMethodASTNodeFromJava2File(Java2File java2File, int lineNumber) {
-        return java2File.getChildren().stream()
-                .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof MethodDeclaration &&
-                        astNodeSourceRegion.getStartLine() <= lineNumber &&
-                        astNodeSourceRegion.getEndLine() >= lineNumber)
-                .findFirst()
-                .orElse(null);
-    }
-
     /**
      * Parse the {@link Java2Directory} model in order to find a class using its qualified name
      *
@@ -266,6 +249,53 @@ public class TraceParser implements Runnable {
     }
 
     /**
+     * Parse the {@link org.eclipse.gmt.modisco.java.ASTNode} of a {@link Java2File} to find a specific {@link org.eclipse.gmt.modisco.java.ClassDeclaration}
+     *
+     * @param java2File a {@link Java2File}
+     * @param className the name of the {@link org.eclipse.gmt.modisco.java.ClassDeclaration}
+     * @return the {@link org.eclipse.gmt.modisco.java.ClassDeclaration}
+     */
+    private ASTNodeSourceRegion getClassFromJava2File(Java2File java2File, String className) {
+        return java2File
+                .getChildren() //Get all the node source region
+                .stream() // as a stream
+                .filter(astNodeSourceRegion -> (astNodeSourceRegion.getNode() instanceof ClassDeclaration) // get the method declaration nodes
+                        && (className.equals(((ClassDeclaration) astNodeSourceRegion.getNode()).getName()))) // with the name 'methodName'
+                .findFirst() // and return the first one found
+                .orElse(null);
+    }
+    /**
+     * Parse the {@link Java2File} children to file the node corresponding to the {@link MethodDeclaration} with the name given as a parameter
+     * @param java2File  a {@link Java2File}
+     * @param lineNumber a {@link Integer} contained inside the method block
+     * @return the {@link org.eclipse.gmt.modisco.java.ASTNode} with the {@link MethodDeclaration} as a node
+     */
+    private ASTNodeSourceRegion getMethodASTNodeFromJava2File(Java2File java2File, int lineNumber) {
+        return java2File.getChildren().stream()
+                .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof MethodDeclaration &&
+                        astNodeSourceRegion.getStartLine() <= lineNumber &&
+                        astNodeSourceRegion.getEndLine() >= lineNumber)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Parse the {@link Java2File} children to file the node corresponding to the {@link MethodDeclaration} with the name given as a parameter
+     * @param java2File a {@link Java2File}
+     * @param startPos the start position of an element inside the method
+     * @param endPos the end position of an element inside the method
+     * @return the {@link org.eclipse.jdt.core.dom.AST} with the {@link MethodDeclaration} as a node
+     */
+    private ASTNodeSourceRegion getMethodASTNodeFromJava2File(Java2File java2File, int startPos, int endPos) {
+        return java2File.getChildren().stream()
+                .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof MethodDeclaration &&
+                        astNodeSourceRegion.getStartPosition() <= startPos &&
+                        astNodeSourceRegion.getEndPosition() >= endPos)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
      * Parse the {@link org.eclipse.gmt.modisco.java.ASTNode} of a {@link Java2File} to find a specific {@link MethodDeclaration}
      *
      * @param java2File  a {@link Java2File}
@@ -282,22 +312,7 @@ public class TraceParser implements Runnable {
                 .orElse(null);
     }
 
-    /**
-     * Parse the {@link org.eclipse.gmt.modisco.java.ASTNode} of a {@link Java2File} to find a specific {@link org.eclipse.gmt.modisco.java.ClassDeclaration}
-     *
-     * @param java2File a {@link Java2File}
-     * @param className the name of the {@link org.eclipse.gmt.modisco.java.ClassDeclaration}
-     * @return the {@link org.eclipse.gmt.modisco.java.ClassDeclaration}
-     */
-    private ASTNodeSourceRegion getClassFromJava2File(Java2File java2File, String className) {
-        return java2File
-                .getChildren() //Get all the node source region
-                .stream() // as a stream
-                .filter(astNodeSourceRegion -> (astNodeSourceRegion.getNode() instanceof ClassDeclaration) // get the method declaration nodes
-                        && (className.equals(((ClassDeclaration) astNodeSourceRegion.getNode()).getName()))) // with the name 'methodName'
-                .findFirst() // and return the first one found
-                .orElse(null);
-    }
+
 
     /**
      * Create an impact relation between a statement and a test method, using the statement line number after finding the statement in the model
@@ -326,7 +341,13 @@ public class TraceParser implements Runnable {
      */
     private void updateStatementUsingPosition(int startPos, int endPos) {
         Collection<ASTNodeSourceRegion> astNodeSourceRegions = oclStatementQuery.queryPosition(startPos, endPos, currentTarget);
-        astNodeSourceRegions.forEach(astNodeSourceRegion -> createRunByAnalysis(astNodeSourceRegion, currentTestMethod));
+        astNodeSourceRegions.forEach(astNodeSourceRegion -> {
+            if (currentTargetMethod == null || !(currentTargetMethod.getStartPosition() <= startPos && currentTargetMethod.getEndPosition() >= endPos)) {
+                currentTargetMethod = getMethodASTNodeFromJava2File(currentTarget, startPos, endPos);
+                createRunByAnalysis(currentTargetMethod, currentTestMethod);
+            }
+            createRunByAnalysis(astNodeSourceRegion, currentTestMethod);
+        });
     }
 
     /**
@@ -351,13 +372,5 @@ public class TraceParser implements Runnable {
         } else {
             LOGGER.fine("Link already existing. Not adding.");
         }
-    }
-
-    public Resource getOutputModelResource() {
-        return outputModelResource;
-    }
-
-    public void setOutputModelResource(Resource outputModelResource) {
-        this.outputModelResource = outputModelResource;
     }
 }
