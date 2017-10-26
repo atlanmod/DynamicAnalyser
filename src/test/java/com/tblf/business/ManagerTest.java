@@ -114,10 +114,10 @@ public class ManagerTest {
             Assert.assertEquals(6, resource.getContents().size());
         } catch (Exception e) {
             e.printStackTrace();
+            FileUtils.deleteDirectory(file);
             Assert.fail(e.getMessage());
         }
 
-        FileUtils.deleteDirectory(file);
     }
 
 }
