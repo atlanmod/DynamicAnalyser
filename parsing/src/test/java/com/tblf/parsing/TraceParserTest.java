@@ -57,7 +57,9 @@ public class TraceParserTest {
         Map<String, Object> m = reg.getExtensionToFactoryMap();
         m.put("xmi", new XMIResourceFactoryImpl());
 
-        File file = new File("parsing/src/test/resources/models/simpleProject");
+        System.out.println(new File(".").getAbsolutePath());
+
+        File file = new File("./src/test/resources/models/simpleProject");
         Files.walk(file.toPath())
                 .filter(path -> path.toString().endsWith(".xmi") && !path.toString().endsWith("_kdm.xmi"))
                 .forEach(path -> {
@@ -89,7 +91,7 @@ public class TraceParserTest {
 
         Files.write(trace.toPath(), sb.toString().getBytes());
 
-        File file = new File("parsing/src/test/resources/myAnalysisModel.xmi");
+        File file = new File("./src/test/resources/myAnalysisModel.xmi");
         if (file.exists())
             file.delete();
 
@@ -117,7 +119,7 @@ public class TraceParserTest {
 
         Files.write(trace.toPath(), sb.toString().getBytes());
 
-        File file = new File("parsing/src/test/resources/myAnalysisModel.xmi");
+        File file = new File("./src/test/resources/myAnalysisModel.xmi");
         if (file.exists())
             file.delete();
 
@@ -149,7 +151,7 @@ public class TraceParserTest {
 
         Files.write(trace.toPath(), sb.toString().getBytes());
 
-        File file = new File("parsing/src/test/resources/myAnalysisModel.xmi");
+        File file = new File("./src/test/resources/myAnalysisModel.xmi");
         if (file.exists())
             file.delete();
 
@@ -181,7 +183,7 @@ public class TraceParserTest {
 
         Files.write(trace.toPath(), sb.toString().getBytes());
 
-        File file = new File("parsing/src/test/resources/myAnalysisModel.xmi");
+        File file = new File("./src/test/resources/myAnalysisModel.xmi");
         if (file.exists())
             file.delete();
 
