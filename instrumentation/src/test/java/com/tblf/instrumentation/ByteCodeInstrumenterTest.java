@@ -38,15 +38,6 @@ import java.util.stream.Collectors;
 
 public class ByteCodeInstrumenterTest {
 
-    @Before
-    public void setup() {
-        Logger rootLogger = LogManager.getLogManager().getLogger("");
-        rootLogger.setLevel(Level.INFO);
-        for (Handler h : rootLogger.getHandlers()) {
-            h.setLevel(Level.INFO);
-        }
-    }
-
     @Test
     public void checkInstrumentTarget() throws ClassNotFoundException, IOException {
         File file = new File("src/test/resources/binaries/junit.zip");

@@ -2,6 +2,8 @@ package com.tblf.parsing;
 
 import com.tblf.Model.Analysis;
 import com.tblf.Model.ModelPackage;
+import com.tblf.utils.ModelUtils;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -13,6 +15,7 @@ import org.eclipse.gmt.modisco.java.emf.JavaPackage;
 import org.eclipse.gmt.modisco.omg.kdm.kdm.KdmPackage;
 import org.eclipse.gmt.modisco.omg.kdm.source.SourcePackage;
 import org.eclipse.modisco.java.composition.javaapplication.JavaapplicationPackage;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,12 +60,13 @@ public class TraceParserTest {
         Map<String, Object> m = reg.getExtensionToFactoryMap();
         m.put("xmi", new XMIResourceFactoryImpl());
 
-        File file = new File("src/test/resources/models/simpleProject");
+        ModelUtils.unzip(new File("./src/test/resources/models/simpleProject.zip"));
+
+        File file = new File("./src/test/resources/models/simpleProject");
         Files.walk(file.toPath())
                 .filter(path -> path.toString().endsWith(".xmi") && !path.toString().endsWith("_kdm.xmi"))
                 .forEach(path -> {
 
-            System.out.println("now adding: "+path.getFileName().toString());
             try {
                 Resource resource = resourceSet.getResource(URI.createURI(path.toUri().toURL().toString()), true);
                 System.out.println(resource);
@@ -74,6 +78,14 @@ public class TraceParserTest {
         });
 
         Assert.assertTrue(resourceSet.getResources().stream().filter(resource -> resource.getContents().get(0) == null).collect(Collectors.toList()).isEmpty());
+    }
+
+    @After
+    public void tearDown() throws IOException {
+        File file = new File("./src/test/resources/models/simpleProject");
+        if (file.exists()) {
+            FileUtils.deleteDirectory(file);
+        }
     }
 
     @Test
@@ -89,7 +101,7 @@ public class TraceParserTest {
 
         Files.write(trace.toPath(), sb.toString().getBytes());
 
-        File file = new File("src/test/resources/myAnalysisModel.xmi");
+        File file = new File("./src/test/resources/myAnalysisModel.xmi");
         if (file.exists())
             file.delete();
 
@@ -117,7 +129,7 @@ public class TraceParserTest {
 
         Files.write(trace.toPath(), sb.toString().getBytes());
 
-        File file = new File("src/test/resources/myAnalysisModel.xmi");
+        File file = new File("./src/test/resources/myAnalysisModel.xmi");
         if (file.exists())
             file.delete();
 
@@ -149,7 +161,7 @@ public class TraceParserTest {
 
         Files.write(trace.toPath(), sb.toString().getBytes());
 
-        File file = new File("src/test/resources/myAnalysisModel.xmi");
+        File file = new File("./src/test/resources/myAnalysisModel.xmi");
         if (file.exists())
             file.delete();
 
@@ -181,7 +193,7 @@ public class TraceParserTest {
 
         Files.write(trace.toPath(), sb.toString().getBytes());
 
-        File file = new File("src/test/resources/myAnalysisModel.xmi");
+        File file = new File("./src/test/resources/myAnalysisModel.xmi");
         if (file.exists())
             file.delete();
 

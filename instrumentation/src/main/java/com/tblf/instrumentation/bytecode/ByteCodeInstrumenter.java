@@ -79,7 +79,6 @@ public class ByteCodeInstrumenter implements Instrumenter {
 
             } catch (IOException | LinkageError e) {
                 LOGGER.fine("Couldn't instrument "+t+" : "+e.getMessage());
-                e.printStackTrace();
                 scores[1]++;
             }
         });

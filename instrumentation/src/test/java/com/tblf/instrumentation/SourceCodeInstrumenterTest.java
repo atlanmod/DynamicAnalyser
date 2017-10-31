@@ -2,8 +2,11 @@ package com.tblf.instrumentation;
 
 import com.tblf.classloading.SingleURLClassLoader;
 import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
+import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 
@@ -15,8 +18,20 @@ import java.util.stream.Collectors;
 
 public class SourceCodeInstrumenterTest {
 
+    @Before
+    public void setup() throws IOException {
+        ModelUtils.unzip(new File("src/test/resources/sources/SimpleProject.zip"));
+    }
+
+    @After
+    public void tearDown() throws IOException {
+        FileUtils.deleteDirectory(new File("src/test/resources/sources/SimpleProject"));
+    }
+
     @Test
     public void checkInstrumentMaven() throws IOException {
+
+
         File proj = new File("src/test/resources/sources/SimpleProject/");
         File binOut = new File(proj, "binOut");
 
