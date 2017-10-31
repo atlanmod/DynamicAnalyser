@@ -5,10 +5,20 @@
     <groupId>com.tblf</groupId>
     <artifactId>DynamicAnalysis</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
 
+    <packaging>pom</packaging>
     <name>DynamicAnalysis</name>
     <url>http://maven.apache.org</url>
+
+    <modules>
+        <module>utils</module>
+        <module>instrumentation</module>
+        <module>diff</module>
+        <module>parsing</module>
+        <module>classloading</module>
+        <module>runner</module>
+        <module>management</module>
+    </modules>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
