@@ -62,7 +62,7 @@ public class TraceParserTest {
 
         Files.walk(new File(".").toPath()).forEach(System.out::println);
 
-        ModelUtils.unzip(new File("./src/test/resources/model/simpleProject.zip"));
+        ModelUtils.unzip(new File("./src/test/resources/models/simpleProject.zip"));
 
         File file = new File("./src/test/resources/models/simpleProject");
         Files.walk(file.toPath())
