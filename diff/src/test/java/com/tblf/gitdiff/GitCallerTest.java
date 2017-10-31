@@ -29,7 +29,7 @@ public class GitCallerTest {
     }
 
     @Test
-    public void checkCompareCommit() throws IOException {git statu
+    public void checkCompareCommit() throws IOException {
         File zip = new File("src/test/resources/files.zip");
 
         ModelUtils.unzip(zip);
