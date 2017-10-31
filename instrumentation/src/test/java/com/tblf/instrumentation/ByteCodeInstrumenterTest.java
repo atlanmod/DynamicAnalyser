@@ -65,7 +65,7 @@ public class ByteCodeInstrumenterTest {
         Class aClass = SingleURLClassLoader.getInstance().getUrlClassLoader().loadClass("org.junit.internal.matchers.StacktracePrintingMatcherTest");
         Assert.assertNotNull(aClass);
 
-        File callDependency = new File("src/test/resources/jar/Link-1.0.0.jar");
+        File callDependency = new File("src/test/resources/jars/Link-1.0.0.jar");
         Assert.assertTrue(callDependency.exists());
 
         SingleURLClassLoader.getInstance().addURLs(new URL[]{folder.toURI().toURL(), callDependency.toURI().toURL()});

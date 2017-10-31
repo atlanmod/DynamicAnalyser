@@ -135,7 +135,7 @@ public class ByteCodeInstrumenter implements Instrumenter {
 
         LOGGER.info("Adding the following dependencies to the classpath: "+dependencies.toString());
 
-        dependencies.add(new File("src/main/resources/Link-1.0.0.jar"));
+        dependencies.add(new File("../instrumentation/src/main/resources/Link-1.0.0.jar"));
         dependencies.add(sutBinFolder); //This is necessary to add the SUT classes before instrumentation.
         dependencies.add(testBinFolder); //This is necessary to add the test classes before instrumentation.
 
