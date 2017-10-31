@@ -2,6 +2,8 @@ package com.tblf.parsing;
 
 import com.tblf.Model.Analysis;
 import com.tblf.Model.ModelPackage;
+import com.tblf.utils.ModelUtils;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -13,6 +15,7 @@ import org.eclipse.gmt.modisco.java.emf.JavaPackage;
 import org.eclipse.gmt.modisco.omg.kdm.kdm.KdmPackage;
 import org.eclipse.gmt.modisco.omg.kdm.source.SourcePackage;
 import org.eclipse.modisco.java.composition.javaapplication.JavaapplicationPackage;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,7 +60,7 @@ public class TraceParserTest {
         Map<String, Object> m = reg.getExtensionToFactoryMap();
         m.put("xmi", new XMIResourceFactoryImpl());
 
-        Files.walk(new File(".").toPath()).forEach(System.out::println);
+        ModelUtils.unzip(new File("./src/test/resources/model/simpleProject.zip"));
 
         File file = new File("./src/test/resources/models/simpleProject");
         Files.walk(file.toPath())
@@ -76,6 +79,14 @@ public class TraceParserTest {
         });
 
         Assert.assertTrue(resourceSet.getResources().stream().filter(resource -> resource.getContents().get(0) == null).collect(Collectors.toList()).isEmpty());
+    }
+
+    @After
+    public void tearDown() throws IOException {
+        File file = new File("./src/test/resources/models/simpleProject");
+        if (file.exists()) {
+            FileUtils.deleteDirectory(file);
+        }
     }
 
     @Test
