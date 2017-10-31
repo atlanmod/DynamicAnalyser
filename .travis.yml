@@ -7,4 +7,4 @@ notifications:
     email: true
 
 install:
-    - cd $TRAVIS_BUILD_DIR/ && mvn clean install4
+    - cd $TRAVIS_BUILD_DIR/ && mvn clean install
