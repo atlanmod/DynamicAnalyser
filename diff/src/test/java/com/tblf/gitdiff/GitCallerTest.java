@@ -29,11 +29,17 @@ public class GitCallerTest {
     }
 
     @Test
-    public void checkCompareCommit() {
+    public void checkCompareCommit() throws IOException {
+        File zip = new File("src/test/resources/files.zip");
+
+        ModelUtils.unzip(zip);
+
         File file = new File("src/test/resources/files");
         Assert.assertTrue(file.exists());
         GitCaller gitCaller = new GitCaller(file, new ResourceSetImpl());
         gitCaller.compareCommits("HEAD~1");
+
+        FileUtils.deleteDirectory(file);
     }
 
     @Test

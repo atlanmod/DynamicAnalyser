@@ -284,7 +284,7 @@ public class TraceParser implements Runnable {
      * @param java2File a {@link Java2File}
      * @param startPos the start position of an element inside the method
      * @param endPos the end position of an element inside the method
-     * @return the {@link org.eclipse.jdt.core.dom.AST} with the {@link MethodDeclaration} as a node
+     * @return the {@link ASTNodeSourceRegion} with the {@link MethodDeclaration} as a node
      */
     private ASTNodeSourceRegion getMethodASTNodeFromJava2File(Java2File java2File, int startPos, int endPos) {
         return java2File.getChildren().stream()
