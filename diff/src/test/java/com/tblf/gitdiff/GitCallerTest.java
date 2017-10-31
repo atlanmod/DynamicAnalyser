@@ -1,8 +1,8 @@
 package com.tblf.gitdiff;
 
+import com.tblf.business.Manager;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.ModelUtils;
-import com.tblf.business.Manager;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
@@ -38,13 +38,13 @@ public class GitCallerTest {
 
     @Test
     public void checkCompareCommitStandardProject() throws IOException {
-        File zip = new File("src/test/resources/fullProject/SimpleProject.zip");
+        File zip = new File("src/test/resources/fullprojects/SimpleProject.zip");
         ModelUtils.unzip(zip);
 
         Configuration.setProperty("mode", "SOURCECODE");
         Manager manager = new Manager();
 
-        File file = new File("src/test/resources/fullProject/SimpleProject");
+        File file = new File("src/test/resources/fullprojects/SimpleProject");
         Assert.assertTrue(file.exists());
 
         try {

@@ -5,8 +5,8 @@
     <groupId>com.tblf</groupId>
     <artifactId>DynamicAnalysis</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-
     <packaging>pom</packaging>
+
     <name>DynamicAnalysis</name>
     <url>http://maven.apache.org</url>
 
@@ -47,133 +47,14 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
+            <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>com.tblf</groupId>
-            <artifactId>DotCP</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.github.lukehutch</groupId>
-            <artifactId>fast-classpath-scanner</artifactId>
-            <version>LATEST</version>
-        </dependency>
-
-        <!-- EMF -->
-        <dependency>
-            <groupId>org.eclipse.emf</groupId>
-            <artifactId>org.eclipse.emf.ecore</artifactId>
-            <version>2.12.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.emf</groupId>
-            <artifactId>org.eclipse.emf.common</artifactId>
-            <version>2.12.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.emf</groupId>
-            <artifactId>org.eclipse.emf.ecore.xmi</artifactId>
-            <version>2.12.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.openehealth.ipf.eclipse.ocl</groupId>
-            <artifactId>ipf-eclipse-ocl</artifactId>
-            <version>3.1.0.v20110913-1213</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.openehealth.ipf.eclipse.ocl</groupId>
-            <artifactId>ipf-eclipse-ocl-ecore</artifactId>
-            <version>3.1.1.v20110823-1646</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.acceleo</groupId>
-            <artifactId>lpg.runtime.java</artifactId>
-            <version>2.0.17.v201004271640</version>
-        </dependency>
-
-        <!--Run the .sh script in order to mvn install:install-file those dependencies-->
-        <dependency>
-            <groupId>org.eclipse.mdt</groupId>
-            <artifactId>org.eclipse.gmt.modisco.java</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.mdt</groupId>
-            <artifactId>org.eclipse.gmt.modisco.omg.kdm</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.mdt</groupId>
-            <artifactId>org.eclipse.modisco.java.composition</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.mdt</groupId>
-            <artifactId>org.eclipse.modisco.kdm.source.extension</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>fr.inria.atlanmod.neoemf</groupId>
-            <artifactId>neoemf-core</artifactId>
-            <version>1.0.2</version>
-        </dependency>
-
-
-        <!-- Instrumentation -->
-        <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm-all</artifactId>
-            <version>5.2</version>
-        </dependency>
-
-        <dependency>
-            <groupId>fr.inria.gforge.spoon</groupId>
-            <artifactId>spoon-core</artifactId>
-            <version>6.0.0-SNAPSHOT</version>
-        </dependency>
 
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.5</version>
-        </dependency>
-
-        <!--Model building -->
-        <dependency>
-            <groupId>com.tblf</groupId>
-            <artifactId>AnalysisModel</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.tblf</groupId>
-            <artifactId>Link</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-
-        <!-- Diff -->
-
-        <dependency>
-            <groupId>org.eclipse.jgit</groupId>
-            <artifactId>org.eclipse.jgit</artifactId>
-            <version>4.9.0.201710071750-r</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.javaparser</groupId>
-            <artifactId>javaparser-core</artifactId>
-            <version>3.4.3</version>
         </dependency>
     </dependencies>
 

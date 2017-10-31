@@ -228,7 +228,7 @@ public class ModelUtils {
 
     /**
      * Gather all the test classes from a {@link Model} using OCL queries
-     * A {@link ClassDeclaration} is considered as a test class if it had @{@link org.junit.Test} annotations
+     * A {@link ClassDeclaration} is considered as a test class if it had JUnit test annotations
      * @param model
      * @return
      */
