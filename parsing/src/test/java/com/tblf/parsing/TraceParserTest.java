@@ -57,7 +57,7 @@ public class TraceParserTest {
         Map<String, Object> m = reg.getExtensionToFactoryMap();
         m.put("xmi", new XMIResourceFactoryImpl());
 
-        System.out.println(new File(".").getAbsolutePath());
+        Files.walk(new File(".").toPath()).forEach(System.out::println);
 
         File file = new File("./src/test/resources/models/simpleProject");
         Files.walk(file.toPath())
