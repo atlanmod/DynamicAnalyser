@@ -60,6 +60,8 @@ public class TraceParserTest {
         Map<String, Object> m = reg.getExtensionToFactoryMap();
         m.put("xmi", new XMIResourceFactoryImpl());
 
+        Files.walk(new File(".").toPath()).forEach(System.out::println);
+
         ModelUtils.unzip(new File("./src/test/resources/model/simpleProject.zip"));
 
         File file = new File("./src/test/resources/models/simpleProject");
@@ -67,7 +69,6 @@ public class TraceParserTest {
                 .filter(path -> path.toString().endsWith(".xmi") && !path.toString().endsWith("_kdm.xmi"))
                 .forEach(path -> {
 
-            System.out.println("now adding: "+path.getFileName().toString());
             try {
                 Resource resource = resourceSet.getResource(URI.createURI(path.toUri().toURL().toString()), true);
                 System.out.println(resource);
