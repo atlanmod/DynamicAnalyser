@@ -50,7 +50,7 @@ public class SourceCodeInstrumenterTest {
         >= Files.walk(proj.toPath()).filter(path -> path.toString().endsWith(".java")).collect(Collectors.toList()).size());
 
         try {
-            Class clazz = SingleURLClassLoader.getInstance().getUrlClassLoader().loadClass("com.tblf.SimpleProject.AppTest");
+            Class clazz = SingleURLClassLoader.getInstance().getClassLoader().loadClass("com.tblf.SimpleProject.AppTest");
             JUnitCore.runClasses(clazz);
         } catch (Throwable e) {
             Assert.fail(e.toString());

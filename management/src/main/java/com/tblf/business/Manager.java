@@ -97,7 +97,7 @@ public class Manager {
         instrumenter.instrument(modelParser.getTargets().keySet(), modelParser.getTests().keySet());
 
         //Running the test suites
-        JUnitRunner jUnitRunner = new JUnitRunner(SingleURLClassLoader.getInstance().getUrlClassLoader());
+        JUnitRunner jUnitRunner = new JUnitRunner(SingleURLClassLoader.getInstance().getClassLoader());
 
         jUnitRunner.runTests(modelParser.getTests().keySet());
 

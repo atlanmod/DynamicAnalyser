@@ -15,7 +15,6 @@
         <module>instrumentation</module>
         <module>diff</module>
         <module>parsing</module>
-        <module>classloading</module>
         <module>runner</module>
         <module>management</module>
     </modules>

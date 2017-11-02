@@ -1,7 +1,4 @@
-package com.tblf.parsing;
-
-import com.github.javaparser.ast.stmt.Statement;
-import com.tblf.utils.Configuration;
+package com.tblf.utils;
 
 import java.io.File;
 import java.io.FileReader;
@@ -80,25 +77,9 @@ public class ParserUtils {
     }
 
     /**
-     * Parse a statement to create a string to display out of it
-     * @param statement the {@link Statement}
-     * @return a {@link String}
-     */
-    public static String statementToString(Statement statement) {
-        String toString;
-        if (statement.getRange().isPresent()) {
-            toString = String.format(" %s : line %s, from %s, to %s", statement, statement.getRange().get().begin.line,statement.getRange().get().begin.column, statement.getRange().get().end.column);
-        } else {
-            toString = statement.toString();
-        }
-
-        return toString;
-    }
-
-    /**
      * Print the progression of the parsing
-     * @param total
-     * @param current
+     * @param total the max progression
+     * @param current the current progression
      */
     public static void printProgress(long startTime, long total, long current) {
         long eta = current == 0 ? 0 :
@@ -127,6 +108,10 @@ public class ParserUtils {
     }
 
 
+    /**
+     * Print a nice progression
+     * @param maxLine the maximum progression
+     */
     public static void endProgress(long maxLine) {
         StringBuilder stringBuilder = new StringBuilder(140);
         int percent = 100;

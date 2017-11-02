@@ -6,9 +6,9 @@ import com.github.javaparser.Position;
 import com.github.javaparser.Range;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.tblf.Model.Analysis;
-import com.tblf.parsing.ParserUtils;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.ModelUtils;
+import com.tblf.utils.ParserUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.gmt.modisco.java.ClassDeclaration;
@@ -158,7 +158,7 @@ public class GitCaller {
         //Statement modified or removed
         blockStmtBefore.getStatements().forEach(statement -> {
             if (! blockStmtAfter.getStatements().contains(statement) && statement.getRange().isPresent()) {
-                LOGGER.info("In file "+diffEntry.getOldPath()+ParserUtils.statementToString(statement)+" modified.");
+                LOGGER.info("In file "+diffEntry.getOldPath()+ statementToString(statement)+" modified.");
                 //Get the impacts at the statement level
                 testToRun.addAll(getImpacts(java2File, statement));
             }
@@ -167,7 +167,7 @@ public class GitCaller {
         //New statements
         blockStmtAfter.getStatements().forEach(statement -> {
             if (! blockStmtBefore.getStatements().contains(statement) && statement.getRange().isPresent()) {
-                LOGGER.info("In file "+diffEntry.getNewPath()+ParserUtils.statementToString(statement)+" added");
+                LOGGER.info("In file "+diffEntry.getNewPath()+ statementToString(statement)+" added");
                 //Get the impacts at the method level
                 testToRun.addAll(getMethodImpacts(java2File, statement));
             }
@@ -305,6 +305,22 @@ public class GitCaller {
      */
     public Set<MethodDeclaration> getTestToRun() {
         return testToRun;
+    }
+
+    /**
+     * Parse a statement to create a string to display out of it
+     * @param statement the {@link com.github.javaparser.ast.stmt.Statement}
+     * @return a {@link String}
+     */
+    private static String statementToString(com.github.javaparser.ast.stmt.Statement statement) {
+        String toString;
+        if (statement.getRange().isPresent()) {
+            toString = String.format(" %s : line %s, from %s, to %s", statement, statement.getRange().get().begin.line,statement.getRange().get().begin.column, statement.getRange().get().end.column);
+        } else {
+            toString = statement.toString();
+        }
+
+        return toString;
     }
 
     /**

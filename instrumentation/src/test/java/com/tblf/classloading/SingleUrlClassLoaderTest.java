@@ -29,7 +29,7 @@ public class SingleUrlClassLoaderTest {
         singleURLClassLoader.addURLs(new URL[]{file.toURI().toURL()});
 
         try {
-            Class aClass = singleURLClassLoader.getUrlClassLoader().loadClass("Main.Main");
+            Class aClass = singleURLClassLoader.getClassLoader().loadClass("Main.Main");
             Assert.assertEquals("Main.Main", aClass.getName());
         } catch (Throwable t) {
             Assert.fail(t.toString());
@@ -57,7 +57,7 @@ public class SingleUrlClassLoaderTest {
         singleURLClassLoader.addURLs(new URL[]{file2.toURI().toURL()});
 
         try {
-            Class aClass = singleURLClassLoader.getUrlClassLoader().loadClass("Main.Main");
+            Class aClass = singleURLClassLoader.getClassLoader().loadClass("Main.Main");
             Assert.assertEquals("Main.Main", aClass.getName());
         } catch (Throwable t) {
             Assert.fail(t.toString());
@@ -65,10 +65,10 @@ public class SingleUrlClassLoaderTest {
 
         singleURLClassLoader.addURLs(new URL[]{file.toURI().toURL()});
         try {
-            Class aClass = singleURLClassLoader.getUrlClassLoader().loadClass("Main.Main");
+            Class aClass = singleURLClassLoader.getClassLoader().loadClass("Main.Main");
             Assert.assertEquals("Main.Main", aClass.getName());
 
-            aClass = singleURLClassLoader.getUrlClassLoader().loadClass("org.junit.After");
+            aClass = singleURLClassLoader.getClassLoader().loadClass("org.junit.After");
             Assert.assertEquals("org.junit.After", aClass.getName());
         } catch (Throwable t) {
             Assert.fail(t.toString());
