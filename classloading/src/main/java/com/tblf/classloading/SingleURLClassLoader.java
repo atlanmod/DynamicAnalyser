@@ -3,6 +3,7 @@ package com.tblf.classloading;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,7 +19,7 @@ public class SingleURLClassLoader {
     private static SingleURLClassLoader INSTANCE;
     private static final Logger LOGGER = Logger.getLogger("SingleURLClassLoader");
 
-    private URLClassLoader urlClassLoader;
+    private InstURLClassLoader urlClassLoader;
 
     private SingleURLClassLoader() {
         urlClassLoader = new InstURLClassLoader(new URL[]{}, this.getClass().getClassLoader());
@@ -26,7 +27,7 @@ public class SingleURLClassLoader {
 
     /**
      * Singleton getInstance() method
-     * @return
+     * @return this, a {@link SingleURLClassLoader}
      */
     public static SingleURLClassLoader getInstance() {
         if (INSTANCE == null) {
@@ -38,18 +39,10 @@ public class SingleURLClassLoader {
 
     /**
      * Add urls to the already existing classloader
-     * @param urls
+     * @param urls an {@link URL} array
      */
     public void addURLs(URL[] urls) {
         urlClassLoader = new InstURLClassLoader(urls, urlClassLoader);
-    }
-
-    public URLClassLoader getUrlClassLoader() {
-        return urlClassLoader;
-    }
-
-    public void setUrlClassLoader(URLClassLoader urlClassLoader) {
-        this.urlClassLoader = urlClassLoader;
     }
 
     /**
@@ -57,10 +50,36 @@ public class SingleURLClassLoader {
      */
     public void clear() {
         try {
-            this.getUrlClassLoader().close();
+            this.urlClassLoader.close();
             this.urlClassLoader = new InstURLClassLoader(new URL[]{}, this.getClass().getClassLoader());
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Cannot clear the classLoader", e);
         }
+    }
+
+    /**
+     * Load the bytes when the {@link URLClassLoader} is a {@link InstURLClassLoader}
+     * @param bytes a byte array
+     * @param name the name of the class to load
+     */
+    public void loadBytes(byte[] bytes, String name) {
+        urlClassLoader.loadBytes(bytes, name);
+    }
+
+    /**
+     * Load a {@link ByteBuffer} in the {@link ClassLoader}
+     * @param byteBuffer a {@link ByteBuffer}
+     */
+    public void loadBytes(ByteBuffer byteBuffer){
+        urlClassLoader.loadBytes(byteBuffer);
+    }
+
+    /**
+     * Gets urlClassLoader
+     *
+     * @return value of urlClassLoader
+     */
+    public ClassLoader getClassLoader() {
+        return urlClassLoader;
     }
 }

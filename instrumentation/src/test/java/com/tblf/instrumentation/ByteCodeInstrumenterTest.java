@@ -53,7 +53,7 @@ public class ByteCodeInstrumenterTest {
         ByteCodeInstrumenter byteCodeInstrumenter = new ByteCodeInstrumenter(folder);
         byteCodeInstrumenter.instrument(Collections.singletonList("org.junit.internal.matchers.StacktracePrintingMatcherTest"), new ArrayList<>());
 
-        Class aClass = SingleURLClassLoader.getInstance().getUrlClassLoader().loadClass("org.junit.internal.matchers.StacktracePrintingMatcherTest");
+        Class aClass = SingleURLClassLoader.getInstance().getClassLoader().loadClass("org.junit.internal.matchers.StacktracePrintingMatcherTest");
         Assert.assertNotNull(aClass);
 
         File callDependency = new File("src/test/resources/jars/Link-1.0.0.jar");
@@ -85,7 +85,7 @@ public class ByteCodeInstrumenterTest {
         ByteCodeInstrumenter byteCodeInstrumenter = new ByteCodeInstrumenter(folder);
         byteCodeInstrumenter.instrument(Collections.singletonList("com.tblf.SimpleProject.App"), Collections.singletonList("com.tblf.SimpleProject.AppTest"));
 
-        Class aClass = SingleURLClassLoader.getInstance().getUrlClassLoader().loadClass("com.tblf.SimpleProject.AppTest");
+        Class aClass = SingleURLClassLoader.getInstance().getClassLoader().loadClass("com.tblf.SimpleProject.AppTest");
         Assert.assertNotNull(aClass);
 
         //Running the testClass instrumented with the Test instrumentation
@@ -147,8 +147,8 @@ public class ByteCodeInstrumenterTest {
             Assert.fail(t.getMessage());
         }
 
-        Assert.assertNotNull(SingleURLClassLoader.getInstance().getUrlClassLoader().loadClass("org.assertj.core.api.AbstractMapSizeAssert"));
-        Assert.assertNotNull(SingleURLClassLoader.getInstance().getUrlClassLoader().loadClass("org.assertj.core.api.date.AbstractDateAssertWithOneIntArg_Test"));
+        Assert.assertNotNull(SingleURLClassLoader.getInstance().getClassLoader().loadClass("org.assertj.core.api.AbstractMapSizeAssert"));
+        Assert.assertNotNull(SingleURLClassLoader.getInstance().getClassLoader().loadClass("org.assertj.core.api.date.AbstractDateAssertWithOneIntArg_Test"));
 
         FileUtils.deleteDirectory(assertJFolder);
     }

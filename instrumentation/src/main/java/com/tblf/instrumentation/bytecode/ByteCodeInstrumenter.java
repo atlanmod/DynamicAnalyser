@@ -1,7 +1,6 @@
 package com.tblf.instrumentation.bytecode;
 
 import com.tblf.DotCP.DotCPParserBuilder;
-import com.tblf.classloading.InstURLClassLoader;
 import com.tblf.classloading.SingleURLClassLoader;
 import com.tblf.instrumentation.InstrumentationUtils;
 import com.tblf.instrumentation.Instrumenter;
@@ -50,9 +49,10 @@ public class ByteCodeInstrumenter implements Instrumenter {
     private File projectFolder;
 
     /**
-     * The classLoader loading instrumented classes
+     * A singleton class loading the bytes arrays instrumented
      */
-    private InstURLClassLoader instURLClassLoader = (InstURLClassLoader) SingleURLClassLoader.getInstance().getUrlClassLoader();
+    private static SingleURLClassLoader singleURLClassLoader = SingleURLClassLoader.getInstance();
+
 
     public ByteCodeInstrumenter(File project) {
         this.projectFolder = project;
@@ -74,7 +74,7 @@ public class ByteCodeInstrumenter implements Instrumenter {
                 File target = InstrumentationUtils.getClassFile(sutBinFolder, t);
                 LOGGER.fine("Instrumenting class "+t+" of classFile "+target.toString());
                 byte[] targetAsByte = instrumentTargetClass(target, t);
-                ((InstURLClassLoader) SingleURLClassLoader.getInstance().getUrlClassLoader()).loadBytes(targetAsByte);
+                singleURLClassLoader.loadBytes(targetAsByte, t);
                 scores[0]++;
 
             } catch (IOException | LinkageError e) {
@@ -87,7 +87,7 @@ public class ByteCodeInstrumenter implements Instrumenter {
             try {
                 File target = InstrumentationUtils.getClassFile(testBinFolder, t);
                 byte[] targetAsByte = instrumentTestClass(target, t);
-                ((InstURLClassLoader) SingleURLClassLoader.getInstance().getUrlClassLoader()).loadBytes(targetAsByte);
+                singleURLClassLoader.loadBytes(targetAsByte, t);
                 scores[2]++;
             } catch (IOException | LinkageError e) {
                 LOGGER.fine("Couldn't instrument "+t+" : "+e.getMessage());
@@ -106,7 +106,7 @@ public class ByteCodeInstrumenter implements Instrumenter {
 
         try {
             classReader.accept(new TargetClassVisitor(Opcodes.ASM5, classWriter, qualifiedName), ClassReader.EXPAND_FRAMES);
-        } catch (Throwable t) {
+        } catch (Throwable ignored) {
 
         }
 
@@ -149,6 +149,6 @@ public class ByteCodeInstrumenter implements Instrumenter {
         }).collect(Collectors.toList()).toArray(new URL[dependencies.size()]);
 
         //Instrumenting the binaries
-        SingleURLClassLoader.getInstance().addURLs(dependencyArray);
+        singleURLClassLoader.addURLs(dependencyArray);
     }
 }
