@@ -4,6 +4,7 @@ import com.tblf.Model.Analysis;
 import com.tblf.Model.ModelFactory;
 import com.tblf.Model.ModelPackage;
 import com.tblf.utils.Configuration;
+import com.tblf.utils.ParserUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.eclipse.emf.common.util.URI;
