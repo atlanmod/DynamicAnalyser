@@ -314,7 +314,7 @@ public class ModelUtils {
     public static ResourceSet buildResourceSet(File folder) {
         ResourceSet resourceSet = new ResourceSetImpl();
         try {
-            Files.walk(folder.toPath()).filter(path -> path.toString().endsWith(".xmi")).forEach(path -> {
+            Files.walk(folder.toPath()).filter(path -> path.toString().endsWith(Configuration.getProperty("modelFormat"))).forEach(path -> {
                 try {
                     resourceSet.getResource(URI.createURI(path.toUri().toURL().toString()), true);
                 } catch (MalformedURLException e) {

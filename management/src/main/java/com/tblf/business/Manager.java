@@ -2,6 +2,7 @@ package com.tblf.business;
 
 import com.tblf.Link.FileTracer;
 import com.tblf.classloading.SingleURLClassLoader;
+import com.tblf.discovery.Discoverer;
 import com.tblf.instrumentation.InstrumentationType;
 import com.tblf.instrumentation.Instrumenter;
 import com.tblf.instrumentation.bytecode.ByteCodeInstrumenter;
@@ -18,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -31,6 +33,30 @@ public class Manager {
     private static final Logger LOGGER = Logger.getLogger("Manager");
     private File project;
     private ResourceSet resourceSet;
+
+    private Collection<String> sutClasses;
+    private Collection<String> testClasses;
+
+    public ResourceSet buildModel(File project) {
+        this.project = project;
+
+        try {
+            Discoverer.generateFullModel(project);
+            this.resourceSet = ModelUtils.buildResourceSet(project);
+
+            Resource javaModel = this.resourceSet.getResources().stream().filter(resource -> resource.getURI().toString().endsWith("_java.xmi")).findFirst().orElseThrow(() -> new IOException("Couldnt' find the MoDisco java model"));
+            ModelParser modelParser = new ModelParser();
+            modelParser.parse(javaModel);
+
+            sutClasses = modelParser.getTargets().keySet();
+            testClasses = modelParser.getTests().keySet();
+
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Couldn't build the Modisco model", e);
+        }
+
+        return this.resourceSet;
+    }
 
     /**
      * Build the traces of a project by instrumenting and running the tests

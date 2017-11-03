@@ -17,6 +17,7 @@
         <module>parsing</module>
         <module>runner</module>
         <module>management</module>
+        <module>discovery</module>
     </modules>
 
     <properties>
