@@ -10,9 +10,33 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
+import java.util.Collection;
 
 public class ManagerTest {
+
+    @Test
+    public void checkParseModel() throws IOException, NoSuchFieldException, IllegalAccessException {
+        File zip = new File("src/test/resources/fullprojects/SimpleProject.zip");
+        ModelUtils.unzip(zip);
+        File file = new File("src/test/resources/fullprojects/SimpleProject");
+
+        Manager manager = new Manager();
+        manager.buildModel(file);
+
+        Field f = manager.getClass().getDeclaredField("sutClasses");
+        f.setAccessible(true);
+        Collection c = (Collection) f.get(manager);
+        Assert.assertEquals(1, c.size());
+
+        f = manager.getClass().getDeclaredField("testClasses");
+        f.setAccessible(true);
+        c = (Collection) f.get(manager);
+        Assert.assertEquals(1, c.size());
+
+        FileUtils.deleteDirectory(file);
+    }
 
     @Test
     public void checkManagerBCI() throws IOException {
