@@ -49,6 +49,7 @@ public class Discoverer {
             iJavaProjectAbstractModelDiscoverer.setSerializeTarget(true);
             iJavaProjectAbstractModelDiscoverer.discoverElement(iJavaProject, PROGRESS_MONITOR);
 
+
         } catch (CoreException | DiscoveryException e) {
             throw new IOException(e);
         }
