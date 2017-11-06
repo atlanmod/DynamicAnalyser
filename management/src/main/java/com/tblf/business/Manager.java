@@ -37,11 +37,19 @@ public class Manager {
     private Collection<String> sutClasses;
     private Collection<String> testClasses;
 
+    /**
+     * Generate the model out of the source code using MoDisco
+     * @param project the {@link File} containing the project
+     * @return the {@link ResourceSet} loaded
+     */
     public ResourceSet buildModel(File project) {
         this.project = project;
 
         try {
-            Discoverer.generateFullModel(project);
+            if (! ModelUtils.isModelLoaded(project)) {
+                Discoverer.generateFullModel(project);
+            }
+
             this.resourceSet = ModelUtils.buildResourceSet(project);
 
             Resource javaModel = this.resourceSet.getResources().stream().filter(resource -> resource.getURI().toString().endsWith("_java.xmi")).findFirst().orElseThrow(() -> new IOException("Couldnt' find the MoDisco java model"));
@@ -61,48 +69,12 @@ public class Manager {
     /**
      * Build the traces of a project by instrumenting and running the tests
      *
-     * @param project the F
+     * @param project the {@link File} containing the project executed to generate traces
      * @return the file containing the execution trace
      */
     public File buildTraces(File project) {
         ((FileTracer) FileTracer.getInstance()).reset();
         SingleURLClassLoader.getInstance().clear();
-
-        // getting the xmi model file
-        Optional<Path> pathOptional;
-
-        this.project = project;
-        File model;
-        Resource resource = null;
-
-        try {
-            pathOptional = Files.walk(project.toPath(), 1).filter(path -> path.toString().endsWith("_java." + Configuration.getProperty("modelFormat"))).findFirst();
-
-            if (pathOptional.isPresent()) {
-                model = pathOptional.get().toFile();
-            } else throw new IOException("Couldn't find the MoDisco model !");
-
-            //Loading the model
-            if (model.toString().endsWith(".xmi")) {
-                resource = ModelUtils.loadModel(model);
-            } else if (model.toString().endsWith(".zip")) {
-                resource = ModelUtils.loadModelFromZip(model);
-            }
-            this.resourceSet = resource != null ? resource.getResourceSet() : null;
-
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Could not parse the project", e);
-        }
-
-
-        //Parsing the model to differentiate the SUT from the tests
-        ModelParser modelParser = new ModelParser();
-        modelParser.parse(resource);
-
-        if (modelParser.getTests().isEmpty() || modelParser.getTargets().isEmpty()) {
-            LOGGER.warning("Could not find test or SUT classes");
-            return null;
-        }
 
         //Instrumenting the project
         Instrumenter instrumenter;
@@ -120,12 +92,12 @@ public class Manager {
                 return null;
         }
 
-        instrumenter.instrument(modelParser.getTargets().keySet(), modelParser.getTests().keySet());
+        instrumenter.instrument(this.sutClasses, this.testClasses);
 
         //Running the test suites
         JUnitRunner jUnitRunner = new JUnitRunner(SingleURLClassLoader.getInstance().getClassLoader());
 
-        jUnitRunner.runTests(modelParser.getTests().keySet());
+        jUnitRunner.runTests(this.testClasses);
 
         ((FileTracer) FileTracer.getInstance()).endTrace();
 
@@ -153,7 +125,7 @@ public class Manager {
         }
 
         TraceParser traceParser = new TraceParser(trace, outputModel, resourceSet);
-        //new Thread(traceParser).start(); //Paralleled
+
         Resource resource = traceParser.parse();
 
         try {

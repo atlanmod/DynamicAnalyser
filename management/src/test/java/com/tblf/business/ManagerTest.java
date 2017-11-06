@@ -5,10 +5,12 @@ import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 public class ManagerTest {
 
@@ -21,6 +23,7 @@ public class ManagerTest {
         Configuration.setProperty("sutBinaries", "/");
         Configuration.setProperty("testBinaries", "/");
         Manager manager = new Manager();
+        manager.buildModel(project);
         try {
             long before = System.currentTimeMillis();
             File trace = manager.buildTraces(project);
@@ -45,6 +48,7 @@ public class ManagerTest {
         Manager manager = new Manager();
 
         File file = new File("src/test/resources/fullprojects/SimpleProject");
+        manager.buildModel(file);
         try {
             long before = System.currentTimeMillis();
             File trace = manager.buildTraces(file);
@@ -69,6 +73,7 @@ public class ManagerTest {
         Manager manager = new Manager();
 
         File file = new File("src/test/resources/fullprojects/SimpleProject");
+        manager.buildModel(file);
         try {
             long before = System.currentTimeMillis();
             File trace = manager.buildTraces(file);
@@ -101,7 +106,7 @@ public class ManagerTest {
 
         Manager manager = new Manager();
         File file = new File("src/test/resources/fullprojects/SimpleProject");
-
+        manager.buildModel(file);
         try {
             long before = System.currentTimeMillis();
             File trace = manager.buildTraces(file);
