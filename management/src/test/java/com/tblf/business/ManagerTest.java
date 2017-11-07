@@ -5,12 +5,38 @@ import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.util.Collection;
 
 public class ManagerTest {
+
+    @Test
+    public void checkParseModel() throws IOException, NoSuchFieldException, IllegalAccessException {
+        File zip = new File("src/test/resources/fullprojects/SimpleProject.zip");
+        ModelUtils.unzip(zip);
+        File file = new File("src/test/resources/fullprojects/SimpleProject");
+
+        Manager manager = new Manager();
+        manager.buildModel(file);
+
+        Field f = manager.getClass().getDeclaredField("sutClasses");
+        f.setAccessible(true);
+        Collection c = (Collection) f.get(manager);
+        Assert.assertEquals(1, c.size());
+
+        f = manager.getClass().getDeclaredField("testClasses");
+        f.setAccessible(true);
+        c = (Collection) f.get(manager);
+        Assert.assertEquals(1, c.size());
+
+        FileUtils.deleteDirectory(file);
+    }
 
     @Test
     public void checkManagerBCI() throws IOException {
@@ -21,6 +47,7 @@ public class ManagerTest {
         Configuration.setProperty("sutBinaries", "/");
         Configuration.setProperty("testBinaries", "/");
         Manager manager = new Manager();
+        manager.buildModel(project);
         try {
             long before = System.currentTimeMillis();
             File trace = manager.buildTraces(project);
@@ -45,6 +72,7 @@ public class ManagerTest {
         Manager manager = new Manager();
 
         File file = new File("src/test/resources/fullprojects/SimpleProject");
+        manager.buildModel(file);
         try {
             long before = System.currentTimeMillis();
             File trace = manager.buildTraces(file);
@@ -69,6 +97,7 @@ public class ManagerTest {
         Manager manager = new Manager();
 
         File file = new File("src/test/resources/fullprojects/SimpleProject");
+        manager.buildModel(file);
         try {
             long before = System.currentTimeMillis();
             File trace = manager.buildTraces(file);
@@ -101,7 +130,7 @@ public class ManagerTest {
 
         Manager manager = new Manager();
         File file = new File("src/test/resources/fullprojects/SimpleProject");
-
+        manager.buildModel(file);
         try {
             long before = System.currentTimeMillis();
             File trace = manager.buildTraces(file);

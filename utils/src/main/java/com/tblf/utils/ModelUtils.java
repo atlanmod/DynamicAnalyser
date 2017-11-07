@@ -27,6 +27,7 @@ import org.eclipse.ocl.options.ParsingOptions;
 
 import java.io.*;
 import java.net.MalformedURLException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.util.*;
@@ -314,7 +315,7 @@ public class ModelUtils {
     public static ResourceSet buildResourceSet(File folder) {
         ResourceSet resourceSet = new ResourceSetImpl();
         try {
-            Files.walk(folder.toPath()).filter(path -> path.toString().endsWith(".xmi")).forEach(path -> {
+            Files.walk(folder.toPath()).filter(path -> path.toString().endsWith(Configuration.getProperty("modelFormat"))).forEach(path -> {
                 try {
                     resourceSet.getResource(URI.createURI(path.toUri().toURL().toString()), true);
                 } catch (MalformedURLException e) {
@@ -341,4 +342,14 @@ public class ModelUtils {
                 .findFirst()
                 .orElseThrow(() -> new IOException("Cannot find the package "+pkgQualifiedName+" in the Model"));
     }
+
+    /**
+     * Check if the MoDisco model has been built in the project {@link File}
+     * @param project the {@link File} directory containing the project
+     * @return true if the model exists, false otherwise
+     */
+    public static boolean isModelLoaded(File project) throws IOException {
+        return Files.walk(project.toPath(), 2).filter(path -> path.toString().endsWith(".xmi")).count() > 0;
+    }
+
 }
