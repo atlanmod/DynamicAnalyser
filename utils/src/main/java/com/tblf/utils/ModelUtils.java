@@ -142,7 +142,7 @@ public class ModelUtils {
                 .filter(path -> path.toString().endsWith("java2kdm.xmi"))
                 .forEach(path -> {
             try {
-                LOGGER.info("Adding the model "+path+" to the resourceSet");
+                LOGGER.fine("Adding the model "+path+" to the resourceSet");
                 resourceSet.getResource(URI.createURI(path.toUri().toURL().toString()), true);
             } catch (MalformedURLException e) {
                 LOGGER.warning("Cannot load the xmi: "+path);

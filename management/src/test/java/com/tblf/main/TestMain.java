@@ -25,6 +25,13 @@ public class TestMain {
 
     @Before
     public void setUp() throws GitAPIException {
+        File project = new File(URI);
+
+        if (new File(project, "analysis.xmi").exists()) {
+            System.out.println("Found an existing analysis model. Removing");
+            Assert.assertTrue(new File(project, "analysis.xmi").delete());
+        }
+
         git = Git.init().setDirectory(new File(URI)).call();
         DirCache dirCache = git.add().addFilepattern(".").call();
         Assert.assertTrue(dirCache.getEntryCount() > 0);
@@ -36,21 +43,22 @@ public class TestMain {
 
     @Test
     @Ignore
-    public void test() throws IOException, GitAPIException {
+    public void testEndToEnd() throws IOException, GitAPIException {
         File file = new File(URI);
 
-        //Creating the impact analysis model
+        /** Creating the impact analysis model **/
         Assert.assertTrue(file.exists());
 
         Configuration.setProperty("mode", "BYTECODE");
 
         Manager manager = new Manager();
+        manager.buildModel(file);
         File trace = manager.buildTraces(file);
         Resource resource = manager.parseTraces(trace);
 
         Assert.assertTrue(resource.getContents().size() > 0 );
 
-        //Modifying a file and commiting the changes
+        /******** Modifying a file and commiting the changes ***********/
         File fileToModify = new File(file, "src/main/java/net/vvakame/util/jsonpullparser/JsonPullParser.java");
         Assert.assertTrue(fileToModify.exists());
 
@@ -63,13 +71,13 @@ public class TestMain {
 
         git.commit().setAll(true).setMessage("Modification done").call();
 
-        //Computing the impacts of this modification
+        /******** Computing the impacts of this modification ***********/
         GitCaller gitCaller = new GitCaller(file, resource.getResourceSet());
         gitCaller.compareCommits("HEAD~1");
 
 
         //Displaying all the methods that would need a rerun
-        System.out.println(gitCaller.getTestToRun().size()+" test method impacted:");
+        System.out.println(gitCaller.getTestToRun().size()+" test method impacted by this modification:");
         gitCaller.getTestToRun().forEach(methodDeclaration -> System.out.println(methodDeclaration.getName() +" in class "+ ((NamedElement) methodDeclaration.eContainer()).getName()));
     }
 
