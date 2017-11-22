@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
  */
 public class ParserUtils {
 
+    private static final Logger LOGGER = Logger.getLogger("ParserUtils");
+
     /**
      * Parse the qualified name (QN) of a class and return the package it is contained in
      * @param classQualifiedName the qualified name of the class
@@ -137,15 +139,13 @@ public class ParserUtils {
      */
     public static long getLineNumber(File file) {
         long lineNumber = 0;
-        try {
-            LineNumberReader lineNumberReader = new LineNumberReader(new FileReader(file));
+        try (LineNumberReader lineNumberReader = new LineNumberReader(new FileReader(file))){
             lineNumberReader.skip(Long.MAX_VALUE);
             lineNumber = lineNumberReader.getLineNumber();
             lineNumberReader.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Cannot get the line number in file "+file.getName(), e);
         }
-
         return lineNumber;
     }
 

@@ -184,7 +184,7 @@ public class TraceParser implements Runnable {
         }
 
         String fullMethodQN = testQN.concat(":").concat(method);
-        if (currentTestMethod == null || !fullMethodQN.equals(currentTestMethodQN)) {
+        if ((currentTestMethod == null || !fullMethodQN.equals(currentTestMethodQN)) && currentTest != null) {
             LOGGER.fine("Updating the current test method: " + fullMethodQN);
             currentTestMethod = getMethodFromJava2File(currentTest, method);
             currentTestMethodQN = fullMethodQN;

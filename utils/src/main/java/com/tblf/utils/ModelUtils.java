@@ -30,10 +30,12 @@ import java.net.MalformedURLException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -117,16 +119,18 @@ public class ModelUtils {
         if (f.exists() && f.isDirectory()) {
             ResourceSet resourceSet = new ResourceSetImpl();
 
-            Files.walk(f.toPath()).filter(path -> path.toString().endsWith(".xmi")).forEach(path -> {
-                try {
-                    LOGGER.info("Adding the model "+path+" to the resourceSet");
-                    resourceSet.getResource(URI.createURI(path.toUri().toURL().toString()), true);
-                } catch (MalformedURLException e) {
-                    LOGGER.warning("Cannot load the xmi: "+path);
-                }
-            });
+            try (Stream<Path> stream = Files.walk(f.toPath())) {
+                stream.filter(path -> path.toString().endsWith(".xmi")).forEach(path -> {
+                    try {
+                        LOGGER.info("Adding the model "+path+" to the resourceSet");
+                        resourceSet.getResource(URI.createURI(path.toUri().toURL().toString()), true);
+                    } catch (MalformedURLException e) {
+                        LOGGER.warning("Cannot load the xmi: "+path);
+                    }
+                });
+            }
 
-            return resourceSet.getResources().stream().filter(resource -> resource.getURI().toString().endsWith("Package2Directory_java2kdm.xmi")).findFirst().get();
+            return resourceSet.getResources().stream().filter(resource -> resource.getURI().toString().endsWith("Package2Directory_java2kdm.xmi")).findFirst().orElseThrow(() -> new FileNotFoundException("Cannot load the resource"));
         } else {
             throw new NoSuchFileException("The file does not exist");
         }
@@ -138,16 +142,18 @@ public class ModelUtils {
      * @return the {@link ResourceSet}
      */
     public static ResourceSet addJavaApplicationModelFragments(File file, ResourceSet resourceSet) throws IOException {
-        Files.walk(file.toPath(), 2)
-                .filter(path -> path.toString().endsWith("java2kdm.xmi"))
+
+        try (Stream<Path> files = Files.walk(file.toPath(), 2)) {
+            files.filter(path -> path.toString().endsWith("java2kdm.xmi"))
                 .forEach(path -> {
-            try {
-                LOGGER.fine("Adding the model "+path+" to the resourceSet");
-                resourceSet.getResource(URI.createURI(path.toUri().toURL().toString()), true);
-            } catch (MalformedURLException e) {
-                LOGGER.warning("Cannot load the xmi: "+path);
-            }
-        });
+                    try {
+                        LOGGER.fine("Adding the model "+path+" to the resourceSet");
+                        resourceSet.getResource(URI.createURI(path.toUri().toURL().toString()), true);
+                    } catch (MalformedURLException e) {
+                        LOGGER.warning("Cannot load the xmi: "+path);
+                    }
+                });
+        }
 
         return resourceSet;
     }
@@ -174,45 +180,45 @@ public class ModelUtils {
      * @throws IOException
      */
     public static List<File> unzip(File zip) throws IOException {
-        BufferedOutputStream bufferedOutputStream;
-        FileInputStream fileInputStream = new FileInputStream(zip);
-        ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(fileInputStream));
-        ZipEntry zipEntry;
 
+        ZipEntry zipEntry;
         List<File> filesUnzipped = new ArrayList<>();
 
-        final int BUFFER = 2048;
+        FileInputStream fileInputStream = new FileInputStream(zip);
+        try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(fileInputStream))) {
 
-        while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-            LOGGER.fine("Extracting: "+ zipEntry);
+            final int BUFFER = 2048;
 
-            File file = FileUtils.getFile(zip.getParentFile(), zipEntry.toString());
+            while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+                LOGGER.fine("Extracting: " + zipEntry);
 
-            if (zipEntry.toString().endsWith("/")) {
-                file.mkdir();
-            } else {
-                filesUnzipped.add(file);
+                File file = FileUtils.getFile(zip.getParentFile(), zipEntry.toString());
 
-                int count;
-                byte data[] = new byte[BUFFER];
+                if (zipEntry.toString().endsWith("/")) {
+                    file.mkdir();
+                } else {
+                    filesUnzipped.add(file);
 
-                FileOutputStream fileOutputStream = new FileOutputStream(file);
-                bufferedOutputStream = new BufferedOutputStream(fileOutputStream, BUFFER);
+                    int count;
+                    byte data[] = new byte[BUFFER];
 
-                while ((count = zipInputStream.read(data, 0, BUFFER)) != -1) {
-                    bufferedOutputStream.write(data,0, count);
+                    FileOutputStream fileOutputStream = new FileOutputStream(file);
+
+                    try (BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream, BUFFER)) {
+                        while ((count = zipInputStream.read(data, 0, BUFFER)) != -1) {
+                            bufferedOutputStream.write(data, 0, count);
+                        }
+
+                        bufferedOutputStream.flush();
+                        bufferedOutputStream.close();
+                    }
                 }
-
-                bufferedOutputStream.flush();
-                bufferedOutputStream.close();
             }
-
+            zipInputStream.close();
         }
-        zipInputStream.close();
 
         return filesUnzipped;
     }
-
 
     /**
      * Check if a class is a test class by verifying its methods annotations
@@ -315,13 +321,16 @@ public class ModelUtils {
     public static ResourceSet buildResourceSet(File folder) {
         ResourceSet resourceSet = new ResourceSetImpl();
         try {
-            Files.walk(folder.toPath()).filter(path -> path.toString().endsWith(Configuration.getProperty("modelFormat"))).forEach(path -> {
-                try {
-                    resourceSet.getResource(URI.createURI(path.toUri().toURL().toString()), true);
-                } catch (MalformedURLException e) {
-                    LOGGER.log(Level.WARNING, "Cannot load the resource "+path.toString(), e);
-                }
-            });
+            try (Stream<Path> stream = Files.walk(folder.toPath())) {
+                stream.filter(path -> path.toString().endsWith(Configuration.getProperty("modelFormat"))).forEach(path -> {
+                    try {
+                        resourceSet.getResource(URI.createURI(path.toUri().toURL().toString()), true);
+                    } catch (MalformedURLException e) {
+                        LOGGER.log(Level.WARNING, "Cannot load the resource "+path.toString(), e);
+                    }
+                });
+            }
+
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Couldn't load the resources", e);
         }
@@ -349,7 +358,9 @@ public class ModelUtils {
      * @return true if the model exists, false otherwise
      */
     public static boolean isModelLoaded(File project) throws IOException {
-        return Files.walk(project.toPath(), 2).filter(path -> path.toString().endsWith(".xmi")).count() > 0;
+        try(Stream<Path> stream = Files.walk(project.toPath())) {
+            return stream.filter(path -> path.toString().endsWith(".xmi")).count() > 0;
+        }
     }
 
 }

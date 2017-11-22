@@ -24,9 +24,9 @@ public class DiffUtils {
     static String getLineFromFile(String fileAsString, int line) throws IOException {
         try (Stream<String> lines = new BufferedReader(new StringReader(fileAsString)).lines()) {
             if (line == 0) {
-                return lines.findFirst().get();
+                return lines.findFirst().orElseThrow(() -> new IOException("Could not find a line at line "+line));
             } else {
-                return lines.skip(line).findFirst().get();
+                return lines.skip(line).findFirst().orElseThrow(() -> new IOException("Could not find a line at line "+line));
             }
         }
     }

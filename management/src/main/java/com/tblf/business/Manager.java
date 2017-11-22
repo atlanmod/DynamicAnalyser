@@ -117,7 +117,6 @@ public class Manager {
         try {
             ModelUtils.addJavaApplicationModelFragments(project, this.resourceSet);
         } catch (IOException e) {
-            e.printStackTrace();
             LOGGER.log(Level.WARNING, "Could not gather the resources", e);
         }
 

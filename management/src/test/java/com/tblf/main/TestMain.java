@@ -41,8 +41,8 @@ public class TestMain {
         //Be sure that the project is at the right state
     }
 
-    @Test
     @Ignore
+    @Test
     public void testEndToEnd() throws IOException, GitAPIException {
         File file = new File(URI);
 
