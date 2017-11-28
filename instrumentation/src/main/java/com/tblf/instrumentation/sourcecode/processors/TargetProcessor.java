@@ -1,5 +1,6 @@
 package com.tblf.instrumentation.sourcecode.processors;
 
+import spoon.SpoonException;
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCodeSnippetStatement;
@@ -41,7 +42,15 @@ public class TargetProcessor extends AbstractProcessor<CtStatement> {
             // source end +1 to match MoDisco
             ctCodeSnippetStatement.setValue(String.format("com.tblf.Link.Calls.match(\"%s\", \"%s\")", ctStatement.getPosition().getSourceStart(), ctStatement.getPosition().getSourceEnd()+1));
             //ctCodeSnippetStatement.setValue(String.format("System.out.println(\"%s , %s\")", ctStatement.getPosition().getSourceStart(), ctStatement.getPosition().getSourceEnd()+1));
-            ctStatement.insertBefore(ctCodeSnippetStatement);
+            try {
+                ctStatement.insertBefore(ctCodeSnippetStatement);
+            } catch (Exception e) {
+                try {
+                    ctStatement.insertAfter(ctCodeSnippetStatement);
+                } catch (Exception ignored) {
+
+                }
+            }
         }
     }
 }

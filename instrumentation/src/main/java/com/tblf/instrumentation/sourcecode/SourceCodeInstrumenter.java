@@ -6,12 +6,16 @@ import com.tblf.instrumentation.sourcecode.processors.TargetProcessor;
 import com.tblf.instrumentation.sourcecode.processors.TestProcessor;
 import com.tblf.utils.Configuration;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import spoon.Launcher;
 import spoon.MavenLauncher;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -89,22 +93,24 @@ public class SourceCodeInstrumenter implements Instrumenter {
             try {
                 FileUtils.deleteDirectory(file);
             } catch (IOException e) {
-                LOGGER.warning("Cannot delete the temp files created by the instrumentation at URI: "+file.getAbsolutePath());
+                LOGGER.warning("Cannot delete the temp files created by the instrumentation at URI: " + file.getAbsolutePath());
             }
         }
 
         try {
             SingleURLClassLoader.getInstance().addURLs(new URL[]{binDirectory.toURI().toURL()});
         } catch (MalformedURLException e) {
-            LOGGER.warning("Cannot add the instrumented classes to the classpath: "+e.getMessage());
+            LOGGER.warning("Cannot add the instrumented classes to the classpath: " + e.getMessage());
         }
     }
 
     private void addDependencies() throws IOException {
-        File file = new File("../instrumentation/src/main/resources/Link-1.0.0.jar");
+        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("Link-1.0.0.jar");
+        File link = new File("./Link-1.0.0.jar");
+        IOUtils.copy(inputStream, new FileOutputStream(link));
 
-        if (file.exists()) {
-            dependencies.add(file);
+        if (link.exists()) {
+            dependencies.add(link);
         } else {
             throw new IOException("Cannot find the linker dependency");
         }

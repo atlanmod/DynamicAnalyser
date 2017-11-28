@@ -18,7 +18,7 @@ public class TargetClassVisitor extends ClassVisitor {
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         MethodVisitor methodVisitor = super.visitMethod(access, name, desc, signature, exceptions);
         if ("<init>".equals(name)) {
-            return methodVisitor;
+            return new TargetConstructorVisitor(this.api, methodVisitor, access, name, desc, this.name);
         } else {
             return new TargetMethodVisitor(this.api, methodVisitor, access, name, desc, this.name);
         }
