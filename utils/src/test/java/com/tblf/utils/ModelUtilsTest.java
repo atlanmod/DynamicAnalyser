@@ -40,7 +40,7 @@ public class ModelUtilsTest {
         Model model = (Model) resource.getContents().get(0);
         Assert.assertEquals(model.getName(), "junit");
 
-        Collection collection = ModelUtils.queryForTestClasses(model);
+        Collection collection = ModelUtils.queryForTestClasses(resource);
 
         Assert.assertTrue(collection.size() > 400);
     }

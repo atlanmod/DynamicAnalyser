@@ -9,9 +9,7 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
-import org.eclipse.gmt.modisco.java.Annotation;
-import org.eclipse.gmt.modisco.java.ClassDeclaration;
-import org.eclipse.gmt.modisco.java.Model;
+import org.eclipse.gmt.modisco.java.*;
 import org.eclipse.gmt.modisco.java.Package;
 import org.eclipse.gmt.modisco.java.emf.JavaPackage;
 import org.eclipse.gmt.modisco.omg.kdm.kdm.KdmPackage;
@@ -220,18 +218,6 @@ public class ModelUtils {
         return filesUnzipped;
     }
 
-    /**
-     * Check if a class is a test class by verifying its methods annotations
-     * @param clazz
-     * @return true if it is a test class
-     */
-    public static boolean isATestClass(ClassDeclaration clazz) {
-        return clazz.getBodyDeclarations()
-                .stream()
-                .anyMatch(bodyDeclaration -> bodyDeclaration.getAnnotations()
-                        .stream()
-                        .anyMatch(ModelUtils::isATestAnnotation));
-    }
 
     /**
      * Gather all the test classes from a {@link Model} using OCL queries
@@ -239,18 +225,16 @@ public class ModelUtils {
      * @param model
      * @return
      */
-    public static Collection<ClassDeclaration> queryForTestClasses(Model model) {
+    public static Collection<ClassDeclaration> queryForTestClasses(Resource model) {
+        Collection<ClassDeclaration> classDeclarations = new HashSet<>();
 
-        OCLExpression query = null;
-        try {
-            query = OCL_HELPER.createQuery("Annotation.allInstances() -> select( a : Annotation | a.type.type.name = 'Test') -> collect( a : Annotation | a.oclAsType(ecore::EObject).eContainer().eContainer())");
-        } catch (ParserException e) {
-            LOGGER.warning("Error in the OCL query" + e);
-        }
+        model.getAllContents().forEachRemaining(eObject -> {
+            if (eObject instanceof ClassDeclaration && isATestClass((ClassDeclaration) eObject)) {
+                classDeclarations.add((ClassDeclaration) eObject);
+            }
+        });
 
-        Query eval = ocl.createQuery(query);
-        return (Collection<ClassDeclaration>) eval.evaluate(model);
-
+        return classDeclarations;
     }
 
     /**
@@ -258,14 +242,49 @@ public class ModelUtils {
      * @param model
      * @return
      */
-    public static Collection<ClassDeclaration> queryForAllClasses(Model model) {
+    public static Collection<ClassDeclaration> queryForAllClasses(Resource model) {
+
+        Model model1 = (Model) model.getContents().get(0);
         OCLExpression query = null;
         try {
             query = OCL_HELPER.createQuery("ClassDeclaration.allInstances()");
         } catch (ParserException e) {
             LOGGER.warning("Error in the OCL query" + e);
         }
-        return ((Collection<ClassDeclaration>) ocl.createQuery(query).evaluate(model)).stream().collect(Collectors.toSet());
+        return ((Collection<ClassDeclaration>) ocl.createQuery(query).evaluate(model1)).stream().collect(Collectors.toSet());
+    }
+
+    /**
+     * Check if a class is a test class by verifying its methods annotations
+     * @param clazz a {@link ClassDeclaration}
+     * @return true if it is a test class
+     */
+    public static boolean isATestClass(ClassDeclaration clazz) {
+
+        return clazz.getBodyDeclarations()
+                .stream()
+                .anyMatch(bodyDeclaration -> bodyDeclaration.getAnnotations()
+                        .stream()
+                        .anyMatch(ModelUtils::isATestAnnotation))
+                || isATestClassRec(clazz);
+    }
+
+    /**
+     * Check if a class is a test class by verifying if it extends the class TestCase, or a class extending TestCase recursively
+     * @param type a {@link Type}
+     * @return true if it is a test class
+     */
+    public static boolean isATestClassRec(Type type) {
+        if (type instanceof ClassDeclaration) {
+            ClassDeclaration classDeclaration = (ClassDeclaration) type;
+            if (classDeclaration.getSuperClass() != null) {
+                return isATestClassRec(classDeclaration.getSuperClass().getType());
+            } else {
+                return false;
+            }
+        } else {
+            return type.getName().equals("TestCase");
+        }
     }
 
     /**

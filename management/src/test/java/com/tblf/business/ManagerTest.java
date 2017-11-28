@@ -1,18 +1,23 @@
 package com.tblf.business;
 
+import com.tblf.Model.Analysis;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.nio.file.Files;
 import java.util.Collection;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
+
+import static java.util.logging.Level.*;
 
 public class ManagerTest {
 
@@ -36,31 +41,6 @@ public class ManagerTest {
         Assert.assertEquals(1, c.size());
 
         FileUtils.deleteDirectory(file);
-    }
-
-    @Test
-    public void checkManagerBCI() throws IOException {
-        ModelUtils.unzip(new File("src/test/resources/binaries/assertj.zip"));
-
-        File project = new File("src/test/resources/binaries/assertj");
-        Configuration.setProperty("mode", "BYTECODE");
-        Configuration.setProperty("sutBinaries", "/");
-        Configuration.setProperty("testBinaries", "/");
-        Manager manager = new Manager();
-        manager.buildModel(project);
-        try {
-            long before = System.currentTimeMillis();
-            File trace = manager.buildTraces(project);
-
-            System.out.println("Elapsed time: " + String.valueOf(System.currentTimeMillis() - before)+" ms");
-
-            Assert.assertNotNull(trace);
-        } catch (Exception e) {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
-        }
-
-        FileUtils.deleteDirectory(project);
     }
 
     @Test
@@ -109,7 +89,19 @@ public class ManagerTest {
             Resource resource = manager.parseTraces(trace);
             Assert.assertNotNull(resource);
 
-            Assert.assertEquals(6, resource.getContents().size());
+            Assert.assertEquals(10, resource.getContents().size());
+            /**
+             Constructor1 --> TestApp
+             line constructor1 --> TestApp
+             method --> TestApp
+             line 1 method --> TestApp
+             line 2 method --> TestApp
+             Constructor2 --> TestApp2
+             line constructor2 --> TestApp2
+             method --> TestApp2
+             line 1 method --> TestApp2
+             line 2 method --> TestApp2
+             **/
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
@@ -140,13 +132,14 @@ public class ManagerTest {
             Assert.assertNotNull(trace);
 
             Resource resource = manager.parseTraces(trace);
-            Assert.assertEquals(6, resource.getContents().size());
+
+            Assert.assertEquals(10, resource.getContents().size());
         } catch (Exception e) {
             e.printStackTrace();
-            FileUtils.deleteDirectory(file);
             Assert.fail(e.getMessage());
         }
 
+        FileUtils.deleteDirectory(file);
     }
 
 }

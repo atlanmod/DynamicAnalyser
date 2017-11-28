@@ -3,6 +3,7 @@ package com.tblf.utils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,10 +15,10 @@ public class Configuration {
 
     static {
         properties = new Properties();
-        File file = new File("../utils/src/main/resources/config.properties");
-        System.out.println(file.getAbsolutePath());
+        InputStream inputStream;
         try {
-            properties.load(new FileInputStream(file));
+            inputStream = Configuration.class.getClassLoader().getResourceAsStream("config.properties");
+            properties.load(inputStream);
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Error loading the properties", e);
         }
@@ -27,6 +28,7 @@ public class Configuration {
         return properties.getProperty(key);
     }
 
-    public static void setProperty(String key, String value) {properties.setProperty(key, value);
+    public static void setProperty(String key, String value) {
+        properties.setProperty(key, value);
     }
 }

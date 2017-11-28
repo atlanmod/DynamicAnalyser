@@ -94,7 +94,7 @@ public class JUnitRunner {
             failure.addAndGet(result.getFailureCount());
             success.addAndGet(result.getRunCount() - result.getFailureCount());
             ignore.addAndGet(result.getIgnoreCount());
-            LOGGER.fine(RunnerUtils.results(result));
+            LOGGER.info(RunnerUtils.results(result));
         });
 
         LOGGER.info((failure.get() + success.get()) + " tests run : " + success.get() + " succeeded - " + failure.get() + " failed - " + ignore.get() + " ignored");

@@ -56,6 +56,8 @@ public class Manager {
             sutClasses = modelParser.getTargets().keySet();
             testClasses = modelParser.getTests().keySet();
 
+            LOGGER.info(sutClasses.size()+" sut classes");
+            LOGGER.info(testClasses.size()+" test classes");
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Couldn't build the Modisco model", e);
         }
