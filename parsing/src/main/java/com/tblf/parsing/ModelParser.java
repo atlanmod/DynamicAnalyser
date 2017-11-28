@@ -30,8 +30,8 @@ public class ModelParser {
      */
     public void parse(Resource model) {
 
-        Collection<ClassDeclaration> targetCollection = ModelUtils.queryForAllClasses((Model) model.getContents().get(0));
-        Collection<ClassDeclaration> testCollection = ModelUtils.queryForTestClasses((Model) model.getContents().get(0));
+        Collection<ClassDeclaration> targetCollection = ModelUtils.queryForAllClasses(model);
+        Collection<ClassDeclaration> testCollection = ModelUtils.queryForTestClasses(model);
         targetCollection.removeAll(testCollection);
 
         targets = targetCollection  .stream()

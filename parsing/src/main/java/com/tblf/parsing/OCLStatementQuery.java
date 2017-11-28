@@ -73,7 +73,6 @@ public class OCLStatementQuery {
                 ((IntegerLiteralExp) ocl.getConstraints().get(1).getSpecification().getBodyExpression()).setIntegerSymbol(lineEnd);
             }
 
-            LOGGER.fine("Executing the following query: " + lineExpr.getExpression().toString());
             results = (Collection<ASTNodeSourceRegion>) lineExpr.evaluate(java2File);
         } catch (ParserException e) {
             LOGGER.warning("Couldn't create the OCL request to find the statement in the model " + Arrays.toString(e.getStackTrace()));
@@ -108,7 +107,6 @@ public class OCLStatementQuery {
                 ((IntegerLiteralExp) ocl.getConstraints().get(1).getSpecification().getBodyExpression()).setIntegerSymbol(posEnd);
             }
 
-            LOGGER.fine("Executing the following query: " + positionExpr.getExpression().toString());
             results = (Collection<ASTNodeSourceRegion>) positionExpr.evaluate(java2File);
         } catch (ParserException e) {
             LOGGER.warning("Couldn't create the OCL request to find the statement in the model " + Arrays.toString(e.getStackTrace()));

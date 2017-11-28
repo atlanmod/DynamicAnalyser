@@ -11,6 +11,7 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
+import org.eclipse.gmt.modisco.java.AbstractMethodDeclaration;
 import org.eclipse.gmt.modisco.java.ClassDeclaration;
 import org.eclipse.gmt.modisco.java.CompilationUnit;
 import org.eclipse.gmt.modisco.java.MethodDeclaration;
@@ -273,7 +274,7 @@ public class TraceParser implements Runnable {
      */
     private ASTNodeSourceRegion getMethodASTNodeFromJava2File(Java2File java2File, int lineNumber) {
         return java2File.getChildren().stream()
-                .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof MethodDeclaration &&
+                .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof AbstractMethodDeclaration &&
                         astNodeSourceRegion.getStartLine() <= lineNumber &&
                         astNodeSourceRegion.getEndLine() >= lineNumber)
                 .findFirst()
@@ -289,7 +290,7 @@ public class TraceParser implements Runnable {
      */
     private ASTNodeSourceRegion getMethodASTNodeFromJava2File(Java2File java2File, int startPos, int endPos) {
         return java2File.getChildren().stream()
-                .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof MethodDeclaration &&
+                .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof AbstractMethodDeclaration &&
                         astNodeSourceRegion.getStartPosition() <= startPos &&
                         astNodeSourceRegion.getEndPosition() >= endPos)
                 .findFirst()
