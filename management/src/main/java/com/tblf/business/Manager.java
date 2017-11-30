@@ -43,10 +43,6 @@ public class Manager {
         this.project = project;
 
         try {
-            if (! ModelUtils.isModelLoaded(project)) {
-                Discoverer.generateFullModel(project);
-            }
-
             this.resourceSet = ModelUtils.buildResourceSet(project);
 
             Resource javaModel = this.resourceSet.getResources().stream().filter(resource -> resource.getURI().toString().endsWith("_java.xmi")).findFirst().orElseThrow(() -> new IOException("Couldnt' find the MoDisco java model"));
