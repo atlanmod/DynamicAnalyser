@@ -1,15 +1,19 @@
 package com.tblf.instrumentation.sourcecode;
 
+import com.tblf.DotCP.DotCPParserBuilder;
 import com.tblf.classloading.SingleURLClassLoader;
 import com.tblf.instrumentation.Instrumenter;
+import com.tblf.instrumentation.sourcecode.processors.ClassProcessor;
 import com.tblf.instrumentation.sourcecode.processors.TargetProcessor;
 import com.tblf.instrumentation.sourcecode.processors.TestProcessor;
 import com.tblf.utils.Configuration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.xml.sax.SAXException;
 import spoon.Launcher;
 import spoon.MavenLauncher;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -20,6 +24,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -39,19 +44,24 @@ public class SourceCodeInstrumenter implements Instrumenter {
         this.directory = directory;
         dependencies = new ArrayList<>();
         binDirectory = new File(directory, Configuration.getProperty("instrumentedBinaries"));
+
+        sutDirectory = new File(directory, Configuration.getProperty("sut"));
+        testDirectory = new File(directory, Configuration.getProperty("test"));
     }
 
     @Override
     public void instrument(Collection<String> targets, Collection<String> tests) {
+        //TODO use dependency injection to load the Launcher
         Launcher spoonLauncher;
 
         try {
             addDependencies();
-        } catch (IOException e) {
+            computeDependencies();
+        } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Couldn't add the dependencies", e);
         }
 
-        if (FileUtils.getFile(directory, "pom.xml").exists()) {
+        if (FileUtils.getFile(directory, "pom.xml").exists() && "AUTO".equals(Configuration.getProperty("spoon.mode"))) {
             spoonLauncher = new MavenLauncher(directory.getAbsolutePath(), MavenLauncher.SOURCE_TYPE.ALL_SOURCE);
 
             //Add to the dependencies all the deps computed by spoon from the pom.xml
@@ -65,10 +75,10 @@ public class SourceCodeInstrumenter implements Instrumenter {
             LOGGER.info("pom.xml found ! Will be used to compute the dependencies of the application under instrumentation");
         } else {
             spoonLauncher = new Launcher(); //Standard spoon launcher. needs to define the dependencies by hand
-            //FIXME test&sut directory not initialized
+            LOGGER.info("computing the dependencies without maven");
+
             spoonLauncher.addInputResource(testDirectory.getAbsolutePath());
             spoonLauncher.addInputResource(sutDirectory.getAbsolutePath());
-            LOGGER.info("pom.xml not found ! Dependencies have to be specified. ");
         }
 
         //Add all the dependencies, more specifically the one needed by the instrumentation to the spoon classpath
@@ -77,11 +87,12 @@ public class SourceCodeInstrumenter implements Instrumenter {
         //TODO use hashsets instead of standard lists to optimize the contains() method
         spoonLauncher.getEnvironment().setLevel(String.valueOf(Level.ALL));
         spoonLauncher.getEnvironment().setShouldCompile(true);
-        spoonLauncher.getEnvironment().setAutoImports(true);
+        spoonLauncher.getEnvironment().setAutoImports(false);
         spoonLauncher.getEnvironment().setNoClasspath(false);
 
         spoonLauncher.setBinaryOutputDirectory(binDirectory);
 
+        spoonLauncher.addProcessor(new ClassProcessor());
         spoonLauncher.addProcessor(new TestProcessor(tests));
         spoonLauncher.addProcessor(new TargetProcessor(targets));
 
@@ -89,13 +100,13 @@ public class SourceCodeInstrumenter implements Instrumenter {
 
         File file = new File("spooned");
 
-        if (file.exists()) {
+/*        if (file.exists()) {
             try {
                 FileUtils.deleteDirectory(file);
             } catch (IOException e) {
                 LOGGER.warning("Cannot delete the temp files created by the instrumentation at URI: " + file.getAbsolutePath());
             }
-        }
+        }*/
 
         try {
             SingleURLClassLoader.getInstance().addURLs(new URL[]{binDirectory.toURI().toURL()});
@@ -114,6 +125,16 @@ public class SourceCodeInstrumenter implements Instrumenter {
         } else {
             throw new IOException("Cannot find the linker dependency");
         }
+    }
+
+    private void computeDependencies() throws IOException, ParserConfigurationException, SAXException {
+        File dotCP = FileUtils.getFile(directory, ".classpath");
+        if (! dotCP.exists()) {
+            throw new IOException("no .classpath file in the folder: load this project within an Eclipse application or run the goal 'mvn eclipse:eclipse'");
+        }
+
+        List<File> computedDependencies = new DotCPParserBuilder().create().parse(dotCP);
+        dependencies.addAll(computedDependencies);
     }
 
     public void setBinDirectory(File binDirectory) {

@@ -238,7 +238,7 @@ public class TraceParser implements Runnable {
     private Java2File getJava2FileFromJava2Directory(Resource resource, String name) {
         name = name.substring(name.lastIndexOf(".") + 1); //We only keep the last part of the qualified name of the class
 
-        if (name.contains("$")) { //This is an internal class
+        while (name.contains("$")) { //This is an internal class
             name = name.substring(0, name.lastIndexOf("$")); //We remove the sub class part to find the right compilation unit
         }
 

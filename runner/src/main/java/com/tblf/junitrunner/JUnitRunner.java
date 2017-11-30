@@ -4,7 +4,9 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
 
+import java.util.AbstractMap;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -33,14 +35,14 @@ public class JUnitRunner {
     public void runTests(Collection<String> tests) {
         LOGGER.info("Running " + tests.size() + " test suites");
 
-        Collection<Request> requests = tests.stream().map(s -> {
+        List requests = tests.stream().map(s -> {
             Request request = null;
             try {
                 request = Request.aClass(classLoader.loadClass(s));
             } catch (ClassNotFoundException e) {
                 LOGGER.log(Level.WARNING, "couldn't load the test class " + s, e);
             }
-            return request;
+            return new AbstractMap.SimpleEntry<>(s, request);
         }).collect(Collectors.toList());
 
         this.analyseResults(this.runRequests(requests));
@@ -54,15 +56,16 @@ public class JUnitRunner {
     public void runTestMethods(Collection<Map.Entry<String, String>> entries) {
         LOGGER.info("Running" + entries.size() + " test methods");
 
-        Collection<Request> requests = entries.stream().map(entry -> {
+        Collection<Map.Entry<String, Request>> requests = entries.stream().map(entry -> {
             Request request = null;
             try {
                 Class aClass = classLoader.loadClass(entry.getValue());
                 request = Request.method(aClass, entry.getKey());
+
             } catch (ClassNotFoundException e) {
                 LOGGER.log(Level.WARNING, "couldn't load the test class " + entry.getValue(), e);
             }
-            return request;
+            return new AbstractMap.SimpleEntry<>(entry.getKey(), request);
         }).collect(Collectors.toList());
 
         this.analyseResults(this.runRequests(requests));
@@ -74,10 +77,11 @@ public class JUnitRunner {
      * @param requests a collection of {@link Request}
      * @return a collection of {@link Result}
      */
-    private Collection<Result> runRequests(Collection<Request> requests) {
+    private Collection<Map.Entry<String, Result>> runRequests(Collection<Map.Entry<String, Request>> requests) {
+
         return requests
                 .stream()
-                .map(J_UNIT_CORE::run)
+                .map(stringRequestEntry -> new AbstractMap.SimpleEntry<>(stringRequestEntry.getKey(), J_UNIT_CORE.run(stringRequestEntry.getValue())))
                 .collect(Collectors.toList());
     }
 
@@ -85,16 +89,16 @@ public class JUnitRunner {
      * Iterate over a collection of {@link Result} and log the overall results
      * @param results a {@link Collection} of {@link Result}
      */
-    private void analyseResults(Collection<Result> results) {
+    private void analyseResults(Collection<Map.Entry<String, Result>> results) {
         AtomicInteger failure = new AtomicInteger(0);
         AtomicInteger success = new AtomicInteger(0);
         AtomicInteger ignore = new AtomicInteger(0);
 
         results.forEach(result -> {
-            failure.addAndGet(result.getFailureCount());
-            success.addAndGet(result.getRunCount() - result.getFailureCount());
-            ignore.addAndGet(result.getIgnoreCount());
-            LOGGER.info(RunnerUtils.results(result));
+            failure.addAndGet(result.getValue().getFailureCount());
+            success.addAndGet(result.getValue().getRunCount() - result.getValue().getFailureCount());
+            ignore.addAndGet(result.getValue().getIgnoreCount());
+            LOGGER.info(result.getKey()+": \n"+RunnerUtils.results(result.getValue()));
         });
 
         LOGGER.info((failure.get() + success.get()) + " tests run : " + success.get() + " succeeded - " + failure.get() + " failed - " + ignore.get() + " ignored");
