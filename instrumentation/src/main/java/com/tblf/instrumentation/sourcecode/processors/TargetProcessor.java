@@ -40,7 +40,7 @@ public class TargetProcessor extends AbstractProcessor<CtStatement> {
             //The ctStatement is not a super(). we can insert an other just before it
             CtCodeSnippetStatement ctCodeSnippetStatement = getFactory().Core().createCodeSnippetStatement();
             // source end +1 to match MoDisco
-            ctCodeSnippetStatement.setValue(String.format("com.tblf.Link.Calls.match(\"%s\", \"%s\")", ctStatement.getPosition().getSourceStart(), ctStatement.getPosition().getSourceEnd()+1));
+            ctCodeSnippetStatement.setValue(String.format("Calls.match(\"%s\", \"%s\")", ctStatement.getPosition().getSourceStart(), ctStatement.getPosition().getSourceEnd()+1));
             //ctCodeSnippetStatement.setValue(String.format("System.out.println(\"%s , %s\")", ctStatement.getPosition().getSourceStart(), ctStatement.getPosition().getSourceEnd()+1));
             try {
                 ctStatement.insertBefore(ctCodeSnippetStatement);

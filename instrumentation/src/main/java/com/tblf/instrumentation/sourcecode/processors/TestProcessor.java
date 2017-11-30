@@ -47,7 +47,7 @@ public class TestProcessor extends AbstractProcessor<CtType<?>> {
             CtBlock ctBlock = ctMethod.getBody();
             if (ctBlock != null) {
                 CtCodeSnippetStatement ctCodeSnippetStatement = getFactory().Core().createCodeSnippetStatement();
-                ctCodeSnippetStatement.setValue(String.format("com.tblf.Link.Calls.setTestMethod(\"%s\", \"%s\")", ctType.getQualifiedName(), ctMethod.getSimpleName()));
+                ctCodeSnippetStatement.setValue(String.format("Calls.setTestMethod(\"%s\", \"%s\")", ctType.getQualifiedName(), ctMethod.getSimpleName()));
                 ctBlock.insertBegin(ctCodeSnippetStatement);
             }
         });
@@ -67,7 +67,7 @@ public class TestProcessor extends AbstractProcessor<CtType<?>> {
                 CtBlock ctBlock = ctConstructor.getBody();
                 if (ctBlock != null) {
                     CtCodeSnippetStatement ctCodeSnippetStatement = getFactory().Core().createCodeSnippetStatement();
-                    ctCodeSnippetStatement.setValue(String.format("com.tblf.Link.Calls.setTargetMethod(\"%s\", \"%s\")", ctType.getQualifiedName(), ctConstructor.getSimpleName()));
+                    ctCodeSnippetStatement.setValue(String.format("Calls.setTargetMethod(\"%s\", \"%s\")", ctType.getQualifiedName(), ctConstructor.getSimpleName()));
                     ctBlock.insertBegin(ctCodeSnippetStatement);
                 }
             });
@@ -77,7 +77,7 @@ public class TestProcessor extends AbstractProcessor<CtType<?>> {
             CtBlock ctBlock = ctMethod.getBody();
             if (ctBlock != null) {
                 CtCodeSnippetStatement ctCodeSnippetStatement = getFactory().Core().createCodeSnippetStatement();
-                ctCodeSnippetStatement.setValue(String.format("com.tblf.Link.Calls.setTargetMethod(\"%s\", \"%s\")", ctType.getQualifiedName(), ctMethod.getSimpleName()));
+                ctCodeSnippetStatement.setValue(String.format("Calls.setTargetMethod(\"%s\", \"%s\")", ctType.getQualifiedName(), ctMethod.getSimpleName()));
                 ctBlock.insertBegin(ctCodeSnippetStatement);
             }
         });
