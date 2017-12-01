@@ -1,6 +1,5 @@
 package com.tblf.business;
 
-import com.tblf.Model.Analysis;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
@@ -12,12 +11,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Collection;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
-
-import static java.util.logging.Level.*;
 
 public class ManagerTest {
 
