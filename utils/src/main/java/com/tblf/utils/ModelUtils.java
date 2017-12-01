@@ -17,7 +17,6 @@ import org.eclipse.modisco.java.composition.javaapplication.JavaapplicationPacka
 import org.eclipse.modisco.kdm.source.extension.ExtensionPackage;
 import org.eclipse.ocl.OCL;
 import org.eclipse.ocl.ParserException;
-import org.eclipse.ocl.Query;
 import org.eclipse.ocl.ecore.EcoreEnvironmentFactory;
 import org.eclipse.ocl.expressions.OCLExpression;
 import org.eclipse.ocl.helper.OCLHelper;
@@ -25,7 +24,6 @@ import org.eclipse.ocl.options.ParsingOptions;
 
 import java.io.*;
 import java.net.MalformedURLException;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
