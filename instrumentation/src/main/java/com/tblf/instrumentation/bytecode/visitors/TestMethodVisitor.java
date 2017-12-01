@@ -22,7 +22,7 @@ public class TestMethodVisitor extends AdviceAdapter {
         mv.visitCode();
         mv.visitLdcInsn(className); //put the method class name in the stack
         mv.visitLdcInsn(name); //put the method name in the stack
-        mv.visitMethodInsn(INVOKESTATIC, "com/tblf/Link/Calls", "setTestMethod", "(Ljava/lang/String;Ljava/lang/String;)V", false);
+        mv.visitMethodInsn(INVOKESTATIC, "com/tblf/linker/Calls", "setTestMethod", "(Ljava/lang/String;Ljava/lang/String;)V", false);
         mv.visitEnd();
     }
 

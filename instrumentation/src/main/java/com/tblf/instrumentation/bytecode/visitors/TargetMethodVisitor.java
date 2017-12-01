@@ -2,7 +2,6 @@ package com.tblf.instrumentation.bytecode.visitors;
 
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.commons.AdviceAdapter;
 
 /**
  * Created by Thibault on 20/09/2017.

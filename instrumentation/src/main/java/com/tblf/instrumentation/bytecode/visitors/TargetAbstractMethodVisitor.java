@@ -34,12 +34,12 @@ public abstract class TargetAbstractMethodVisitor extends AdviceAdapter {
         mv.visitCode();
         mv.visitLdcInsn(className); //put the method class name in the stack
         mv.visitLdcInsn(name); //put the method name in the stack
-        mv.visitMethodInsn(INVOKESTATIC, "com/tblf/Link/Calls", "setTargetMethod", "(Ljava/lang/String;Ljava/lang/String;)V", false);
+        mv.visitMethodInsn(INVOKESTATIC, "com/tblf/linker/Calls", "setTargetMethod", "(Ljava/lang/String;Ljava/lang/String;)V", false);
         mv.visitEnd();
     }
 
     protected void trace(int line) {
         mv.visitLdcInsn(String.valueOf(line)); //put the method name in the stack
-        mv.visitMethodInsn(INVOKESTATIC, "com/tblf/Link/Calls", "match", "(Ljava/lang/String;)V", false);
+        mv.visitMethodInsn(INVOKESTATIC, "com/tblf/linker/Calls", "match", "(Ljava/lang/String;)V", false);
     }
 }
