@@ -6,6 +6,7 @@ import com.tblf.instrumentation.Instrumenter;
 import com.tblf.instrumentation.sourcecode.processors.ClassProcessor;
 import com.tblf.instrumentation.sourcecode.processors.TargetProcessor;
 import com.tblf.instrumentation.sourcecode.processors.TestProcessor;
+import com.tblf.linker.Calls;
 import com.tblf.utils.Configuration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -51,6 +52,8 @@ public class SourceCodeInstrumenter implements Instrumenter {
 
     @Override
     public void instrument(Collection<String> targets, Collection<String> tests) {
+        SingleURLClassLoader.getInstance().clear();
+
         //TODO use dependency injection to load the Launcher
         Launcher spoonLauncher;
 
@@ -100,13 +103,13 @@ public class SourceCodeInstrumenter implements Instrumenter {
 
         File file = new File("spooned");
 
-/*        if (file.exists()) {
+        if (file.exists()) {
             try {
                 FileUtils.deleteDirectory(file);
             } catch (IOException e) {
                 LOGGER.warning("Cannot delete the temp files created by the instrumentation at URI: " + file.getAbsolutePath());
             }
-        }*/
+        }
 
         try {
             SingleURLClassLoader.getInstance().addURLs(new URL[]{binDirectory.toURI().toURL()});
@@ -115,26 +118,18 @@ public class SourceCodeInstrumenter implements Instrumenter {
         }
     }
 
-    private void addDependencies() throws IOException {
-        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("Link-1.0.0.jar");
-        File link = new File("./Link-1.0.0.jar");
-        IOUtils.copy(inputStream, new FileOutputStream(link));
-
-        if (link.exists()) {
-            dependencies.add(link);
-        } else {
-            throw new IOException("Cannot find the linker dependency");
-        }
+    private void addDependencies() throws IOException, URISyntaxException {
+        dependencies.add(new File(Calls.class.getProtectionDomain().getCodeSource().getLocation().toURI()));
     }
 
     private void computeDependencies() throws IOException, ParserConfigurationException, SAXException {
         File dotCP = FileUtils.getFile(directory, ".classpath");
         if (! dotCP.exists()) {
-            throw new IOException("no .classpath file in the folder: load this project within an Eclipse application or run the goal 'mvn eclipse:eclipse'");
+            LOGGER.warning("no .classpath file in the folder: load this project within an Eclipse application or run the goal 'mvn eclipse:eclipse'");
+        } else {
+            List<File> computedDependencies = new DotCPParserBuilder().create().parse(dotCP);
+            dependencies.addAll(computedDependencies);
         }
-
-        List<File> computedDependencies = new DotCPParserBuilder().create().parse(dotCP);
-        dependencies.addAll(computedDependencies);
     }
 
     public void setBinDirectory(File binDirectory) {
