@@ -1,13 +1,12 @@
 package com.tblf.business;
 
-import com.tblf.Link.FileTracer;
 import com.tblf.classloading.SingleURLClassLoader;
-import com.tblf.discovery.Discoverer;
 import com.tblf.instrumentation.InstrumentationType;
 import com.tblf.instrumentation.Instrumenter;
 import com.tblf.instrumentation.bytecode.ByteCodeInstrumenter;
 import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
 import com.tblf.junitrunner.JUnitRunner;
+import com.tblf.linker.FileTracer;
 import com.tblf.parsing.ModelParser;
 import com.tblf.parsing.TraceParser;
 import com.tblf.utils.Configuration;
@@ -68,7 +67,7 @@ public class Manager {
      * @return the file containing the execution trace
      */
     public File buildTraces(File project) {
-        ((FileTracer) FileTracer.getInstance()).reset();
+        ((FileTracer) FileTracer.getInstance()).startTrace();
         SingleURLClassLoader.getInstance().clear();
 
         //Instrumenting the project

@@ -1,17 +1,17 @@
 package com.tblf.instrumentation;
 
 import com.tblf.DotCP.DotCPParserBuilder;
-import com.tblf.Link.Calls;
 import com.tblf.classloading.SingleURLClassLoader;
 import com.tblf.instrumentation.bytecode.ByteCodeInstrumenter;
 import com.tblf.junitrunner.RunnerUtils;
+import com.tblf.linker.Calls;
+import com.tblf.linker.FileTracer;
 import com.tblf.parsing.ModelParser;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
@@ -20,14 +20,11 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -39,7 +36,7 @@ import java.util.stream.Collectors;
 public class ByteCodeInstrumenterTest {
 
     @Test
-    public void checkInstrumentTarget() throws ClassNotFoundException, IOException {
+    public void checkInstrumentTarget() throws ClassNotFoundException, IOException, URISyntaxException {
         File file = new File("src/test/resources/binaries/junit.zip");
         ModelUtils.unzip(file);
 
@@ -56,19 +53,21 @@ public class ByteCodeInstrumenterTest {
         Class aClass = SingleURLClassLoader.getInstance().getClassLoader().loadClass("org.junit.internal.matchers.StacktracePrintingMatcherTest");
         Assert.assertNotNull(aClass);
 
-        File callDependency = new File("src/test/resources/jars/Link-1.0.0.jar");
+        File callDependency = new File(Calls.class.getProtectionDomain().getCodeSource().getLocation().toURI());
         Assert.assertTrue(callDependency.exists());
 
         SingleURLClassLoader.getInstance().addURLs(new URL[]{folder.toURI().toURL(), callDependency.toURI().toURL()});
 
+        FileTracer.getInstance().startTrace();
         //Running the testClass instrumented with the Target instrumentation
         System.out.println(RunnerUtils.results(JUnitCore.runClasses(aClass)));
+        FileTracer.getInstance().startTrace();
 
         FileUtils.deleteDirectory(folder);
     }
 
     @Test
-    public void checkInstrumentTest() throws ClassNotFoundException, IOException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+    public void checkInstrumentTest() throws ClassNotFoundException, IOException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, URISyntaxException {
         Configuration.setProperty("sutBinaries", "/");
         Configuration.setProperty("testBinaries", "/");
         File zip = new File("src/test/resources/binaries/simpleProj.zip");
@@ -76,7 +75,7 @@ public class ByteCodeInstrumenterTest {
 
         File folder = new File("src/test/resources/binaries/simpleProj");
 
-        File callDependency = new File("src/test/resources/jars/Link-1.0.0.jar");
+        File callDependency = new File(Calls.class.getProtectionDomain().getCodeSource().getLocation().toURI());
         Assert.assertTrue(callDependency.exists());
 
         SingleURLClassLoader.getInstance().addURLs(new URL[]{folder.toURI().toURL(), callDependency.toURI().toURL()});
@@ -88,8 +87,14 @@ public class ByteCodeInstrumenterTest {
         Class aClass = SingleURLClassLoader.getInstance().getClassLoader().loadClass("com.tblf.SimpleProject.AppTest");
         Assert.assertNotNull(aClass);
 
+        Class bClass = SingleURLClassLoader.getInstance().getClassLoader().loadClass("com.tblf.SimpleProject.App");
+        Assert.assertNotNull(bClass);
+
+        FileTracer.getInstance().startTrace();
         //Running the testClass instrumented with the Test instrumentation
         Result result = JUnitCore.runClasses(aClass);
+
+        FileTracer.getInstance().endTrace();
 
         Assert.assertTrue(result.getFailures()
                         .stream()

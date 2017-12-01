@@ -6,6 +6,7 @@ import com.tblf.instrumentation.InstrumentationUtils;
 import com.tblf.instrumentation.Instrumenter;
 import com.tblf.instrumentation.bytecode.visitors.TargetClassVisitor;
 import com.tblf.instrumentation.bytecode.visitors.TestClassVisitor;
+import com.tblf.linker.Calls;
 import com.tblf.utils.Configuration;
 import org.apache.commons.io.FileUtils;
 import org.objectweb.asm.ClassReader;
@@ -19,7 +20,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
@@ -62,6 +65,8 @@ public class ByteCodeInstrumenter implements Instrumenter {
 
     @Override
     public void instrument(Collection<String> targets, Collection<String> tests) {
+        SingleURLClassLoader.getInstance().clear();
+
         int[] scores = new int[]{0, 0, 0, 0};
         try {
             getDependencies();
@@ -76,22 +81,26 @@ public class ByteCodeInstrumenter implements Instrumenter {
                 byte[] targetAsByte = instrumentTargetClass(target, t);
                 singleURLClassLoader.loadBytes(targetAsByte, t);
                 scores[0]++;
-
-            } catch (IOException | LinkageError e) {
-                LOGGER.fine("Couldn't instrument "+t+" : "+e.getMessage());
+            } catch (IOException e) {
+                LOGGER.log(Level.FINE, "Couldn't instrument " + t, e);
                 scores[1]++;
+            } catch (LinkageError e) {
+                LOGGER.log(Level.FINE, "Error with instrumentation of: "+t, e);
             }
         });
 
         tests.forEach(t -> {
             try {
                 File target = InstrumentationUtils.getClassFile(testBinFolder, t);
+                LOGGER.fine("Instrumenting class "+t+" of classFile "+target.toString());
                 byte[] targetAsByte = instrumentTestClass(target, t);
                 singleURLClassLoader.loadBytes(targetAsByte, t);
                 scores[2]++;
-            } catch (IOException | LinkageError e) {
-                LOGGER.fine("Couldn't instrument "+t+" : "+e.getMessage());
+            } catch (IOException e) {
+                LOGGER.log(Level.FINE, "Couldn't instrument "+t, e);
                 scores[3]++;
+            } catch (LinkageError e) {
+                LOGGER.log(Level.FINE, "Error with instrumentation of: "+t, e);
             }
         });
 
@@ -104,11 +113,7 @@ public class ByteCodeInstrumenter implements Instrumenter {
         ClassReader classReader = new ClassReader(inputStream);
         ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 
-        try {
-            classReader.accept(new TargetClassVisitor(Opcodes.ASM5, classWriter, qualifiedName), ClassReader.EXPAND_FRAMES);
-        } catch (Throwable ignored) {
-
-        }
+        classReader.accept(new TargetClassVisitor(Opcodes.ASM5, classWriter, qualifiedName), ClassReader.EXPAND_FRAMES);
 
         return classWriter.toByteArray();
     }
@@ -123,18 +128,21 @@ public class ByteCodeInstrumenter implements Instrumenter {
         return classWriter.toByteArray();
     }
 
-    private void getDependencies() throws ParserConfigurationException, SAXException, IOException {
+    private void getDependencies() throws ParserConfigurationException, SAXException, IOException, URISyntaxException {
+        List<File> dependencies = new ArrayList<>();
+
         //Getting the dependencies from the .classpath file, assuming it is located in the same folder as the zip
         File dotCP = FileUtils.getFile(projectFolder, ".classpath");
-        if (! dotCP.exists()) {
-            throw new IOException("no .classpath file in the folder: load this project within an Eclipse application or run the goal 'mvn eclipse:eclipse'");
-        }
 
-        List<File> dependencies = new DotCPParserBuilder().create().parse(dotCP);
+        if (dotCP.exists()) {
+            dependencies.addAll(new DotCPParserBuilder().create().parse(dotCP));
+        } else {
+            LOGGER.warning("no .classpath file in the folder: load this project within an Eclipse application or run the goal 'mvn eclipse:eclipse'");
+        }
 
         LOGGER.info("Adding the following dependencies to the classpath: "+dependencies.toString());
 
-        dependencies.add(new File("../instrumentation/src/main/resources/Link-1.0.0.jar"));
+        dependencies.add(new File(Calls.class.getProtectionDomain().getCodeSource().getLocation().toURI()));
         dependencies.add(sutBinFolder); //This is necessary to add the SUT classes before instrumentation.
         dependencies.add(testBinFolder); //This is necessary to add the test classes before instrumentation.
 

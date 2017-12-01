@@ -23,11 +23,6 @@
             <artifactId>DotCP</artifactId>
             <version>1.0.0</version>
         </dependency>
-        <dependency>
-            <groupId>com.tblf</groupId>
-            <artifactId>Link</artifactId>
-            <version>1.0.0</version>
-        </dependency>
         <!-- Instrumentation -->
         <dependency>
             <groupId>org.ow2.asm</groupId>
