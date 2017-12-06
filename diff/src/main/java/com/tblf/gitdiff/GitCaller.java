@@ -5,7 +5,7 @@ import com.github.javaparser.ParseProblemException;
 import com.github.javaparser.Position;
 import com.github.javaparser.Range;
 import com.github.javaparser.ast.stmt.BlockStmt;
-import com.tblf.Model.Analysis;
+import com.tblf.model.Analysis;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.ModelUtils;
 import com.tblf.utils.ParserUtils;
@@ -41,6 +41,8 @@ public class GitCaller {
 
     private static final Logger LOGGER = Logger.getLogger("GitCaller");
 
+    private File pomFolder;
+
     private Repository repository;
     private DiffFormatter diffFormatter;
 
@@ -56,12 +58,29 @@ public class GitCaller {
      * Constructor initializing the {@link Git}
      *
      * @param pomFolder a {@link File} directory containing a pom.xml mvn file
-     * @param set       a {@link ResourceSet}
+     * @param resourceSet a {@link ResourceSet}
      */
-    public GitCaller(File pomFolder, ResourceSet set) {
+    public GitCaller(File pomFolder, ResourceSet resourceSet) {
         try (Git git = Git.open(pomFolder)) {
-            repository = git.getRepository();
-            resourceSet = set;
+            this.repository = git.getRepository();
+            this.resourceSet = resourceSet;
+            this.pomFolder = pomFolder;
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot load the git repository", e);
+        }
+    }
+
+    /**
+     * Constructor to use with multi-module projects
+     * @param pomFolder the folder containing the pom
+     * @param gitFolder the folder containing the .git
+     * @param resourceSet the {@link ResourceSet}
+     */
+    public GitCaller(File pomFolder, File gitFolder, ResourceSet resourceSet) {
+        try (Git git = Git.open(gitFolder)) {
+            this.repository = git.getRepository();
+            this.resourceSet = resourceSet;
+            this.pomFolder = pomFolder;
         } catch (IOException e) {
             throw new RuntimeException("Cannot load the git repository", e);
         }
@@ -118,11 +137,15 @@ public class GitCaller {
                 FileHeader fileHeader = diffFormatter.toFileHeader(diffEntry);
 
                 String pkg;
+                String uri = diffEntry.getOldPath();
 
-                if (diffEntry.getOldPath().startsWith(Configuration.getProperty("sut"))) {
-                    pkg = ParserUtils.getPackageQNFromSUTFile(new File(diffEntry.getOldPath()));
+                if (uri.startsWith(pomFolder.getName()))
+                    uri = uri.replace(pomFolder.getName()+"/", "");
+
+                if (uri.contains(Configuration.getProperty("sut"))) {
+                    pkg = ParserUtils.getPackageQNFromSUTFile(new File(uri));
                 } else {
-                    pkg = ParserUtils.getPackageQNFromTestFile(new File(diffEntry.getOldPath()));
+                    pkg = ParserUtils.getPackageQNFromTestFile(new File(uri));
                 }
 
                 if (java2File == null) {
@@ -151,7 +174,6 @@ public class GitCaller {
         testToRun.forEach(methodDeclaration -> LOGGER.fine("The test method: " + methodDeclaration.getName() + " of the test class " + ((ClassDeclaration) methodDeclaration.eContainer()).getName() + " is impacted by this modification"));
         return testToRun.stream().map(methodDeclaration -> new AbstractMap.SimpleEntry<>(methodDeclaration.getName(), ((ClassDeclaration) methodDeclaration.eContainer()).getName())).collect(Collectors.toList());
     }
-
 
     /**
      * Compute the statements modified by the commit
@@ -205,8 +227,7 @@ public class GitCaller {
                 //For each method modified, find the impacts
                 .forEach(node -> node.getAnalysis().forEach(eObject -> {
                     Analysis analysis = (Analysis) eObject;
-                    MethodDeclaration methodDeclaration = (MethodDeclaration) analysis.getTarget();
-                    methodDeclarationSet.add(methodDeclaration);
+                    methodDeclarationSet.addAll(analysis.getTarget().stream().map(eObject1 -> (MethodDeclaration) eObject1).collect(Collectors.toSet()));
                 }));
         return methodDeclarationSet;
     }
@@ -232,8 +253,7 @@ public class GitCaller {
                 //Iterating over the statement's analysis to get the impacts
                 .forEach(node -> node.getAnalysis().forEach(eObject -> {
                     Analysis analysis = (Analysis) eObject;
-                    MethodDeclaration methodDeclaration = (MethodDeclaration) analysis.getTarget();
-                    methodDeclarationSet.add(methodDeclaration);
+                    methodDeclarationSet.addAll(analysis.getTarget().stream().map(eObject1 -> (MethodDeclaration) eObject1).collect(Collectors.toSet()));
                 }));
 
         return methodDeclarationSet;

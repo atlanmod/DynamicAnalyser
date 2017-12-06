@@ -26,4 +26,5 @@ public class GitCallerTest {
 
         //Does not expect any results. Method is tested in the manager pkg
     }
+
 }
