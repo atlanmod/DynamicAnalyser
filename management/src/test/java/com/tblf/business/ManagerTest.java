@@ -4,12 +4,15 @@ import com.tblf.utils.Configuration;
 import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Collection;
 
 public class ManagerTest {
@@ -83,7 +86,8 @@ public class ManagerTest {
             Assert.assertNotNull(resource);
 
             Assert.assertEquals(10, resource.getContents().size());
-            /**
+
+            /*
              Constructor1 --> TestApp
              line constructor1 --> TestApp
              method --> TestApp
@@ -94,7 +98,7 @@ public class ManagerTest {
              method --> TestApp2
              line 1 method --> TestApp2
              line 2 method --> TestApp2
-             **/
+             */
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
@@ -134,5 +138,4 @@ public class ManagerTest {
 
         FileUtils.deleteDirectory(file);
     }
-
 }

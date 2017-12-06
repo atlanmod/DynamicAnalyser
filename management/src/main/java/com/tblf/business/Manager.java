@@ -67,7 +67,7 @@ public class Manager {
      * @return the file containing the execution trace
      */
     public File buildTraces(File project) {
-        ((FileTracer) FileTracer.getInstance()).startTrace();
+        FileTracer.getInstance().startTrace();
         SingleURLClassLoader.getInstance().clear();
 
         //Instrumenting the project
@@ -93,7 +93,7 @@ public class Manager {
 
         jUnitRunner.runTests(this.testClasses);
 
-        ((FileTracer) FileTracer.getInstance()).endTrace();
+        FileTracer.getInstance().endTrace();
 
         //Analyzing the traces
         File trace = ((FileTracer) FileTracer.getInstance()).getFile();

@@ -4,7 +4,6 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
-import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
@@ -15,12 +14,6 @@ import org.eclipse.gmt.modisco.java.emf.JavaPackage;
 import org.eclipse.gmt.modisco.omg.kdm.kdm.KdmPackage;
 import org.eclipse.modisco.java.composition.javaapplication.JavaapplicationPackage;
 import org.eclipse.modisco.kdm.source.extension.ExtensionPackage;
-import org.eclipse.ocl.OCL;
-import org.eclipse.ocl.ParserException;
-import org.eclipse.ocl.ecore.EcoreEnvironmentFactory;
-import org.eclipse.ocl.expressions.OCLExpression;
-import org.eclipse.ocl.helper.OCLHelper;
-import org.eclipse.ocl.options.ParsingOptions;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -32,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -41,8 +35,6 @@ import java.util.zip.ZipInputStream;
 public class ModelUtils {
 
     private static final Logger LOGGER = Logger.getAnonymousLogger();
-    private static final OCLHelper OCL_HELPER;
-    private static final OCL ocl;
 
     static
     {
@@ -54,15 +46,6 @@ public class ModelUtils {
         Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
         Map<String, Object> m = reg.getExtensionToFactoryMap();
         m.put("xmi", new XMIResourceFactoryImpl());
-
-        ocl = OCL.newInstance(EcoreEnvironmentFactory.INSTANCE);
-        OCL_HELPER = ocl.createOCLHelper();
-        OCL_HELPER.setContext(JavaPackage.eINSTANCE.getEClassifier("Model"));
-
-        ParsingOptions.setOption(ocl.getEnvironment(),
-                ParsingOptions.implicitRootClass(ocl.getEnvironment()),
-                EcorePackage.Literals.EOBJECT);
-
     }
 
     /**
@@ -236,20 +219,17 @@ public class ModelUtils {
     }
 
     /**
-     * Return all the {@link ClassDeclaration} from a Model using an OCL query
-     * @param model
-     * @return
+     * Return all the {@link ClassDeclaration} from a Model
+     * @param model a {@link Resource}
+     * @return a {@link Set} of {@link ClassDeclaration}s
      */
     public static Collection<ClassDeclaration> queryForAllClasses(Resource model) {
-
         Model model1 = (Model) model.getContents().get(0);
-        OCLExpression query = null;
-        try {
-            query = OCL_HELPER.createQuery("ClassDeclaration.allInstances()");
-        } catch (ParserException e) {
-            LOGGER.warning("Error in the OCL query" + e);
-        }
-        return ((Collection<ClassDeclaration>) ocl.createQuery(query).evaluate(model1)).stream().collect(Collectors.toSet());
+
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(model1.eAllContents(), Spliterator.ORDERED), false)
+                            .filter(eObject -> eObject instanceof ClassDeclaration)
+                            .map(eObject -> (ClassDeclaration) eObject)
+                            .collect(Collectors.toSet());
     }
 
     /**
@@ -275,11 +255,7 @@ public class ModelUtils {
     public static boolean isATestClassRec(Type type) {
         if (type instanceof ClassDeclaration) {
             ClassDeclaration classDeclaration = (ClassDeclaration) type;
-            if (classDeclaration.getSuperClass() != null) {
-                return isATestClassRec(classDeclaration.getSuperClass().getType());
-            } else {
-                return false;
-            }
+            return classDeclaration.getSuperClass() != null && isATestClassRec(classDeclaration.getSuperClass().getType());
         } else {
             return type.getName().equals("TestCase");
         }
