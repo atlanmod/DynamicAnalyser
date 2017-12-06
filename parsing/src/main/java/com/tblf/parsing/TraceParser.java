@@ -1,13 +1,12 @@
 package com.tblf.parsing;
 
-import com.tblf.Model.Analysis;
-import com.tblf.Model.ModelFactory;
-import com.tblf.Model.ModelPackage;
+import com.tblf.model.Analysis;
+import com.tblf.model.ModelFactory;
+import com.tblf.model.ModelPackage;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.ParserUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
-import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
@@ -27,7 +26,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Created by Thibault on 26/09/2017.
@@ -55,7 +53,7 @@ public class TraceParser extends Parser{
     private String currentTargetMethodQN;
     private ASTNodeSourceRegion currentTargetMethod;
 
-    private OCLStatementQuery oclStatementQuery;
+    private Query query;
 
     /**
      * @param traceFile   the file containing the execution trace
@@ -79,7 +77,7 @@ public class TraceParser extends Parser{
                 .filter(resource -> resource.getURI().segment(resource.getURI().segmentCount() - 2).equals(Configuration.getProperty("fragmentFolder")))
                 .forEach(resource -> packages.put(resource.getURI().lastSegment().replace("_java2kdm.xmi", ""), resource));
 
-        oclStatementQuery = new OCLStatementQuery();
+        query = new StreamQuery();
     }
 
     /**
@@ -301,7 +299,7 @@ public class TraceParser extends Parser{
      * @param lineNumber the line number
      */
     private void updateStatementUsingLine(int lineNumber) {
-        Collection<ASTNodeSourceRegion> astNodeSourceRegions = oclStatementQuery.queryLine(lineNumber, lineNumber, currentTarget);
+        Collection<ASTNodeSourceRegion> astNodeSourceRegions = query.queryLine(lineNumber, lineNumber, currentTarget);
         astNodeSourceRegions.forEach(astNodeSourceRegion -> {
             if (currentTargetMethod == null || !(currentTargetMethod.getStartLine() <= lineNumber && currentTargetMethod.getEndLine() >= lineNumber)) {
                 currentTargetMethod = getMethodASTNodeFromJava2File(currentTarget, lineNumber);
@@ -321,7 +319,7 @@ public class TraceParser extends Parser{
      * @param endPos   the end position inside the class file of the statement looked for*
      */
     private void updateStatementUsingPosition(int startPos, int endPos) {
-        Collection<ASTNodeSourceRegion> astNodeSourceRegions = oclStatementQuery.queryPosition(startPos, endPos, currentTarget);
+        Collection<ASTNodeSourceRegion> astNodeSourceRegions = query.queryPosition(startPos, endPos, currentTarget);
         astNodeSourceRegions.forEach(astNodeSourceRegion -> {
             if (currentTargetMethod == null || !(currentTargetMethod.getStartPosition() <= startPos && currentTargetMethod.getEndPosition() >= endPos)) {
                 currentTargetMethod = getMethodASTNodeFromJava2File(currentTarget, startPos, endPos);
@@ -342,13 +340,18 @@ public class TraceParser extends Parser{
      */
     private void createRunByAnalysis(ASTNodeSourceRegion source, ASTNodeSourceRegion target) {
         //We create an analysis if it does not already exist.
-        if (source != null && target != null && source.getAnalysis().stream().noneMatch(eObject -> ((Analysis) eObject).getTarget().equals(target.getNode()))) {
+        if (source != null
+                && target != null
+                && source.getAnalysis().stream()
+                    .map(eObject -> (Analysis) eObject)
+                    .noneMatch(analysis -> analysis.getTarget().contains(target.getNode()))) {
+
             Analysis analysis = ModelFactory.eINSTANCE.createAnalysis();
             analysis.setName(ANALYSIS_NAME);
             analysis.setSource(source.getNode());
-            analysis.setTarget(target.getNode());
+            analysis.getTarget().add(target.getNode());
             source.getAnalysis().add(analysis);
-            target.getAnalysis().add(analysis);
+            //target.getAnalysis().add(analysis);
             outputModel.getContents().add(analysis);
         } else {
             LOGGER.fine("Link already existing. Not adding.");

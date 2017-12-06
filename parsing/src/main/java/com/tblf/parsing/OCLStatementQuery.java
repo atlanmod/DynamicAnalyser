@@ -1,41 +1,29 @@
 package com.tblf.parsing;
 
-import org.eclipse.emf.ecore.EPackage;
-import org.eclipse.emf.ecore.EcorePackage;
+import org.apache.commons.lang.NotImplementedException;
 import org.eclipse.modisco.java.composition.javaapplication.Java2File;
-import org.eclipse.modisco.java.composition.javaapplication.JavaapplicationPackage;
 import org.eclipse.modisco.kdm.source.extension.ASTNodeSourceRegion;
-import org.eclipse.ocl.ParserException;
-import org.eclipse.ocl.ecore.Constraint;
-import org.eclipse.ocl.ecore.EcoreEnvironmentFactory;
-import org.eclipse.ocl.ecore.IntegerLiteralExp;
-import org.eclipse.ocl.ecore.OCL;
-import org.eclipse.ocl.expressions.OCLExpression;
-import org.eclipse.ocl.helper.OCLHelper;
-import org.eclipse.ocl.options.ParsingOptions;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.logging.Logger;
 
 /**
  * Method used to compute all the requests using OCL queries
  */
-public class OCLStatementQuery {
+public class OCLStatementQuery implements Query {
     private static final Logger LOGGER = Logger.getLogger("OCLStatementQuery");
 
-    private OCLHelper<org.eclipse.emf.ecore.EClassifier, org.eclipse.emf.ecore.EOperation, org.eclipse.emf.ecore.EStructuralFeature, Constraint> OCL_HELPER;
+/*    private OCLHelper<org.eclipse.emf.ecore.EClassifier, org.eclipse.emf.ecore.EOperation, org.eclipse.emf.ecore.EStructuralFeature, Constraint> OCL_HELPER;
     private OCL ocl;
 
     private OCL.Query lineExpr;
-    private OCL.Query positionExpr;
+    private OCL.Query positionExpr;*/
 
     /**
      * Constructor initializing OCL
      */
     public OCLStatementQuery() {
-
+/*
         EcoreEnvironmentFactory ecoreEnvironmentFactory = new EcoreEnvironmentFactory(EPackage.Registry.INSTANCE);
 
         ocl = OCL.newInstance(ecoreEnvironmentFactory);
@@ -45,18 +33,13 @@ public class OCLStatementQuery {
                 ParsingOptions.implicitRootClass(ocl.getEnvironment()),
                 EcorePackage.Literals.EOBJECT);
 
-        OCL_HELPER.setContext(JavaapplicationPackage.eINSTANCE.getEClassifier("Java2File"));
+        OCL_HELPER.setContext(JavaapplicationPackage.eINSTANCE.getEClassifier("Java2File"));*/
     }
 
-    /**
-     * Query a line in a {@link Java2File} with the linePositions
-     *
-     * @param lineStart
-     * @param lineEnd
-     * @param java2File
-     * @return the list of the {@link org.eclipse.gmt.modisco.java.ASTNode} corresponding to the lines
-     */
+    @Override
     public Collection<ASTNodeSourceRegion> queryLine(int lineStart, int lineEnd, Java2File java2File) {
+
+/*
         Collection<ASTNodeSourceRegion> results;
         try {
 
@@ -78,19 +61,16 @@ public class OCLStatementQuery {
             LOGGER.warning("Couldn't create the OCL request to find the statement in the model " + Arrays.toString(e.getStackTrace()));
             results = new ArrayList<>();
         }
-
         return results;
+*/
+        throw new NotImplementedException();
     }
 
-    /**
-     * Query a line in a {@link Java2File} with the linePositions
-     *
-     * @param posStart  the starting position in the file of the specified statement
-     * @param posEnd    the ending position in the file of the specified
-     * @param java2File
-     * @return the list of the {@link org.eclipse.gmt.modisco.java.ASTNode} corresponding to the lines
-     */
-    public Collection<ASTNodeSourceRegion> queryPosition(int posStart, int posEnd, Java2File java2File) {
+
+    @Override
+    public Collection<ASTNodeSourceRegion> queryPosition(int startPos, int endPos, Java2File java2File) {
+
+/*
         Collection<ASTNodeSourceRegion> results;
         try {
 
@@ -112,10 +92,9 @@ public class OCLStatementQuery {
             LOGGER.warning("Couldn't create the OCL request to find the statement in the model " + Arrays.toString(e.getStackTrace()));
             results = new ArrayList<>();
         }
+*/
 
-        return results;
-
-
+        throw new NotImplementedException();
     }
 
 }

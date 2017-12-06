@@ -1,7 +1,7 @@
 package com.tblf.parsing;
 
-import com.tblf.Model.Analysis;
-import com.tblf.Model.ModelPackage;
+import com.tblf.model.Analysis;
+import com.tblf.model.ModelPackage;
 import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.common.util.URI;
@@ -44,11 +44,6 @@ public class TraceParserTest {
     @Before
     public void setUpRealCode() throws IOException {
         resourceSet = new ResourceSetImpl();
-        Logger rootLogger = LogManager.getLogManager().getLogger("");
-        rootLogger.setLevel(Level.FINE);
-        for (Handler h : rootLogger.getHandlers()) {
-            h.setLevel(Level.FINE);
-        }
 
         EPackage.Registry.INSTANCE.put(JavaPackage.eNS_URI, JavaPackage.eINSTANCE);
         EPackage.Registry.INSTANCE.put(JavaapplicationPackage.eNS_URI, JavaapplicationPackage.eINSTANCE);
@@ -69,7 +64,6 @@ public class TraceParserTest {
 
             try {
                 Resource resource = resourceSet.getResource(URI.createURI(path.toUri().toURL().toString()), true);
-                System.out.println(resource);
                 resourceSet.getResources().add(resource);
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -204,7 +198,6 @@ public class TraceParserTest {
 
         resource.getContents().forEach(eObject -> {
             Analysis analysis = (Analysis) eObject;
-            System.out.println(analysis.getSource()+" -> "+analysis.getTarget());
         });
 
         Map<Statement, Integer> impacts = new HashMap<>();
@@ -216,7 +209,9 @@ public class TraceParserTest {
             }
         });
 
-        Map.Entry entry = impacts.entrySet().stream().max(Comparator.comparingInt(Map.Entry::getValue)).orElseThrow(() -> new Exception("Couldn't find anything"));
+        Map.Entry entry = impacts.entrySet().stream()
+                .max(Comparator.comparingInt(Map.Entry::getValue))
+                .orElseThrow(() -> new Exception("Couldn't find anything"));
 
         System.out.println(entry.getKey()+" has "+entry.getValue()+" impacts ");
 

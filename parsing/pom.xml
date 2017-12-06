@@ -18,44 +18,17 @@
             <artifactId>utils</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.tblf</groupId>
+            <artifactId>model</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
 
         <dependency>
             <groupId>com.github.javaparser</groupId>
             <artifactId>javaparser-core</artifactId>
             <version>3.4.3</version>
         </dependency>
-
-        <!--Model building -->
-        <dependency>
-            <groupId>com.tblf</groupId>
-            <artifactId>AnalysisModel</artifactId>
-            <version>1.0.0</version>
-        </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <version>2.5.2</version>
-                <executions>
-                    <execution>
-                        <id>install-model</id>
-                        <phase>clean</phase>
-                        <configuration>
-                            <file>${project.basedir}/src/main/resources/AnalysisModel-1.0.0.jar</file>
-                            <groupId>com.tblf</groupId>
-                            <artifactId>AnalysisModel</artifactId>
-                            <version>1.0.0</version>
-                            <packaging>jar</packaging>
-                        </configuration>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>
