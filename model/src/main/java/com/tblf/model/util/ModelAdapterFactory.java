@@ -1,9 +1,12 @@
 /**
  */
-package com.tblf.Model.util;
+package com.tblf.model.util;
 
 import com.tblf.Model.*;
 
+import com.tblf.model.Analysis;
+import com.tblf.model.Model;
+import com.tblf.model.ModelPackage;
 import org.eclipse.emf.common.notify.Adapter;
 import org.eclipse.emf.common.notify.Notifier;
 
@@ -16,7 +19,7 @@ import org.eclipse.emf.ecore.EObject;
  * The <b>Adapter Factory</b> for the model.
  * It provides an adapter <code>createXXX</code> method for each class of the model.
  * <!-- end-user-doc -->
- * @see com.tblf.Model.ModelPackage
+ * @see ModelPackage
  * @generated
  */
 public class ModelAdapterFactory extends AdapterFactoryImpl {
@@ -96,13 +99,13 @@ public class ModelAdapterFactory extends AdapterFactoryImpl {
 
 
 	/**
-	 * Creates a new adapter for an object of class '{@link com.tblf.Model.Analysis <em>Analysis</em>}'.
+	 * Creates a new adapter for an object of class '{@link Analysis <em>Analysis</em>}'.
 	 * <!-- begin-user-doc -->
 	 * This default implementation returns null so that we can easily ignore cases;
 	 * it's useful to ignore a case when inheritance will catch all the cases anyway.
 	 * <!-- end-user-doc -->
 	 * @return the new adapter.
-	 * @see com.tblf.Model.Analysis
+	 * @see Analysis
 	 * @generated
 	 */
 	public Adapter createAnalysisAdapter() {
@@ -110,13 +113,13 @@ public class ModelAdapterFactory extends AdapterFactoryImpl {
 	}
 
 	/**
-	 * Creates a new adapter for an object of class '{@link com.tblf.Model.Model <em>Model</em>}'.
+	 * Creates a new adapter for an object of class '{@link Model <em>Model</em>}'.
 	 * <!-- begin-user-doc -->
 	 * This default implementation returns null so that we can easily ignore cases;
 	 * it's useful to ignore a case when inheritance will catch all the cases anyway.
 	 * <!-- end-user-doc -->
 	 * @return the new adapter.
-	 * @see com.tblf.Model.Model
+	 * @see Model
 	 * @generated
 	 */
 	public Adapter createModelAdapter() {

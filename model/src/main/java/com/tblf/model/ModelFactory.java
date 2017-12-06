@@ -1,7 +1,8 @@
 /**
  */
-package com.tblf.Model;
+package com.tblf.model;
 
+import com.tblf.model.impl.ModelFactoryImpl;
 import org.eclipse.emf.ecore.EFactory;
 
 /**
@@ -9,7 +10,7 @@ import org.eclipse.emf.ecore.EFactory;
  * The <b>Factory</b> for the model.
  * It provides a create method for each non-abstract class of the model.
  * <!-- end-user-doc -->
- * @see com.tblf.Model.ModelPackage
+ * @see ModelPackage
  * @generated
  */
 public interface ModelFactory extends EFactory {
@@ -19,7 +20,7 @@ public interface ModelFactory extends EFactory {
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	ModelFactory eINSTANCE = com.tblf.Model.impl.ModelFactoryImpl.init();
+	ModelFactory eINSTANCE = ModelFactoryImpl.init();
 
 	/**
 	 * Returns a new object of class '<em>Analysis</em>'.

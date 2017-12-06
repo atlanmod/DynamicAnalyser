@@ -1,6 +1,6 @@
 /**
  */
-package com.tblf.Model;
+package com.tblf.model;
 
 import fr.inria.atlanmod.neoemf.core.PersistentEObject;
 
@@ -17,13 +17,13 @@ import org.eclipse.emf.ecore.EObject;
  * The following features are supported:
  * </p>
  * <ul>
- *   <li>{@link com.tblf.Model.Analysis#getName <em>Name</em>}</li>
- *   <li>{@link com.tblf.Model.Analysis#getSource <em>Source</em>}</li>
- *   <li>{@link com.tblf.Model.Analysis#getTarget <em>Target</em>}</li>
- *   <li>{@link com.tblf.Model.Analysis#getValue <em>Value</em>}</li>
+ *   <li>{@link Analysis#getName <em>Name</em>}</li>
+ *   <li>{@link Analysis#getSource <em>Source</em>}</li>
+ *   <li>{@link Analysis#getTarget <em>Target</em>}</li>
+ *   <li>{@link Analysis#getValue <em>Value</em>}</li>
  * </ul>
  *
- * @see com.tblf.Model.ModelPackage#getAnalysis()
+ * @see ModelPackage#getAnalysis()
  * @model
  * @extends PersistentEObject
  * @generated
@@ -39,14 +39,14 @@ public interface Analysis extends PersistentEObject {
 	 * <!-- end-user-doc -->
 	 * @return the value of the '<em>Name</em>' attribute.
 	 * @see #setName(String)
-	 * @see com.tblf.Model.ModelPackage#getAnalysis_Name()
+	 * @see ModelPackage#getAnalysis_Name()
 	 * @model
 	 * @generated
 	 */
 	String getName();
 
 	/**
-	 * Sets the value of the '{@link com.tblf.Model.Analysis#getName <em>Name</em>}' attribute.
+	 * Sets the value of the '{@link Analysis#getName <em>Name</em>}' attribute.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 * @param value the new value of the '<em>Name</em>' attribute.
@@ -65,14 +65,14 @@ public interface Analysis extends PersistentEObject {
 	 * <!-- end-user-doc -->
 	 * @return the value of the '<em>Source</em>' reference.
 	 * @see #setSource(EObject)
-	 * @see com.tblf.Model.ModelPackage#getAnalysis_Source()
+	 * @see ModelPackage#getAnalysis_Source()
 	 * @model
 	 * @generated
 	 */
 	EObject getSource();
 
 	/**
-	 * Sets the value of the '{@link com.tblf.Model.Analysis#getSource <em>Source</em>}' reference.
+	 * Sets the value of the '{@link Analysis#getSource <em>Source</em>}' reference.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 * @param value the new value of the '<em>Source</em>' reference.
@@ -91,7 +91,7 @@ public interface Analysis extends PersistentEObject {
 	 * </p>
 	 * <!-- end-user-doc -->
 	 * @return the value of the '<em>Target</em>' reference list.
-	 * @see com.tblf.Model.ModelPackage#getAnalysis_Target()
+	 * @see ModelPackage#getAnalysis_Target()
 	 * @model
 	 * @generated
 	 */
@@ -108,14 +108,14 @@ public interface Analysis extends PersistentEObject {
 	 * <!-- end-user-doc -->
 	 * @return the value of the '<em>Value</em>' attribute.
 	 * @see #setValue(String)
-	 * @see com.tblf.Model.ModelPackage#getAnalysis_Value()
+	 * @see ModelPackage#getAnalysis_Value()
 	 * @model default=""
 	 * @generated
 	 */
 	String getValue();
 
 	/**
-	 * Sets the value of the '{@link com.tblf.Model.Analysis#getValue <em>Value</em>}' attribute.
+	 * Sets the value of the '{@link Analysis#getValue <em>Value</em>}' attribute.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 * @param value the new value of the '<em>Value</em>' attribute.

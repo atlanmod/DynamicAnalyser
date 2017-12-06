@@ -1,9 +1,12 @@
 /**
  */
-package com.tblf.Model.util;
+package com.tblf.model.util;
 
 import com.tblf.Model.*;
 
+import com.tblf.model.Analysis;
+import com.tblf.model.Model;
+import com.tblf.model.ModelPackage;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 
@@ -19,7 +22,7 @@ import org.eclipse.emf.ecore.util.Switch;
  * until a non-null result is returned,
  * which is the result of the switch.
  * <!-- end-user-doc -->
- * @see com.tblf.Model.ModelPackage
+ * @see ModelPackage
  * @generated
  */
 public class ModelSwitch<T> extends Switch<T> {

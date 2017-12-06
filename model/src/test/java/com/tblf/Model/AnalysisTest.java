@@ -2,8 +2,8 @@
  */
 package com.tblf.Model;
 
-import com.tblf.Model.Analysis;
-import com.tblf.Model.ModelFactory;
+import com.tblf.model.Analysis;
+import com.tblf.model.ModelFactory;
 
 import junit.framework.TestCase;
 

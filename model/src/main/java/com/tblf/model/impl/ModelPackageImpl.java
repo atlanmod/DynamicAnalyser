@@ -1,11 +1,11 @@
 /**
  */
-package com.tblf.Model.impl;
+package com.tblf.model.impl;
 
-import com.tblf.Model.Analysis;
-import com.tblf.Model.Model;
-import com.tblf.Model.ModelFactory;
-import com.tblf.Model.ModelPackage;
+import com.tblf.model.Analysis;
+import com.tblf.model.Model;
+import com.tblf.model.ModelFactory;
+import com.tblf.model.ModelPackage;
 
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
@@ -46,7 +46,7 @@ public class ModelPackageImpl extends EPackageImpl implements ModelPackage {
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 * @see org.eclipse.emf.ecore.EPackage.Registry
-	 * @see com.tblf.Model.ModelPackage#eNS_URI
+	 * @see ModelPackage#eNS_URI
 	 * @see #init()
 	 * @generated
 	 */

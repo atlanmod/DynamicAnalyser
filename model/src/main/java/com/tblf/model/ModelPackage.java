@@ -1,7 +1,10 @@
 /**
  */
-package com.tblf.Model;
+package com.tblf.model;
 
+import com.tblf.model.impl.AnalysisImpl;
+import com.tblf.model.impl.ModelImpl;
+import com.tblf.model.impl.ModelPackageImpl;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EPackage;
@@ -19,7 +22,7 @@ import org.eclipse.emf.ecore.EReference;
  *   <li>and each data type</li>
  * </ul>
  * <!-- end-user-doc -->
- * @see com.tblf.Model.ModelFactory
+ * @see ModelFactory
  * @model kind="package"
  * @generated
  */
@@ -54,14 +57,14 @@ public interface ModelPackage extends EPackage {
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	ModelPackage eINSTANCE = com.tblf.Model.impl.ModelPackageImpl.init();
+	ModelPackage eINSTANCE = ModelPackageImpl.init();
 
 	/**
-	 * The meta object id for the '{@link com.tblf.Model.impl.AnalysisImpl <em>Analysis</em>}' class.
+	 * The meta object id for the '{@link AnalysisImpl <em>Analysis</em>}' class.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @see com.tblf.Model.impl.AnalysisImpl
-	 * @see com.tblf.Model.impl.ModelPackageImpl#getAnalysis()
+	 * @see AnalysisImpl
+	 * @see ModelPackageImpl#getAnalysis()
 	 * @generated
 	 */
 	int ANALYSIS = 0;
@@ -121,11 +124,11 @@ public interface ModelPackage extends EPackage {
 	int ANALYSIS_OPERATION_COUNT = 0;
 
 	/**
-	 * The meta object id for the '{@link com.tblf.Model.impl.ModelImpl <em>Model</em>}' class.
+	 * The meta object id for the '{@link ModelImpl <em>Model</em>}' class.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @see com.tblf.Model.impl.ModelImpl
-	 * @see com.tblf.Model.impl.ModelPackageImpl#getModel()
+	 * @see ModelImpl
+	 * @see ModelPackageImpl#getModel()
 	 * @generated
 	 */
 	int MODEL = 1;
@@ -159,75 +162,75 @@ public interface ModelPackage extends EPackage {
 
 
 	/**
-	 * Returns the meta object for class '{@link com.tblf.Model.Analysis <em>Analysis</em>}'.
+	 * Returns the meta object for class '{@link Analysis <em>Analysis</em>}'.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 * @return the meta object for class '<em>Analysis</em>'.
-	 * @see com.tblf.Model.Analysis
+	 * @see Analysis
 	 * @generated
 	 */
 	EClass getAnalysis();
 
 	/**
-	 * Returns the meta object for the attribute '{@link com.tblf.Model.Analysis#getName <em>Name</em>}'.
+	 * Returns the meta object for the attribute '{@link Analysis#getName <em>Name</em>}'.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 * @return the meta object for the attribute '<em>Name</em>'.
-	 * @see com.tblf.Model.Analysis#getName()
+	 * @see Analysis#getName()
 	 * @see #getAnalysis()
 	 * @generated
 	 */
 	EAttribute getAnalysis_Name();
 
 	/**
-	 * Returns the meta object for the reference '{@link com.tblf.Model.Analysis#getSource <em>Source</em>}'.
+	 * Returns the meta object for the reference '{@link Analysis#getSource <em>Source</em>}'.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 * @return the meta object for the reference '<em>Source</em>'.
-	 * @see com.tblf.Model.Analysis#getSource()
+	 * @see Analysis#getSource()
 	 * @see #getAnalysis()
 	 * @generated
 	 */
 	EReference getAnalysis_Source();
 
 	/**
-	 * Returns the meta object for the reference list '{@link com.tblf.Model.Analysis#getTarget <em>Target</em>}'.
+	 * Returns the meta object for the reference list '{@link Analysis#getTarget <em>Target</em>}'.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 * @return the meta object for the reference list '<em>Target</em>'.
-	 * @see com.tblf.Model.Analysis#getTarget()
+	 * @see Analysis#getTarget()
 	 * @see #getAnalysis()
 	 * @generated
 	 */
 	EReference getAnalysis_Target();
 
 	/**
-	 * Returns the meta object for the attribute '{@link com.tblf.Model.Analysis#getValue <em>Value</em>}'.
+	 * Returns the meta object for the attribute '{@link Analysis#getValue <em>Value</em>}'.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 * @return the meta object for the attribute '<em>Value</em>'.
-	 * @see com.tblf.Model.Analysis#getValue()
+	 * @see Analysis#getValue()
 	 * @see #getAnalysis()
 	 * @generated
 	 */
 	EAttribute getAnalysis_Value();
 
 	/**
-	 * Returns the meta object for class '{@link com.tblf.Model.Model <em>Model</em>}'.
+	 * Returns the meta object for class '{@link Model <em>Model</em>}'.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 * @return the meta object for class '<em>Model</em>'.
-	 * @see com.tblf.Model.Model
+	 * @see Model
 	 * @generated
 	 */
 	EClass getModel();
 
 	/**
-	 * Returns the meta object for the reference list '{@link com.tblf.Model.Model#getAnalyses <em>Analyses</em>}'.
+	 * Returns the meta object for the reference list '{@link Model#getAnalyses <em>Analyses</em>}'.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 * @return the meta object for the reference list '<em>Analyses</em>'.
-	 * @see com.tblf.Model.Model#getAnalyses()
+	 * @see Model#getAnalyses()
 	 * @see #getModel()
 	 * @generated
 	 */
@@ -257,11 +260,11 @@ public interface ModelPackage extends EPackage {
 	 */
 	interface Literals {
 		/**
-		 * The meta object literal for the '{@link com.tblf.Model.impl.AnalysisImpl <em>Analysis</em>}' class.
+		 * The meta object literal for the '{@link AnalysisImpl <em>Analysis</em>}' class.
 		 * <!-- begin-user-doc -->
 		 * <!-- end-user-doc -->
-		 * @see com.tblf.Model.impl.AnalysisImpl
-		 * @see com.tblf.Model.impl.ModelPackageImpl#getAnalysis()
+		 * @see AnalysisImpl
+		 * @see ModelPackageImpl#getAnalysis()
 		 * @generated
 		 */
 		EClass ANALYSIS = eINSTANCE.getAnalysis();
@@ -299,11 +302,11 @@ public interface ModelPackage extends EPackage {
 		EAttribute ANALYSIS__VALUE = eINSTANCE.getAnalysis_Value();
 
 		/**
-		 * The meta object literal for the '{@link com.tblf.Model.impl.ModelImpl <em>Model</em>}' class.
+		 * The meta object literal for the '{@link ModelImpl <em>Model</em>}' class.
 		 * <!-- begin-user-doc -->
 		 * <!-- end-user-doc -->
-		 * @see com.tblf.Model.impl.ModelImpl
-		 * @see com.tblf.Model.impl.ModelPackageImpl#getModel()
+		 * @see ModelImpl
+		 * @see ModelPackageImpl#getModel()
 		 * @generated
 		 */
 		EClass MODEL = eINSTANCE.getModel();

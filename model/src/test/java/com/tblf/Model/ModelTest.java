@@ -2,6 +2,8 @@
  */
 package com.tblf.Model;
 
+import com.tblf.model.Model;
+import com.tblf.model.ModelFactory;
 import junit.framework.TestCase;
 import junit.textui.TestRunner;
 import org.junit.Ignore;

@@ -1,6 +1,6 @@
 /**
  */
-package com.tblf.Model;
+package com.tblf.model;
 
 import fr.inria.atlanmod.neoemf.core.PersistentEObject;
 
@@ -15,10 +15,10 @@ import org.eclipse.emf.common.util.EList;
  * The following features are supported:
  * </p>
  * <ul>
- *   <li>{@link com.tblf.Model.Model#getAnalyses <em>Analyses</em>}</li>
+ *   <li>{@link Model#getAnalyses <em>Analyses</em>}</li>
  * </ul>
  *
- * @see com.tblf.Model.ModelPackage#getModel()
+ * @see ModelPackage#getModel()
  * @model
  * @extends PersistentEObject
  * @generated
@@ -26,7 +26,7 @@ import org.eclipse.emf.common.util.EList;
 public interface Model extends PersistentEObject {
 	/**
 	 * Returns the value of the '<em><b>Analyses</b></em>' reference list.
-	 * The list contents are of type {@link com.tblf.Model.Analysis}.
+	 * The list contents are of type {@link Analysis}.
 	 * <!-- begin-user-doc -->
 	 * <p>
 	 * If the meaning of the '<em>Analyses</em>' reference list isn't clear,
@@ -34,7 +34,7 @@ public interface Model extends PersistentEObject {
 	 * </p>
 	 * <!-- end-user-doc -->
 	 * @return the value of the '<em>Analyses</em>' reference list.
-	 * @see com.tblf.Model.ModelPackage#getModel_Analyses()
+	 * @see ModelPackage#getModel_Analyses()
 	 * @model
 	 * @generated
 	 */

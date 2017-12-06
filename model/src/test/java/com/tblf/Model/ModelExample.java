@@ -2,6 +2,9 @@
  */
 package com.tblf.Model;
 
+import com.tblf.model.Analysis;
+import com.tblf.model.ModelFactory;
+import com.tblf.model.ModelPackage;
 import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -42,7 +45,7 @@ public class ModelExample {
 		// Register the package to ensure it is available during loading.
 		//
 		resourceSet.getPackageRegistry().put
-			(ModelPackage.eNS_URI, 
+			(ModelPackage.eNS_URI,
 			 ModelPackage.eINSTANCE);
         
 		// If there are no arguments, emit an appropriate usage message.

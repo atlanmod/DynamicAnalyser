@@ -1,9 +1,9 @@
 /**
  */
-package com.tblf.Model.impl;
+package com.tblf.model.impl;
 
-import com.tblf.Model.Analysis;
-import com.tblf.Model.ModelPackage;
+import com.tblf.model.Analysis;
+import com.tblf.model.ModelPackage;
 
 import fr.inria.atlanmod.neoemf.core.DefaultPersistentEObject;
 
@@ -20,10 +20,10 @@ import org.eclipse.emf.ecore.EObject;
  * The following features are implemented:
  * </p>
  * <ul>
- *   <li>{@link com.tblf.Model.impl.AnalysisImpl#getName <em>Name</em>}</li>
- *   <li>{@link com.tblf.Model.impl.AnalysisImpl#getSource <em>Source</em>}</li>
- *   <li>{@link com.tblf.Model.impl.AnalysisImpl#getTarget <em>Target</em>}</li>
- *   <li>{@link com.tblf.Model.impl.AnalysisImpl#getValue <em>Value</em>}</li>
+ *   <li>{@link AnalysisImpl#getName <em>Name</em>}</li>
+ *   <li>{@link AnalysisImpl#getSource <em>Source</em>}</li>
+ *   <li>{@link AnalysisImpl#getTarget <em>Target</em>}</li>
+ *   <li>{@link AnalysisImpl#getValue <em>Value</em>}</li>
  * </ul>
  *
  * @generated
