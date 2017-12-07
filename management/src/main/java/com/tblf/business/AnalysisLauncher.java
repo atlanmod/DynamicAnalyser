@@ -16,8 +16,10 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -32,6 +34,11 @@ public class AnalysisLauncher {
     private File outputModel;
     private Instrumenter instrumenter;
 
+    private List<Consumer<File>> before;
+    private List<Consumer<File>> after;
+
+    private boolean isPomAtRoot = true;
+
     /**
      * Constructor getting all the analysable module inside the {@link File} directory
      *
@@ -39,7 +46,8 @@ public class AnalysisLauncher {
      */
     public AnalysisLauncher(File source) {
         root = source;
-        sources = FileUtils.getAllModules(source).stream().filter(FileUtils::isAnalysable).collect(Collectors.toList());
+        before = new ArrayList<>();
+        after = new ArrayList<>();
     }
 
     /**
@@ -64,6 +72,7 @@ public class AnalysisLauncher {
      */
     private void impactAnalysis() {
         sources.forEach(source -> {
+            LOGGER.info("Computing the impact analysis of " + source.getName());
             this.resourceSet = ModelUtils.buildResourceSet(source);
             instrumenter.setProjectFolder(source);
 
@@ -74,14 +83,16 @@ public class AnalysisLauncher {
                                 findFirst()
                         .orElseThrow(() -> new IOException("Could not find the MoDisco java model"));
 
+                LOGGER.info("Analysis the model: " + javaModel.getURI().toFileString());
                 ModelParser modelParser = new ModelParser();
                 modelParser.parse(javaModel); //Get the tests and sut classes
 
                 LOGGER.log(Level.INFO, modelParser.getTargets().size() + " SUT classes and " + modelParser.getTests().size() + " test classes");
 
-                // Instrumenting the code
+                LOGGER.info("Instrumenting the code in: " + source.getName());
                 instrumenter.instrument(modelParser.getTargets().keySet(), modelParser.getTests().keySet());
 
+                LOGGER.info("Running the tests ");
                 // Running the tests to build the execution trace
                 FileTracer.getInstance().startTrace();
                 new JUnitRunner(instrumenter.getClassLoader()).runTests(modelParser.getTests().keySet());
@@ -102,6 +113,11 @@ public class AnalysisLauncher {
      * Set the dependencies before running the impact analysis
      */
     private void setUp() {
+        if (isPomAtRoot)
+            sources = FileUtils.getAllModules(root).stream().filter(FileUtils::isAnalysable).collect(Collectors.toList());
+        else
+            sources = FileUtils.searchForPoms(root).stream().filter(FileUtils::isAnalysable).collect(Collectors.toList());
+
         switch (InstrumentationType.valueOf(Configuration.getProperty("mode"))) {
             case BYTECODE:
                 instrumenter = new ByteCodeInstrumenter();
@@ -114,7 +130,25 @@ public class AnalysisLauncher {
         }
 
         if (outputModel == null)
-            new File(root, Configuration.getProperty("outputModel") + "." + Configuration.getProperty("outputFormat"));
+            outputModel = new File(root, Configuration.getProperty("outputModel") + "." + Configuration.getProperty("outputFormat"));
+    }
+
+    /**
+     * Depending on the context, some external methods could be executed on the sources before running the impact analysis
+     *
+     * @param method a {@link Consumer} of {@link File}
+     */
+    public void applyBefore(Consumer<File> method) {
+        before.add(method);
+    }
+
+    /**
+     * Depending on the context, some external methods could be executed on the sources after running the impact analysis
+     *
+     * @param method a {@link Consumer} of {@link File}
+     */
+    public void applyAfter(Consumer<File> method) {
+        after.add(method);
     }
 
     /**
@@ -122,7 +156,16 @@ public class AnalysisLauncher {
      */
     public void run() {
         setUp();
+
+        before.forEach(fileConsumer -> sources.forEach(fileConsumer));
+
         impactAnalysis();
+
+        after.forEach(fileConsumer -> sources.forEach(fileConsumer));
+    }
+
+    public void setIsPomAtRoot(boolean bool) {
+        isPomAtRoot = bool;
     }
 
     public List<? extends File> getSources() {
