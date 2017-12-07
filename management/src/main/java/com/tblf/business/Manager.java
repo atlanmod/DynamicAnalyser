@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 /**
  * Will be used to build the traces and parse it at a higher level
  */
+@Deprecated
 public class Manager {
 
     private static final Logger LOGGER = Logger.getLogger("Manager");
