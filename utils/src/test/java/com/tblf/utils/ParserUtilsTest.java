@@ -32,4 +32,16 @@ public class ParserUtilsTest {
             Thread.sleep(50);
         }
     }
+
+    @Test
+    public void checkGetPackageQNFromFile() {
+        File file = new File("src/test/java/com/package1/package2/package3/TheClass.java");
+        Assert.assertEquals("com.package1.package2.package3", ParserUtils.getPackageQNFromFile(file));
+    }
+
+    @Test
+    public void checkGetPackageQNFromFileMultipleJava() {
+        File file = new File("code/java/src/test/java/com/package1/package2/package3/TheClass.java");
+        Assert.assertEquals("com.package1.package2.package3", ParserUtils.getPackageQNFromFile(file));
+    }
 }

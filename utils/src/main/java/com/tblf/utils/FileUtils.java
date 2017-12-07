@@ -8,10 +8,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.nio.file.Path;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -100,6 +98,26 @@ public class FileUtils {
 
         if (isParent(parent))
             getModules(parent).forEach(o -> files.addAll(getAllModules(o)));
+
+        return files;
+    }
+
+    /**
+     * Walk the directory to find pom.xml files. This is used when the user does not know where the poms are
+     * @param root the {@link File} directory
+     * @return a {@link Collection} of all the folders containing poms
+     */
+    public static Collection<? extends File> searchForPoms(File root) {
+        Collection<File> files = new ArrayList<>();
+
+        try {
+            files.addAll(Files.walk(root.toPath())
+                    .filter(path -> new File(path.toFile(), "pom.xml").exists())
+                    .map(Path::toFile)
+                    .collect(Collectors.toList()));
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Could not walk the directory to find pom.xml", e);
+        }
 
         return files;
     }
