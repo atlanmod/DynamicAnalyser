@@ -213,8 +213,6 @@ public class TraceParserTest {
                 .max(Comparator.comparingInt(Map.Entry::getValue))
                 .orElseThrow(() -> new Exception("Couldn't find anything"));
 
-        System.out.println(entry.getKey()+" has "+entry.getValue()+" impacts ");
-
         Assert.assertEquals(6, resource.getContents().size());
     }
 

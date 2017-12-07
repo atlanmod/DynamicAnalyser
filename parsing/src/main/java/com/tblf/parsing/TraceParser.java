@@ -334,7 +334,6 @@ public class TraceParser extends Parser{
      * Add this analysis to the Source {@link ASTNodeSourceRegion} and to the Target {@link ASTNodeSourceRegion}
      * Is usually a Statement pointing to a test {@link MethodDeclaration} node, or a SUT {@link MethodDeclaration} pointing to a test
      * {@link MethodDeclaration}.
-     *
      * @param source an {@link ASTNode}
      * @param target an {@link ASTNodeSourceRegion}
      */
