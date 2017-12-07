@@ -2,14 +2,11 @@
  */
 package com.tblf.model.util;
 
-import com.tblf.Model.*;
-
 import com.tblf.model.Analysis;
 import com.tblf.model.Model;
 import com.tblf.model.ModelPackage;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
-
 import org.eclipse.emf.ecore.util.Switch;
 
 /**

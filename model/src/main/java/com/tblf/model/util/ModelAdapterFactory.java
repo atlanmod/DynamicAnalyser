@@ -2,16 +2,12 @@
  */
 package com.tblf.model.util;
 
-import com.tblf.Model.*;
-
 import com.tblf.model.Analysis;
 import com.tblf.model.Model;
 import com.tblf.model.ModelPackage;
 import org.eclipse.emf.common.notify.Adapter;
 import org.eclipse.emf.common.notify.Notifier;
-
 import org.eclipse.emf.common.notify.impl.AdapterFactoryImpl;
-
 import org.eclipse.emf.ecore.EObject;
 
 /**

@@ -2,8 +2,6 @@
  */
 package com.tblf.model.impl;
 
-import com.tblf.Model.*;
-
 import com.tblf.model.Analysis;
 import com.tblf.model.Model;
 import com.tblf.model.ModelFactory;
@@ -11,9 +9,7 @@ import com.tblf.model.ModelPackage;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
-
 import org.eclipse.emf.ecore.impl.EFactoryImpl;
-
 import org.eclipse.emf.ecore.plugin.EcorePlugin;
 
 /**
