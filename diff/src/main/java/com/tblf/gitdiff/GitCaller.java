@@ -139,14 +139,12 @@ public class GitCaller {
                 String pkg;
                 String uri = diffEntry.getOldPath();
 
-                if (uri.startsWith(pomFolder.getName()))
-                    uri = uri.replace(pomFolder.getName()+"/", "");
+                if (! uri.endsWith(".java"))
+                    throw new NonJavaFileException("The diff entry: "+uri+" does not concern a Java file");
 
-                if (uri.contains(Configuration.getProperty("sut"))) {
-                    pkg = ParserUtils.getPackageQNFromSUTFile(new File(uri));
-                } else {
-                    pkg = ParserUtils.getPackageQNFromTestFile(new File(uri));
-                }
+                LOGGER.fine("Analyzing impacts of "+uri+" modification");
+
+                pkg = ParserUtils.getPackageQNFromFile(new File(uri));
 
                 if (java2File == null) {
                     Resource sutPackage = ModelUtils.getPackageResource(pkg, resourceSet);
@@ -156,9 +154,6 @@ public class GitCaller {
                                     && ((Java2File) eObject).getJavaUnit().getOriginalFilePath().endsWith(fileHeader.getOldPath()))
                             .findFirst()
                             .orElseThrow(() -> new NonJavaFileException("The DiffEntry does not concern a Java file but: " + fileHeader.getOldPath() + " No impact computed from it"));
-
-
-                    LOGGER.info("Java File currently analysed :" + java2File.getJavaUnit().getName());
                 }
 
                 diffFormatter.format(diffEntry);
@@ -171,6 +166,7 @@ public class GitCaller {
             }
         });
 
+        LOGGER.info("Impact analysis completed");
         testToRun.forEach(methodDeclaration -> LOGGER.fine("The test method: " + methodDeclaration.getName() + " of the test class " + ((ClassDeclaration) methodDeclaration.eContainer()).getName() + " is impacted by this modification"));
         return testToRun.stream().map(methodDeclaration -> new AbstractMap.SimpleEntry<>(methodDeclaration.getName(), ((ClassDeclaration) methodDeclaration.eContainer()).getName())).collect(Collectors.toList());
     }
