@@ -42,10 +42,21 @@ public class SourceCodeInstrumenter implements Instrumenter {
     private Collection<File> dependencies;
 
     public SourceCodeInstrumenter(File directory) {
-        this.directory = directory;
         dependencies = new ArrayList<>();
-        binDirectory = new File(directory, Configuration.getProperty("instrumentedBinaries"));
+        setProjectFolder(directory);
+    }
 
+    public SourceCodeInstrumenter() {
+        dependencies = new ArrayList<>();
+    }
+
+    /**
+     * Set the root directory of the project ton instrument
+     * @param directory the {@link File} directory
+     */
+    public void setProjectFolder(File directory) {
+        this.directory = directory;
+        binDirectory = new File(directory, Configuration.getProperty("instrumentedBinaries"));
         sutDirectory = new File(directory, Configuration.getProperty("sut"));
         testDirectory = new File(directory, Configuration.getProperty("test"));
     }
@@ -116,6 +127,11 @@ public class SourceCodeInstrumenter implements Instrumenter {
         } catch (MalformedURLException e) {
             LOGGER.warning("Cannot add the instrumented classes to the classpath: " + e.getMessage());
         }
+    }
+
+    @Override
+    public ClassLoader getClassLoader() {
+        return SingleURLClassLoader.getInstance().getClassLoader();
     }
 
     private void addDependencies() throws IOException, URISyntaxException {

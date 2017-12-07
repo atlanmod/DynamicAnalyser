@@ -56,8 +56,19 @@ public class ByteCodeInstrumenter implements Instrumenter {
      */
     private static SingleURLClassLoader singleURLClassLoader = SingleURLClassLoader.getInstance();
 
+    public ByteCodeInstrumenter() {
+
+    }
 
     public ByteCodeInstrumenter(File project) {
+        this.setProjectFolder(project);
+    }
+
+    /**
+     * Set the root directory of the project ton instrument
+     * @param project the {@link File} directory
+     */
+    public void setProjectFolder(File project) {
         this.projectFolder = project;
         this.testBinFolder = new File(project, Configuration.getProperty("testBinaries"));
         this.sutBinFolder = new File(project, Configuration.getProperty("sutBinaries"));
@@ -158,5 +169,10 @@ public class ByteCodeInstrumenter implements Instrumenter {
 
         //Instrumenting the binaries
         singleURLClassLoader.addURLs(dependencyArray);
+    }
+
+    @Override
+    public ClassLoader getClassLoader() {
+        return SingleURLClassLoader.getInstance().getClassLoader();
     }
 }

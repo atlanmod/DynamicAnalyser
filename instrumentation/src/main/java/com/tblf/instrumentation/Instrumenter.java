@@ -1,5 +1,6 @@
 package com.tblf.instrumentation;
 
+import java.io.File;
 import java.util.Collection;
 
 /**
@@ -7,5 +8,9 @@ import java.util.Collection;
  */
 public interface Instrumenter {
 
-    public void instrument(Collection<String> targets, Collection<String> tests);
+    void instrument(Collection<String> targets, Collection<String> tests);
+
+    ClassLoader getClassLoader();
+
+    void setProjectFolder(File file);
 }
