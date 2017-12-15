@@ -2,6 +2,7 @@ package com.tblf.gitdiff;
 
 import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.junit.Assert;
 import org.junit.Test;
@@ -27,4 +28,21 @@ public class GitCallerTest {
         //Does not expect any results. Method is tested in the manager pkg
     }
 
+    @Test
+    public void checkCompareCommitsRealProject() throws IOException {
+
+        ModelUtils.unzip(new File("src/test/resources/fullprojects/SimpleProject.zip"));
+
+        File file = new File("src/test/resources/fullprojects/SimpleProject");
+        assert file.exists();
+
+        ResourceSet resourceSet = ModelUtils.buildResourceSet(file);
+
+        GitCaller gitCaller = new GitCaller(file, resourceSet);
+        gitCaller.compareCommits("HEAD~1", "HEAD");
+
+        Assert.assertEquals(1, gitCaller.getTestsToRun().size());
+
+        FileUtils.deleteDirectory(file);
+    }
 }

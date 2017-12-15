@@ -4,9 +4,10 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseProblemException;
 import com.github.javaparser.Position;
 import com.github.javaparser.Range;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.tblf.model.Analysis;
-import com.tblf.utils.Configuration;
 import com.tblf.utils.ModelUtils;
 import com.tblf.utils.ParserUtils;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -52,12 +53,13 @@ public class GitCaller {
     private ResourceSet resourceSet;
     private Java2File java2File;
 
-    private Set<MethodDeclaration> testToRun;
+    private Set<MethodDeclaration> impactedTestsToRun;
+    private Set<String> testsToRun;
 
     /**
      * Constructor initializing the {@link Git}
      *
-     * @param pomFolder a {@link File} directory containing a pom.xml mvn file
+     * @param pomFolder   a {@link File} directory containing a pom.xml mvn file
      * @param resourceSet a {@link ResourceSet}
      */
     public GitCaller(File pomFolder, ResourceSet resourceSet) {
@@ -72,8 +74,9 @@ public class GitCaller {
 
     /**
      * Constructor to use with multi-module projects
-     * @param pomFolder the folder containing the pom
-     * @param gitFolder the folder containing the .git
+     *
+     * @param pomFolder   the folder containing the pom
+     * @param gitFolder   the folder containing the .git
      * @param resourceSet the {@link ResourceSet}
      */
     public GitCaller(File pomFolder, File gitFolder, ResourceSet resourceSet) {
@@ -107,7 +110,7 @@ public class GitCaller {
             ObjectId future = repository.resolve(nextCommitID);
 
             if (current == null || future == null) {
-                throw new IOException("Cannot resolve the commits: "+current+" -> "+future);
+                throw new IOException("Cannot resolve the commits: " + current + " -> " + future);
             }
 
             oldTree = new RevWalk(repository).parseCommit(current).getTree();
@@ -116,7 +119,9 @@ public class GitCaller {
             diffFormatter.setDiffComparator(RawTextComparator.WS_IGNORE_ALL);
             diffFormatter.setRepository(repository);
             diffFormatter.setDetectRenames(true);
-            testToRun = new HashSet<>();
+
+            impactedTestsToRun = new HashSet<>();
+            testsToRun = new HashSet<>();
 
             List<DiffEntry> diffEntryList = diffFormatter.scan(current, future);
             analyseDiffs(diffEntryList);
@@ -139,10 +144,10 @@ public class GitCaller {
                 String pkg;
                 String uri = diffEntry.getOldPath();
 
-                if (! uri.endsWith(".java"))
-                    throw new NonJavaFileException("The diff entry: "+uri+" does not concern a Java file");
+                if (!uri.endsWith(".java"))
+                    throw new NonJavaFileException("The diff entry: " + uri + " does not concern a Java file");
 
-                LOGGER.fine("Analyzing impacts of "+uri+" modification");
+                LOGGER.fine("Analyzing impacts of " + uri + " modification");
 
                 pkg = ParserUtils.getPackageQNFromFile(new File(uri));
 
@@ -167,8 +172,8 @@ public class GitCaller {
         });
 
         LOGGER.info("Impact analysis completed");
-        testToRun.forEach(methodDeclaration -> LOGGER.info("The test method: " + methodDeclaration.getName() + " of the test class " + ((ClassDeclaration) methodDeclaration.eContainer()).getName() + " is impacted by this modification"));
-        return testToRun.stream().map(methodDeclaration -> new AbstractMap.SimpleEntry<>(methodDeclaration.getName(), ((ClassDeclaration) methodDeclaration.eContainer()).getName())).collect(Collectors.toList());
+        impactedTestsToRun.forEach(methodDeclaration -> LOGGER.info("The test method: " + methodDeclaration.getName() + " of the test class " + ((ClassDeclaration) methodDeclaration.eContainer()).getName() + " is impacted by this modification"));
+        return impactedTestsToRun.stream().map(methodDeclaration -> new AbstractMap.SimpleEntry<>(methodDeclaration.getName(), ((ClassDeclaration) methodDeclaration.eContainer()).getName())).collect(Collectors.toList());
     }
 
     /**
@@ -179,28 +184,84 @@ public class GitCaller {
      */
     private void manageEdit(DiffEntry diffEntry, Edit edit) {
 
-        BlockStmt blockStmtBefore = getStatementsFromOldPath(diffEntry, edit);
-        BlockStmt blockStmtAfter = getStatementsFromNewPath(diffEntry, edit);
+        if (edit.getType().equals(Edit.Type.INSERT)) {
+            manageInsertion(diffEntry, edit);
+        } else {
 
-        LOGGER.fine(blockStmtBefore.getStatements().size() + " statements before and " + blockStmtAfter.getStatements().size() + " after. Now comparing.");
+            BlockStmt blockStmtBefore = getStatementsFromOldPath(diffEntry, edit);
+            BlockStmt blockStmtAfter = getStatementsFromNewPath(diffEntry, edit);
 
-        //Statement modified or removed
-        blockStmtBefore.getStatements().forEach(statement -> {
-            if (!blockStmtAfter.getStatements().contains(statement) && statement.getRange().isPresent()) {
-                LOGGER.fine("In file " + diffEntry.getOldPath() + statementToString(statement) + " modified.");
-                //Get the impacts at the statement level
-                testToRun.addAll(getImpacts(java2File, statement));
-            }
-        });
+            LOGGER.fine(blockStmtBefore.getStatements().size() + " statements before and " + blockStmtAfter.getStatements().size() + " after. Now comparing.");
 
-        //New statements
-        blockStmtAfter.getStatements().forEach(statement -> {
-            if (!blockStmtBefore.getStatements().contains(statement) && statement.getRange().isPresent()) {
-                LOGGER.fine("In file " + diffEntry.getNewPath() + statementToString(statement) + " added");
-                //Get the impacts at the method level
-                testToRun.addAll(getMethodImpacts(java2File, statement));
-            }
-        });
+            //Statement modified or removed
+            blockStmtBefore.getStatements().forEach(statement -> {
+                if (!blockStmtAfter.getStatements().contains(statement) && statement.getRange().isPresent()) {
+                    LOGGER.fine("In file " + diffEntry.getOldPath() + statementToString(statement) + " modified.");
+                    //Get the impacts at the statement level
+                    testsToRun.addAll(getMethodImpacts(java2File, statement).stream().map(methodDeclaration -> ((ClassDeclaration) methodDeclaration.eContainer()).getName() + "#" + methodDeclaration.getName()).collect(Collectors.toSet()));
+                    impactedTestsToRun.addAll(getImpacts(java2File, statement));
+                }
+            });
+
+            //New statements
+            blockStmtAfter.getStatements().forEach(statement -> {
+                if (!blockStmtBefore.getStatements().contains(statement) && statement.getRange().isPresent()) {
+                    LOGGER.fine("In file " + diffEntry.getNewPath() + statementToString(statement) + " added");
+                    //Get the impacts at the method level
+                    testsToRun.addAll(getMethodImpacts(java2File, statement).stream().map(methodDeclaration -> ((ClassDeclaration) methodDeclaration.eContainer()).getName() + "#" + methodDeclaration.getName()).collect(Collectors.toSet()));
+                    impactedTestsToRun.addAll(getMethodImpacts(java2File, statement));
+                }
+            });
+        }
+    }
+
+    /**
+     * Manage an insertion. Since those statements are new, they haven't been analysed yet. Thus, their impacts are a bit harder to compute
+     * If it's in a test: Re run this test
+     * If it's in a method from the System under test, get the impacts at the method level
+     *
+     * @param diffEntry a {@link DiffEntry}
+     * @param edit      an {@link Edit}
+     */
+    private void manageInsertion(DiffEntry diffEntry, Edit edit) {
+        try {
+            String fileAsString = DiffUtils.getFileContentFromCommit(repository, newTree, diffEntry.getNewPath());
+            CompilationUnit compilationUnit = JavaParser.parse(fileAsString);
+
+            List<com.github.javaparser.ast.body.MethodDeclaration> methodDeclarations =
+                    compilationUnit
+                            .getChildNodesByType(com.github.javaparser.ast.body.MethodDeclaration.class)
+                            .stream()
+                            .filter(methodDeclaration -> methodDeclaration.getRange().isPresent())
+                            .filter(methodDeclaration -> {
+
+                                        com.google.common.collect.Range<Integer> methodRange = com.google.common.collect.Range.closed(
+                                                methodDeclaration.getRange().get().begin.line,
+                                                methodDeclaration.getRange().get().end.line);
+
+                                        com.google.common.collect.Range<Integer> editRange = com.google.common.collect.Range.closed(
+                                                edit.getBeginB() + 1,
+                                                edit.getEndB());
+
+                                        return editRange.isConnected(methodRange);
+                                    }
+                            ).collect(Collectors.toList());
+
+            //Add all the new methods found edited to the tests to run
+            //Map all the MethodDeclaration to a String as: Classname#MethodName
+
+            testsToRun.addAll(methodDeclarations
+                    .stream()
+                    .map(methodDeclaration -> String.format("%s.%s#%s",
+                            compilationUnit.getPackageDeclaration().get().getName().asString(), //qualified package
+                            methodDeclaration.getAncestorOfType(ClassOrInterfaceDeclaration.class).get().getName().asString(), //class name
+                            methodDeclaration.getName().asString())) //methodName
+                    .collect(Collectors.toList())
+            );
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -332,12 +393,12 @@ public class GitCaller {
     }
 
     /**
-     * Gets testToRun
+     * Gets impactedTestsToRun
      *
-     * @return value of testToRun
+     * @return value of impactedTestsToRun
      */
-    public Set<MethodDeclaration> getTestToRun() {
-        return testToRun;
+    public Set<MethodDeclaration> getImpactedTestsToRun() {
+        return impactedTestsToRun;
     }
 
     /**
@@ -363,12 +424,11 @@ public class GitCaller {
         return toString[0];
     }
 
-    /**
-     * Sets testToRun
-     *
-     * @param testToRun a {@link Set} of {@link MethodDeclaration}
-     */
-    public void setTestToRun(Set<MethodDeclaration> testToRun) {
-        this.testToRun = testToRun;
+    public Set<String> getTestsToRun() {
+        return testsToRun;
+    }
+
+    public void setTestsToRun(Set<String> testsToRun) {
+        this.testsToRun = testsToRun;
     }
 }
