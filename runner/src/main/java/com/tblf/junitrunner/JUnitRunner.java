@@ -101,6 +101,6 @@ public class JUnitRunner {
             LOGGER.info(result.getKey()+": \n"+RunnerUtils.results(result.getValue()));
         });
 
-        LOGGER.info((failure.get() + success.get()) + " tests run : " + success.get() + " succeeded - " + failure.get() + " failed - " + ignore.get() + " ignored");
+        LOGGER.fine((failure.get() + success.get()) + " tests run : " + success.get() + " succeeded - " + failure.get() + " failed - " + ignore.get() + " ignored");
     }
 }
