@@ -99,7 +99,7 @@ public class SourceCodeInstrumenter implements Instrumenter {
         spoonLauncher.getEnvironment().setSourceClasspath(dependencies.stream().map(File::getAbsolutePath).toArray(String[]::new));
 
         //TODO use hashsets instead of standard lists to optimize the contains() method
-        spoonLauncher.getEnvironment().setLevel(String.valueOf(Level.ALL));
+        spoonLauncher.getEnvironment().setLevel(String.valueOf(Level.WARNING));
         spoonLauncher.getEnvironment().setShouldCompile(true);
         spoonLauncher.getEnvironment().setAutoImports(false);
         spoonLauncher.getEnvironment().setNoClasspath(false);
