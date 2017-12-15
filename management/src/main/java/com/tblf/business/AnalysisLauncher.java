@@ -72,6 +72,9 @@ public class AnalysisLauncher {
      */
     private void impactAnalysis() {
         sources.forEach(source -> {
+
+            before.forEach(fileConsumer -> fileConsumer.accept(source));
+
             LOGGER.info("Computing the impact analysis of " + source.getName());
             this.resourceSet = ModelUtils.buildResourceSet(source);
             instrumenter.setProjectFolder(source);
@@ -106,6 +109,8 @@ public class AnalysisLauncher {
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, "An error was caught during the impact analysis", e);
             }
+
+            after.forEach(fileConsumer -> fileConsumer.accept(source));
         });
     }
 
@@ -157,11 +162,8 @@ public class AnalysisLauncher {
     public void run() {
         setUp();
 
-        before.forEach(fileConsumer -> sources.forEach(fileConsumer));
-
         impactAnalysis();
 
-        after.forEach(fileConsumer -> sources.forEach(fileConsumer));
     }
 
     public void setIsPomAtRoot(boolean bool) {
