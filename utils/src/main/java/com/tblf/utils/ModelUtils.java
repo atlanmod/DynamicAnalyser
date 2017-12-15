@@ -356,4 +356,18 @@ public class ModelUtils {
         }
     }
 
+    /**
+     * Iterate over a {@link Model} to get all the test methods
+     * @param model a {@link Model}
+     * @return a {@link Collection} of {@link MethodDeclaration}
+     */
+    public static Collection<MethodDeclaration> getAllTestMethods(Model model) {
+
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(model.eAllContents(), Spliterator.ORDERED), false)
+                .filter(MethodDeclaration.class::isInstance)
+                .map(eObject -> ((MethodDeclaration) eObject)) //get methods
+                .filter(eObject -> eObject.getAnnotations().stream().anyMatch(ModelUtils::isATestAnnotation)) //get test methods using @Test
+                .collect(Collectors.toList()); //collect
+
+    }
 }

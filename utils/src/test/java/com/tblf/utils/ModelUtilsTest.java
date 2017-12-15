@@ -1,14 +1,11 @@
 package com.tblf.utils;
 
-import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.gmt.modisco.java.ClassDeclaration;
 import org.eclipse.gmt.modisco.java.Model;
 import org.eclipse.gmt.modisco.java.Package;
-import org.eclipse.gmt.modisco.java.Statement;
 import org.eclipse.gmt.modisco.java.emf.JavaFactory;
 import org.eclipse.modisco.java.composition.javaapplication.Java2Directory;
-import org.eclipse.modisco.java.composition.javaapplication.Java2File;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -18,7 +15,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 /**
  * Unit test for simple App.
@@ -30,6 +26,7 @@ public class ModelUtilsTest {
         File f = new File("src/test/resources/models/junit_java.zip");
         try {
             Resource resource = ModelUtils.loadModelFromZip(f);
+            assert resource != null;
             Model model = (Model) resource.getContents().get(0);
             Assert.assertEquals(model.getName(), "junit");
         } catch (Exception e) {
@@ -41,6 +38,7 @@ public class ModelUtilsTest {
     public void checkGetTests() throws IOException {
         File f = new File("src/test/resources/models/junit_java.zip");
         Resource resource = ModelUtils.loadModelFromZip(f);
+        assert resource != null;
         Model model = (Model) resource.getContents().get(0);
         Assert.assertEquals(model.getName(), "junit");
 
@@ -50,9 +48,25 @@ public class ModelUtilsTest {
     }
 
     @Test
+    public void checkGetTestMethods() throws IOException {
+        File f = new File("src/test/resources/models/junit_java.zip");
+        Resource resource = ModelUtils.loadModelFromZip(f);
+
+        assert resource != null;
+        Model model = (Model) resource.getContents().get(0);
+
+        Assert.assertEquals(model.getName(), "junit");
+
+        Collection collection = ModelUtils.getAllTestMethods(model);
+
+        Assert.assertTrue(collection.size() > 1200);
+    }
+
+    @Test
     public void checkGetAllClasses() throws IOException {
         File f = new File("src/test/resources/models/junit_java.zip");
         Resource resource = ModelUtils.loadModelFromZip(f);
+        assert resource != null;
         Model model = (Model) resource.getContents().get(0);
         Assert.assertEquals(model.getName(), "junit");
 
@@ -101,6 +115,8 @@ public class ModelUtilsTest {
 
         try {
             Resource resource = ModelUtils.loadModelFromZip(modelAsZip);
+
+            assert resource != null;
             Model model = (Model) resource.getContents().get(0);
 
             Assert.assertEquals("junit", model.getName());

@@ -33,7 +33,7 @@ public class FileUtils {
         try {
             Model model = mavenXpp3Reader.read(new FileInputStream(pom));
             String packaging = model.getPackaging();
-            if (packaging.equals("jar")) {
+            if (packaging.equals("jar") || packaging.equals("bundle")) {
                 return true;
             }
         } catch (IOException | XmlPullParserException e) {
