@@ -103,22 +103,22 @@ public class GitCaller {
      */
     public void compareCommits(String currentCommitID, String nextCommitID) {
         try {
-            ObjectId previous = repository.resolve(currentCommitID);
-            ObjectId current = repository.resolve(nextCommitID);
+            ObjectId current = repository.resolve(currentCommitID);
+            ObjectId future = repository.resolve(nextCommitID);
 
-            if (previous == null || current == null) {
-                throw new IOException("Cannot resolve the commits");
+            if (current == null || future == null) {
+                throw new IOException("Cannot resolve the commits: "+current+" -> "+future);
             }
 
-            oldTree = new RevWalk(repository).parseCommit(previous).getTree();
-            newTree = new RevWalk(repository).parseCommit(current).getTree();
+            oldTree = new RevWalk(repository).parseCommit(current).getTree();
+            newTree = new RevWalk(repository).parseCommit(future).getTree();
             diffFormatter = new DiffFormatter(new LogOutputStream(LOGGER, Level.FINE));
             diffFormatter.setDiffComparator(RawTextComparator.WS_IGNORE_ALL);
             diffFormatter.setRepository(repository);
             diffFormatter.setDetectRenames(true);
             testToRun = new HashSet<>();
 
-            List<DiffEntry> diffEntryList = diffFormatter.scan(previous, current);
+            List<DiffEntry> diffEntryList = diffFormatter.scan(current, future);
             analyseDiffs(diffEntryList);
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Couldn't build the revision tree", e);
@@ -160,14 +160,14 @@ public class GitCaller {
                 fileHeader.toEditList().forEach(edit -> manageEdit(diffEntry, edit));
 
             } catch (NonJavaFileException e) {
-                LOGGER.log(Level.INFO, e.toString());
+                LOGGER.log(Level.FINE, e.toString());
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, "Couldn't analyze the diffEntry", e);
             }
         });
 
         LOGGER.info("Impact analysis completed");
-        testToRun.forEach(methodDeclaration -> LOGGER.fine("The test method: " + methodDeclaration.getName() + " of the test class " + ((ClassDeclaration) methodDeclaration.eContainer()).getName() + " is impacted by this modification"));
+        testToRun.forEach(methodDeclaration -> LOGGER.info("The test method: " + methodDeclaration.getName() + " of the test class " + ((ClassDeclaration) methodDeclaration.eContainer()).getName() + " is impacted by this modification"));
         return testToRun.stream().map(methodDeclaration -> new AbstractMap.SimpleEntry<>(methodDeclaration.getName(), ((ClassDeclaration) methodDeclaration.eContainer()).getName())).collect(Collectors.toList());
     }
 
@@ -187,7 +187,7 @@ public class GitCaller {
         //Statement modified or removed
         blockStmtBefore.getStatements().forEach(statement -> {
             if (!blockStmtAfter.getStatements().contains(statement) && statement.getRange().isPresent()) {
-                LOGGER.info("In file " + diffEntry.getOldPath() + statementToString(statement) + " modified.");
+                LOGGER.fine("In file " + diffEntry.getOldPath() + statementToString(statement) + " modified.");
                 //Get the impacts at the statement level
                 testToRun.addAll(getImpacts(java2File, statement));
             }
@@ -196,7 +196,7 @@ public class GitCaller {
         //New statements
         blockStmtAfter.getStatements().forEach(statement -> {
             if (!blockStmtBefore.getStatements().contains(statement) && statement.getRange().isPresent()) {
-                LOGGER.info("In file " + diffEntry.getNewPath() + statementToString(statement) + " added");
+                LOGGER.fine("In file " + diffEntry.getNewPath() + statementToString(statement) + " added");
                 //Get the impacts at the method level
                 testToRun.addAll(getMethodImpacts(java2File, statement));
             }

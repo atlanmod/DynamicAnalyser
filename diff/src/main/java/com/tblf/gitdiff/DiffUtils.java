@@ -9,9 +9,12 @@ import org.eclipse.jgit.treewalk.filter.PathFilter;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 public class DiffUtils {
+
+    private static final Logger LOGGER = Logger.getLogger(DiffUtils.class.getName());
 
     /**
      * Parse a file line by line until getting to the expected line
@@ -46,7 +49,7 @@ public class DiffUtils {
         treeWalk.setFilter(PathFilter.create(f));
 
         if (!treeWalk.next()) {
-            System.out.println("Couldn't find the file");
+            LOGGER.warning("Couldn't find the file: "+f);
         }
 
         ObjectLoader objectLoader = repository.open(treeWalk.getObjectId(0));
