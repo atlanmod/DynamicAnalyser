@@ -252,6 +252,7 @@ public class GitCaller {
 
             testsToRun.addAll(methodDeclarations
                     .stream()
+                    .filter(methodDeclaration -> methodDeclaration.getAncestorOfType(ClassOrInterfaceDeclaration.class).isPresent())
                     .map(methodDeclaration -> String.format("%s.%s#%s",
                             compilationUnit.getPackageDeclaration().get().getName().asString(), //qualified package
                             methodDeclaration.getAncestorOfType(ClassOrInterfaceDeclaration.class).get().getName().asString(), //class name
