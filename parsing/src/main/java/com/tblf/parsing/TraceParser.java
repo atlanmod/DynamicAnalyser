@@ -5,8 +5,6 @@ import com.tblf.model.ModelFactory;
 import com.tblf.model.ModelPackage;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.ParserUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
@@ -20,11 +18,9 @@ import org.eclipse.modisco.kdm.source.extension.ASTNodeSourceRegion;
 import org.eclipse.modisco.kdm.source.extension.ExtensionPackage;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 
 /**
@@ -91,11 +87,12 @@ public class TraceParser extends Parser{
         long currLine = 0;
         long maxLine = ParserUtils.getLineNumber(trace); //We iterate starting from 0
 
+        Scanner scanner;
         try {
-            LineIterator lineIterator = FileUtils.lineIterator(trace);
-            while (lineIterator.hasNext()) {
-                String line = lineIterator.nextLine();
-                ParserUtils.printProgress(startTime, maxLine, currLine);
+            scanner = new Scanner(new FileReader(trace));
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                //ParserUtils.printProgress(startTime, maxLine, currLine);
                 currLine += 1;
                 String[] split = line.split(":");
                 switch (split[0]) {
@@ -119,9 +116,8 @@ public class TraceParser extends Parser{
                 }
             }
 
-            ParserUtils.endProgress(maxLine);
-            LineIterator.closeQuietly(lineIterator);
-
+            //ParserUtils.endProgress(maxLine);
+            scanner.close();
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Couldn't parse the traces", e);
         }
