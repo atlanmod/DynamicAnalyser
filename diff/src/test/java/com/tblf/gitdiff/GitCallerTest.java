@@ -9,6 +9,10 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 public class GitCallerTest {
 
@@ -30,6 +34,11 @@ public class GitCallerTest {
 
     @Test
     public void checkCompareCommitsRealProject() throws IOException {
+        Logger rootLogger = LogManager.getLogManager().getLogger("");
+        rootLogger.setLevel(Level.FINE);
+        for (Handler h : rootLogger.getHandlers()) {
+            h.setLevel(Level.FINE);
+        }
 
         ModelUtils.unzip(new File("src/test/resources/fullprojects/SimpleProject.zip"));
 

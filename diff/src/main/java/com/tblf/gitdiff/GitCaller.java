@@ -2,8 +2,6 @@ package com.tblf.gitdiff;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseProblemException;
-import com.github.javaparser.Position;
-import com.github.javaparser.Range;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.stmt.BlockStmt;
@@ -42,8 +40,6 @@ public class GitCaller {
 
     private static final Logger LOGGER = Logger.getLogger("GitCaller");
 
-    private File pomFolder;
-
     private Repository repository;
     private DiffFormatter diffFormatter;
 
@@ -66,7 +62,6 @@ public class GitCaller {
         try (Git git = Git.open(pomFolder)) {
             this.repository = git.getRepository();
             this.resourceSet = resourceSet;
-            this.pomFolder = pomFolder;
         } catch (IOException e) {
             throw new RuntimeException("Cannot load the git repository", e);
         }
@@ -83,7 +78,6 @@ public class GitCaller {
         try (Git git = Git.open(gitFolder)) {
             this.repository = git.getRepository();
             this.resourceSet = resourceSet;
-            this.pomFolder = pomFolder;
         } catch (IOException e) {
             throw new RuntimeException("Cannot load the git repository", e);
         }
@@ -188,15 +182,15 @@ public class GitCaller {
             manageInsertion(diffEntry, edit);
         } else {
 
-            BlockStmt blockStmtBefore = getStatementsFromOldPath(diffEntry, edit);
-            BlockStmt blockStmtAfter = getStatementsFromNewPath(diffEntry, edit);
+            BlockStmt blockStmtBefore = getStatementsAsBlockFromOldPath(diffEntry, edit);
+            BlockStmt blockStmtAfter = getStatementsAsBlockFromNewPath(diffEntry, edit);
 
             LOGGER.fine(blockStmtBefore.getStatements().size() + " statements before and " + blockStmtAfter.getStatements().size() + " after. Now comparing.");
 
             //Statement modified or removed
             blockStmtBefore.getStatements().forEach(statement -> {
                 if (!blockStmtAfter.getStatements().contains(statement) && statement.getRange().isPresent()) {
-                    LOGGER.fine("In file " + diffEntry.getOldPath() + statementToString(statement) + " modified.");
+                    LOGGER.fine("In file " + diffEntry.getOldPath() + DiffUtils.statementToString(statement) + " modified.");
                     //Get the impacts at the statement level
                     testsToRun.addAll(getMethodImpacts(java2File, statement).stream().map(methodDeclaration -> ((ClassDeclaration) methodDeclaration.eContainer()).getName() + "#" + methodDeclaration.getName()).collect(Collectors.toSet()));
                     impactedTestsToRun.addAll(getImpacts(java2File, statement));
@@ -206,7 +200,7 @@ public class GitCaller {
             //New statements
             blockStmtAfter.getStatements().forEach(statement -> {
                 if (!blockStmtBefore.getStatements().contains(statement) && statement.getRange().isPresent()) {
-                    LOGGER.fine("In file " + diffEntry.getNewPath() + statementToString(statement) + " added");
+                    LOGGER.fine("In file " + diffEntry.getNewPath() + DiffUtils.statementToString(statement) + " added");
                     //Get the impacts at the method level
                     testsToRun.addAll(getMethodImpacts(java2File, statement).stream().map(methodDeclaration -> ((ClassDeclaration) methodDeclaration.eContainer()).getName() + "#" + methodDeclaration.getName()).collect(Collectors.toSet()));
                     impactedTestsToRun.addAll(getMethodImpacts(java2File, statement));
@@ -308,6 +302,7 @@ public class GitCaller {
                         && astNodeSourceRegion.getStartLine() == statement.getRange().get().begin.line
                         && astNodeSourceRegion.getEndLine() == statement.getRange().get().end.line
                         && !astNodeSourceRegion.getAnalysis().isEmpty()) //The node is a java statement with the same statement position
+
                 //Iterating over the statement's analysis to get the impacts
                 .forEach(node -> node.getAnalysis().forEach(eObject -> {
                     Analysis analysis = (Analysis) eObject;
@@ -324,7 +319,7 @@ public class GitCaller {
      * @param edit      an {@link Edit}
      * @return a {@link BlockStmt}
      */
-    private BlockStmt getStatementsFromOldPath(DiffEntry diffEntry, Edit edit) {
+    private BlockStmt getStatementsAsBlockFromOldPath(DiffEntry diffEntry, Edit edit) {
         BlockStmt blockStmtBefore = new BlockStmt();
         for (AtomicInteger i = new AtomicInteger(edit.getBeginA()); i.get() <= edit.getEndA(); i.incrementAndGet()) {
             String line = null;
@@ -334,7 +329,7 @@ public class GitCaller {
 
                 //Computing the statements inside this line
                 BlockStmt blockStmt = JavaParser.parseBlock("{" + line + "}");
-                setBlockLines(i.get(), blockStmt);
+                DiffUtils.setLineNumberInBlockStatements(i.get(), blockStmt);
                 blockStmtBefore.getStatements().addAll(blockStmt.getStatements());
             } catch (ParseProblemException e) {
                 LOGGER.log(Level.FINE, "Couldn't get the statements of the following line: " + line, e);
@@ -353,7 +348,7 @@ public class GitCaller {
      * @param edit      an {@link Edit}
      * @return a {@link BlockStmt} containing the statements
      */
-    private BlockStmt getStatementsFromNewPath(DiffEntry diffEntry, Edit edit) {
+    private BlockStmt getStatementsAsBlockFromNewPath(DiffEntry diffEntry, Edit edit) {
         BlockStmt blockStmtAfter = new BlockStmt();
         for (AtomicInteger i = new AtomicInteger(edit.getBeginB()); i.get() <= edit.getEndB(); i.incrementAndGet()) {
             String line = null;
@@ -363,7 +358,7 @@ public class GitCaller {
 
                 //Computing the statements inside this line
                 BlockStmt blockStmt = JavaParser.parseBlock("{" + line + "}");
-                setBlockLines(i.get(), blockStmt);
+                DiffUtils.setLineNumberInBlockStatements(i.get(), blockStmt);
                 blockStmtAfter.getStatements().addAll(blockStmt.getStatements());
             } catch (ParseProblemException e) {
                 LOGGER.log(Level.FINE, "Couldn't get the statements of the following line: " + line, e);
@@ -376,53 +371,12 @@ public class GitCaller {
     }
 
     /**
-     * Set the line number of every statement in a block.
-     * Since we're parsing only a line of code, the line number will be 1 for all the statements in this line.
-     * Instead, we set the correct line number according to the compilation unit, instead of the block itself.
-     *
-     * @param line      the line number
-     * @param blockStmt a {@link BlockStmt} containing statements located on a single line of code
-     */
-    private void setBlockLines(int line, BlockStmt blockStmt) {
-        blockStmt.getStatements().forEach(statement -> {
-            if (statement.getRange().isPresent()) {
-                Position begin = new Position(line, statement.getRange().get().begin.column);
-                Position end = new Position(line, statement.getRange().get().end.column);
-                statement.setRange(new Range(begin, end));
-            }
-        });
-    }
-
-    /**
      * Gets impactedTestsToRun
      *
      * @return value of impactedTestsToRun
      */
     public Set<MethodDeclaration> getImpactedTestsToRun() {
         return impactedTestsToRun;
-    }
-
-    /**
-     * Parse a statement to create a string to display out of it
-     *
-     * @param statement the {@link com.github.javaparser.ast.stmt.Statement}
-     * @return a {@link String}
-     */
-    private static String statementToString(com.github.javaparser.ast.stmt.Statement statement) {
-        final String[] toString = {""};
-
-        statement.getRange().ifPresent(range1 -> toString[0] =
-                String.format(" %s : line %s, from %s, to %s",
-                        statement,
-                        range1.begin.line,
-                        range1.begin.column,
-                        range1.end.column));
-
-        if ("".equals(toString[0])) {
-            toString[0] = statement.toString();
-        }
-
-        return toString[0];
     }
 
     public Set<String> getTestsToRun() {

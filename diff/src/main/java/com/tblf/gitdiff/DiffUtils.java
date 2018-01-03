@@ -1,5 +1,8 @@
 package com.tblf.gitdiff;
 
+import com.github.javaparser.Position;
+import com.github.javaparser.Range;
+import com.github.javaparser.ast.stmt.BlockStmt;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevTree;
@@ -55,5 +58,46 @@ public class DiffUtils {
         ObjectLoader objectLoader = repository.open(treeWalk.getObjectId(0));
 
         return new String(objectLoader.getBytes(), "UTF-8");
+    }
+
+    /**
+     * Parse a statement to create a string to display out of it
+     *
+     * @param statement the {@link com.github.javaparser.ast.stmt.Statement}
+     * @return a {@link String}
+     */
+    static String statementToString(com.github.javaparser.ast.stmt.Statement statement) {
+        final String[] toString = {""};
+
+        statement.getRange().ifPresent(range1 -> toString[0] =
+                String.format(" %s : line %s, from %s, to %s",
+                        statement,
+                        range1.begin.line,
+                        range1.begin.column,
+                        range1.end.column));
+
+        if ("".equals(toString[0])) {
+            toString[0] = statement.toString();
+        }
+
+        return toString[0];
+    }
+
+    /**
+     * Set the line number of every statement in a block.
+     * Since we're parsing only a line of code, the line number will be 1 for all the statements in this line.
+     * Instead, we set the correct line number according to the compilation unit, instead of the block itself.
+     *
+     * @param line      the line number
+     * @param blockStmt a {@link BlockStmt} containing statements located on a single line of code
+     */
+    static void setLineNumberInBlockStatements(int line, BlockStmt blockStmt) {
+        blockStmt.getStatements().forEach(statement -> {
+            if (statement.getRange().isPresent()) {
+                Position begin = new Position(line, statement.getRange().get().begin.column);
+                Position end = new Position(line, statement.getRange().get().end.column);
+                statement.setRange(new Range(begin, end));
+            }
+        });
     }
 }
