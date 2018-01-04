@@ -36,21 +36,18 @@ import java.util.stream.Collectors;
 /**
  * This class call basic git methods using the JGit library
  */
-public class GitCaller {
+public class GitCaller extends VersionControlCaller {
 
-    private static final Logger LOGGER = Logger.getLogger("GitCaller");
+    protected static final Logger LOGGER = Logger.getLogger("GitCaller");
 
-    private Repository repository;
-    private DiffFormatter diffFormatter;
+    protected Repository repository;
 
-    private RevTree oldTree;
-    private RevTree newTree;
+    protected RevTree oldTree;
+    protected RevTree newTree;
 
-    private ResourceSet resourceSet;
-    private Java2File java2File;
+    protected DiffFormatter diffFormatter;
 
-    private Set<MethodDeclaration> impactedTestsToRun;
-    private Set<String> testsToRun;
+    protected Set<MethodDeclaration> impactedTestsToRun;
 
     /**
      * Constructor initializing the {@link Git}
@@ -59,9 +56,9 @@ public class GitCaller {
      * @param resourceSet a {@link ResourceSet}
      */
     public GitCaller(File pomFolder, ResourceSet resourceSet) {
+        super(pomFolder, resourceSet);
         try (Git git = Git.open(pomFolder)) {
             this.repository = git.getRepository();
-            this.resourceSet = resourceSet;
         } catch (IOException e) {
             throw new RuntimeException("Cannot load the git repository", e);
         }
@@ -75,9 +72,9 @@ public class GitCaller {
      * @param resourceSet the {@link ResourceSet}
      */
     public GitCaller(File pomFolder, File gitFolder, ResourceSet resourceSet) {
+        super(gitFolder, resourceSet);
         try (Git git = Git.open(gitFolder)) {
             this.repository = git.getRepository();
-            this.resourceSet = resourceSet;
         } catch (IOException e) {
             throw new RuntimeException("Cannot load the git repository", e);
         }
@@ -98,6 +95,7 @@ public class GitCaller {
      * @param currentCommitID the first commit ID
      * @param nextCommitID    the next commit ID
      */
+    @Override
     public void compareCommits(String currentCommitID, String nextCommitID) {
         try {
             ObjectId current = repository.resolve(currentCommitID);
@@ -129,7 +127,7 @@ public class GitCaller {
      *
      * @param diffEntries a {@link List} of {@link DiffEntry}
      */
-    private Collection<Map.Entry<String, String>> analyseDiffs(List<DiffEntry> diffEntries) {
+    protected Collection<Map.Entry<String, String>> analyseDiffs(List<DiffEntry> diffEntries) {
 
         diffEntries.forEach(diffEntry -> {
             try {
@@ -145,18 +143,16 @@ public class GitCaller {
 
                 pkg = ParserUtils.getPackageQNFromFile(new File(uri));
 
-                if (java2File == null) {
-                    Resource sutPackage = ModelUtils.getPackageResource(pkg, resourceSet);
-                    java2File = (Java2File) sutPackage.getContents()
-                            .stream()
-                            .filter(eObject -> eObject instanceof Java2File
-                                    && ((Java2File) eObject).getJavaUnit().getOriginalFilePath().endsWith(fileHeader.getOldPath()))
-                            .findFirst()
-                            .orElseThrow(() -> new NonJavaFileException("The DiffEntry does not concern a Java file but: " + fileHeader.getOldPath() + " No impact computed from it"));
-                }
+                Resource sutPackage = ModelUtils.getPackageResource(pkg, resourceSet);
+                Java2File java2File = (Java2File) sutPackage.getContents()
+                        .stream()
+                        .filter(eObject -> eObject instanceof Java2File
+                                && ((Java2File) eObject).getJavaUnit().getOriginalFilePath().endsWith(fileHeader.getOldPath()))
+                        .findFirst()
+                        .orElseThrow(() -> new NonJavaFileException("The DiffEntry does not concern a Java file but: " + fileHeader.getOldPath() + " No impact computed from it"));
 
                 diffFormatter.format(diffEntry);
-                fileHeader.toEditList().forEach(edit -> manageEdit(diffEntry, edit));
+                fileHeader.toEditList().forEach(edit -> manageEdit(diffEntry, edit, java2File));
 
             } catch (NonJavaFileException e) {
                 LOGGER.log(Level.FINE, e.toString());
@@ -176,7 +172,7 @@ public class GitCaller {
      * @param diffEntry a {@link DiffEntry}
      * @param edit      an {@link Edit}
      */
-    private void manageEdit(DiffEntry diffEntry, Edit edit) {
+    protected void manageEdit(DiffEntry diffEntry, Edit edit, Java2File java2File) {
 
         if (edit.getType().equals(Edit.Type.INSERT)) {
             manageInsertion(diffEntry, edit);
@@ -377,13 +373,5 @@ public class GitCaller {
      */
     public Set<MethodDeclaration> getImpactedTestsToRun() {
         return impactedTestsToRun;
-    }
-
-    public Set<String> getTestsToRun() {
-        return testsToRun;
-    }
-
-    public void setTestsToRun(Set<String> testsToRun) {
-        this.testsToRun = testsToRun;
     }
 }
