@@ -10,7 +10,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ParallelGitCaller extends GitCaller {
@@ -31,7 +30,8 @@ public class ParallelGitCaller extends GitCaller {
     }
 
     @Override
-    protected Collection<Map.Entry<String, String>> analyseDiffs(List<DiffEntry> diffEntries) {
+    protected void analyseDiffs(List<DiffEntry> diffEntries) {
+
         diffEntries.parallelStream().forEach(diffEntry -> {
             try {
 
@@ -60,7 +60,5 @@ public class ParallelGitCaller extends GitCaller {
             }
 
         });
-
-        return null;
     }
 }

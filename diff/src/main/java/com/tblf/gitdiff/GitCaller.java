@@ -27,7 +27,10 @@ import org.eclipse.modisco.java.composition.javaapplication.Java2File;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,8 +49,6 @@ public class GitCaller extends VersionControlCaller {
     protected RevTree newTree;
 
     protected DiffFormatter diffFormatter;
-
-    protected Set<MethodDeclaration> impactedTestsToRun;
 
     /**
      * Constructor initializing the {@link Git}
@@ -112,11 +113,9 @@ public class GitCaller extends VersionControlCaller {
             diffFormatter.setRepository(repository);
             diffFormatter.setDetectRenames(true);
 
-            impactedTestsToRun = new HashSet<>();
-            testsToRun = new HashSet<>();
-
             List<DiffEntry> diffEntryList = diffFormatter.scan(current, future);
             analyseDiffs(diffEntryList);
+
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Couldn't build the revision tree", e);
         }
@@ -127,7 +126,7 @@ public class GitCaller extends VersionControlCaller {
      *
      * @param diffEntries a {@link List} of {@link DiffEntry}
      */
-    protected Collection<Map.Entry<String, String>> analyseDiffs(List<DiffEntry> diffEntries) {
+    protected void analyseDiffs(List<DiffEntry> diffEntries) {
 
         diffEntries.forEach(diffEntry -> {
             try {
@@ -162,8 +161,6 @@ public class GitCaller extends VersionControlCaller {
         });
 
         LOGGER.info("Impact analysis completed");
-        impactedTestsToRun.forEach(methodDeclaration -> LOGGER.info("The test method: " + methodDeclaration.getName() + " of the test class " + ((ClassDeclaration) methodDeclaration.eContainer()).getName() + " is impacted by this modification"));
-        return impactedTestsToRun.stream().map(methodDeclaration -> new AbstractMap.SimpleEntry<>(methodDeclaration.getName(), ((ClassDeclaration) methodDeclaration.eContainer()).getName())).collect(Collectors.toList());
     }
 
     /**
@@ -188,8 +185,7 @@ public class GitCaller extends VersionControlCaller {
                 if (!blockStmtAfter.getStatements().contains(statement) && statement.getRange().isPresent()) {
                     LOGGER.fine("In file " + diffEntry.getOldPath() + DiffUtils.statementToString(statement) + " modified.");
                     //Get the impacts at the statement level
-                    testsToRun.addAll(getMethodImpacts(java2File, statement).stream().map(methodDeclaration -> ((ClassDeclaration) methodDeclaration.eContainer()).getName() + "#" + methodDeclaration.getName()).collect(Collectors.toSet()));
-                    impactedTestsToRun.addAll(getImpacts(java2File, statement));
+                    impactedTests.addAll(getMethodImpacts(java2File, statement).stream().map(methodDeclaration -> ((ClassDeclaration) methodDeclaration.eContainer()).getName() + "#" + methodDeclaration.getName()).collect(Collectors.toSet()));
                 }
             });
 
@@ -198,8 +194,7 @@ public class GitCaller extends VersionControlCaller {
                 if (!blockStmtBefore.getStatements().contains(statement) && statement.getRange().isPresent()) {
                     LOGGER.fine("In file " + diffEntry.getNewPath() + DiffUtils.statementToString(statement) + " added");
                     //Get the impacts at the method level
-                    testsToRun.addAll(getMethodImpacts(java2File, statement).stream().map(methodDeclaration -> ((ClassDeclaration) methodDeclaration.eContainer()).getName() + "#" + methodDeclaration.getName()).collect(Collectors.toSet()));
-                    impactedTestsToRun.addAll(getMethodImpacts(java2File, statement));
+                    impactedTests.addAll(getMethodImpacts(java2File, statement).stream().map(methodDeclaration -> ((ClassDeclaration) methodDeclaration.eContainer()).getName() + "#" + methodDeclaration.getName()).collect(Collectors.toSet()));
                 }
             });
         }
@@ -240,7 +235,7 @@ public class GitCaller extends VersionControlCaller {
             //Add all the new methods found edited to the tests to run
             //Map all the MethodDeclaration to a String as: Classname#MethodName
 
-            testsToRun.addAll(methodDeclarations
+            newTests.addAll(methodDeclarations
                     .stream()
                     .filter(methodDeclaration -> methodDeclaration.getAncestorOfType(ClassOrInterfaceDeclaration.class).isPresent())
                     .map(methodDeclaration -> String.format("%s.%s#%s",
@@ -273,9 +268,13 @@ public class GitCaller extends VersionControlCaller {
                         && astNodeSourceRegion.getEndLine() >= statement.getRange().get().end.line
                         && !astNodeSourceRegion.getAnalysis().isEmpty())
                 //For each method modified, find the impacts
-                .forEach(node -> node.getAnalysis().forEach(eObject -> {
+                .forEach(node -> node.getAnalysis()
+                        .forEach(eObject -> {
                     Analysis analysis = (Analysis) eObject;
-                    methodDeclarationSet.addAll(analysis.getTarget().stream().map(eObject1 -> (MethodDeclaration) eObject1).collect(Collectors.toSet()));
+                    methodDeclarationSet.addAll(analysis.getTarget()
+                            .stream()
+                            .map(eObject1 -> (MethodDeclaration) eObject1)
+                            .collect(Collectors.toSet()));
                 }));
         return methodDeclarationSet;
     }
@@ -366,12 +365,4 @@ public class GitCaller extends VersionControlCaller {
         return blockStmtAfter;
     }
 
-    /**
-     * Gets impactedTestsToRun
-     *
-     * @return value of impactedTestsToRun
-     */
-    public Set<MethodDeclaration> getImpactedTestsToRun() {
-        return impactedTestsToRun;
-    }
 }
