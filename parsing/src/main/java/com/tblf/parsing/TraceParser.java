@@ -337,6 +337,7 @@ public class TraceParser extends Parser{
         //We create an analysis if it does not already exist.
         if (source != null
                 && target != null
+                && target.getNode() instanceof MethodDeclaration
                 && source.getAnalysis().stream()
                     .map(eObject -> (Analysis) eObject)
                     .noneMatch(analysis -> analysis.getTarget().contains(target.getNode()))) {
