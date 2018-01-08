@@ -77,8 +77,6 @@ public class TestMain {
 
 
         //Displaying all the methods that would need a rerun
-        System.out.println(gitCaller.getImpactedTestsToRun().size()+" test method impacted by this modification:");
-        gitCaller.getImpactedTestsToRun().forEach(methodDeclaration -> System.out.println(methodDeclaration.getName() +" in class "+ ((NamedElement) methodDeclaration.eContainer()).getName()));
     }
 
     @After
