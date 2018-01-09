@@ -26,7 +26,7 @@ public class ParallelGitCaller extends GitCaller {
                         .stream()
                         .filter(eObject -> eObject instanceof Java2File)
                         .map(eObject -> (Java2File) eObject)
-                        .forEach(java2File -> stringJava2FileMap.put(java2File.getJavaUnit().getOriginalFilePath().replace(folder.getAbsolutePath()+"/", ""), java2File)));
+                        .forEach(java2File -> stringJava2FileMap.put(java2File.getJavaUnit().getOriginalFilePath(), java2File)));
     }
 
     @Override
@@ -46,7 +46,7 @@ public class ParallelGitCaller extends GitCaller {
 
                 LOGGER.fine("Analyzing impacts of " + uri + " modification");
 
-                Java2File java2File = stringJava2FileMap.get(uri);
+                Java2File java2File = stringJava2FileMap.get(folder.getAbsolutePath()+"/"+uri);
 
                 if (java2File == null)
                     throw new FileNotFoundException("Could not found file "+uri+" in the model");
