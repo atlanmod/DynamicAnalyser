@@ -20,6 +20,8 @@ public class ParallelGitCaller extends GitCaller {
     public ParallelGitCaller(File folder, ResourceSet resourceSet) {
         super(folder, resourceSet);
 
+        LOGGER.info(folder.getAbsolutePath());
+
         stringJava2FileMap = new ConcurrentHashMap<>();
         resourceSet.getResources()
                 .forEach(resource -> resource.getContents() //put all the resources java2files inside a concurrent map
@@ -45,6 +47,8 @@ public class ParallelGitCaller extends GitCaller {
                     throw new NonJavaFileException("The diff entry: "+uri+" does not concern a Java file");
 
                 LOGGER.fine("Analyzing impacts of " + uri + " modification");
+
+                LOGGER.info("Getting "+folder.getAbsolutePath()+"/"+uri+" in the hashmap");
 
                 Java2File java2File = stringJava2FileMap.get(folder.getAbsolutePath()+"/"+uri);
 
