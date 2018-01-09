@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 public class ParallelGitCaller extends GitCaller {
 
@@ -19,7 +20,6 @@ public class ParallelGitCaller extends GitCaller {
     public ParallelGitCaller(File folder, ResourceSet resourceSet) {
         super(folder, resourceSet);
 
-        System.out.println(folder.getAbsolutePath());
         stringJava2FileMap = new ConcurrentHashMap<>();
         resourceSet.getResources()
                 .forEach(resource -> resource.getContents() //put all the resources java2files inside a concurrent map
@@ -31,6 +31,8 @@ public class ParallelGitCaller extends GitCaller {
 
     @Override
     protected void analyseDiffs(List<DiffEntry> diffEntries) {
+
+        stringJava2FileMap.forEach((s, java2File) -> LOGGER.info(s));
 
         diffEntries.parallelStream().forEach(diffEntry -> {
             try {
@@ -56,7 +58,7 @@ public class ParallelGitCaller extends GitCaller {
                 });
 
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.log(Level.WARNING, "An error was caught when analysis the diffentries", e);
             }
 
         });
