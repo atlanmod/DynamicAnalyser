@@ -20,21 +20,29 @@ public class ParallelGitCaller extends GitCaller {
     public ParallelGitCaller(File folder, ResourceSet resourceSet) {
         super(folder, resourceSet);
 
-        LOGGER.info(folder.getAbsolutePath());
-
         stringJava2FileMap = new ConcurrentHashMap<>();
+
+        // ((Java2Directory) resourceSet.getResources().get(0).getContents().get(0)).getDirectory().get(0).getPath()
+
         resourceSet.getResources()
                 .forEach(resource -> resource.getContents() //put all the resources java2files inside a concurrent map
                         .stream()
                         .filter(eObject -> eObject instanceof Java2File)
                         .map(eObject -> (Java2File) eObject)
                         .forEach(java2File -> stringJava2FileMap.put(java2File.getJavaUnit().getOriginalFilePath(), java2File)));
+
+
     }
 
+    // home/travis/build/orichalque/dynamic-analyser/diff/src/test/resources/fullprojects/SimpleProject
+
+    // src/test/java/com/tblf/SimpleProject/AppTest.java
+
+    // home/thibault/Documents/git/Dynamic-Analyser/diff/src/test/resources/fullprojects/SimpleProject/src/test/java/com/tblf/SimpleProject/AppTest.java
+
+    //TODO
     @Override
     protected void analyseDiffs(List<DiffEntry> diffEntries) {
-
-        stringJava2FileMap.forEach((s, java2File) -> LOGGER.info(s));
 
         diffEntries.parallelStream().forEach(diffEntry -> {
             try {
@@ -45,10 +53,6 @@ public class ParallelGitCaller extends GitCaller {
 
                 if (!uri.endsWith(".java"))
                     throw new NonJavaFileException("The diff entry: "+uri+" does not concern a Java file");
-
-                LOGGER.fine("Analyzing impacts of " + uri + " modification");
-
-                LOGGER.info("Getting "+folder.getAbsolutePath()+"/"+uri+" in the hashmap");
 
                 Java2File java2File = stringJava2FileMap.get(folder.getAbsolutePath()+"/"+uri);
 

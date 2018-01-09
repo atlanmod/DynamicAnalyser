@@ -4,6 +4,7 @@ import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -15,6 +16,7 @@ import java.util.logging.Logger;
 
 public class ParallelGitCallerTest {
 
+    @Ignore
     @Test
     public void checkCompareCommitsRealProject() throws IOException {
         Logger rootLogger = LogManager.getLogManager().getLogger("");
