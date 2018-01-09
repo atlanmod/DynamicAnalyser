@@ -40,7 +40,7 @@ public class ParallelGitCaller extends GitCaller {
 
     // home/thibault/Documents/git/Dynamic-Analyser/diff/src/test/resources/fullprojects/SimpleProject/src/test/java/com/tblf/SimpleProject/AppTest.java
 
-    //TODO
+    //TODO: wont work if the models have been generated on a different machine
     @Override
     protected void analyseDiffs(List<DiffEntry> diffEntries) {
 
@@ -57,7 +57,7 @@ public class ParallelGitCaller extends GitCaller {
                 Java2File java2File = stringJava2FileMap.get(folder.getAbsolutePath()+"/"+uri);
 
                 if (java2File == null)
-                    throw new FileNotFoundException("Could not found file "+uri+" in the model");
+                    throw new FileNotFoundException("Could not find file "+uri+" in the model");
 
                 diffFormatter.format(diffEntry);
 
