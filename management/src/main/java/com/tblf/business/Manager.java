@@ -6,6 +6,7 @@ import com.tblf.instrumentation.Instrumenter;
 import com.tblf.instrumentation.bytecode.ByteCodeInstrumenter;
 import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
 import com.tblf.junitrunner.JUnitRunner;
+import com.tblf.junitrunner.MavenRunner;
 import com.tblf.linker.FileTracer;
 import com.tblf.parsing.ModelParser;
 import com.tblf.parsing.TraceParser;
@@ -13,6 +14,7 @@ import com.tblf.utils.Configuration;
 import com.tblf.utils.ModelUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
+import spoon.MavenLauncher;
 
 import java.io.File;
 import java.io.IOException;
@@ -90,14 +92,11 @@ public class Manager {
         instrumenter.instrument(this.sutClasses, this.testClasses);
 
         //Running the test suites
-        JUnitRunner jUnitRunner = new JUnitRunner(SingleURLClassLoader.getInstance().getClassLoader());
-
-        jUnitRunner.runTests(this.testClasses);
-
+        new MavenRunner(project).run();
         FileTracer.getInstance().endTrace();
 
         //Analyzing the traces
-        File trace = ((FileTracer) FileTracer.getInstance()).getFile();
+        File trace = new File(project, "executionTrace.extr");
         LOGGER.info("Full execution trace located at: " + trace.getAbsolutePath());
 
         return trace;

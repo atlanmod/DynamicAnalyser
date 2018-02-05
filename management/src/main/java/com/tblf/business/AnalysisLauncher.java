@@ -5,6 +5,7 @@ import com.tblf.instrumentation.Instrumenter;
 import com.tblf.instrumentation.bytecode.ByteCodeInstrumenter;
 import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
 import com.tblf.junitrunner.JUnitRunner;
+import com.tblf.junitrunner.MavenRunner;
 import com.tblf.linker.FileTracer;
 import com.tblf.parsing.ModelParser;
 import com.tblf.parsing.TraceParser;
@@ -97,16 +98,23 @@ public class AnalysisLauncher {
 
                 LOGGER.info("Running the tests ");
                 // Running the tests to build the execution trace
-                FileTracer.getInstance().startTrace();
-                new JUnitRunner(instrumenter.getClassLoader()).runTests(modelParser.getTests().keySet());
-                FileTracer.getInstance().endTrace();
+
+                File exTrace;
+
+                //new JUnitRunner(instrumenter.getClassLoader()).runTests(modelParser.getTests().keySet());
+                new MavenRunner(new File(source, "pom.xml")).run();
+                exTrace = new File(source, "executionTrace.extr");
+
+                if (!exTrace.exists())
+                    throw new IOException("Cannot get the execution trace file.");
 
                 //Parsing the traces
-                new TraceParser(((FileTracer) FileTracer.getInstance()).getFile(), outputModel, resourceSet)
+                new TraceParser(exTrace, outputModel, resourceSet)
                         .parse()
                         .save(Collections.EMPTY_MAP);
 
-            } catch (IOException e) {
+                exTrace.delete();
+            } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "An error was caught during the impact analysis", e);
             }
 

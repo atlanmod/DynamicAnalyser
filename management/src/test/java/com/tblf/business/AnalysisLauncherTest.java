@@ -1,8 +1,13 @@
 package com.tblf.business;
 
 import com.tblf.instrumentation.InstrumentationType;
+import com.tblf.linker.FileTracer;
+import com.tblf.linker.Tracer;
+import com.tblf.utils.Configuration;
+import com.tblf.utils.MavenUtils;
 import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
@@ -11,7 +16,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 public class AnalysisLauncherTest {
 
@@ -46,18 +57,29 @@ public class AnalysisLauncherTest {
         AnalysisLauncher analysisLauncher = new AnalysisLauncher(file);
         analysisLauncher.setInstrumentationType(InstrumentationType.SOURCECODE);
         analysisLauncher.setOutputModel(new File(file, "analysis.xmi"));
+
         analysisLauncher.run();
 
-        ResourceSet resourceSet = analysisLauncher.getResourceSet();
+        File model = new File(file, "analysis.xmi");
+        Assert.assertTrue(model.exists());
 
-        Resource analysisModel = resourceSet.getResource(URI.createURI(new File(file, "analysis.xmi").toURI().toString()), true);
+        Resource analysisModel = ModelUtils.loadModel(model);
 
         Assert.assertEquals(10, analysisModel.getContents().size());
         FileUtils.deleteDirectory(file);
+
     }
 
     @Test
     public void checkParseBCI() throws IOException {
+
+        Logger rootLogger = LogManager.getLogManager().getLogger("");
+        rootLogger.setLevel(Level.FINE);
+        for (Handler h : rootLogger.getHandlers()) {
+            h.setLevel(Level.FINE);
+        }
+
+        System.setProperty("maven.home", Configuration.getProperty("MAVEN_HOME"));
 
         File zip = new File("src/test/resources/fullprojects/SimpleProject.zip");
         ModelUtils.unzip(zip);
@@ -67,13 +89,16 @@ public class AnalysisLauncherTest {
         AnalysisLauncher analysisLauncher = new AnalysisLauncher(file);
         analysisLauncher.setInstrumentationType(InstrumentationType.BYTECODE);
         analysisLauncher.setOutputModel(new File(file, "analysis.xmi"));
+
+        analysisLauncher.applyBefore(MavenUtils::compilePom);
         analysisLauncher.run();
 
-        ResourceSet resourceSet = analysisLauncher.getResourceSet();
+        File model = new File(file, "analysis.xmi");
+        Assert.assertTrue(model.exists());
 
-        Resource analysisModel = resourceSet.getResource(URI.createURI(new File(file, "analysis.xmi").toURI().toString()), true);
+        Resource analysisModel = ModelUtils.loadModel(model);
 
-        Assert.assertEquals(10, analysisModel.getContents().size());
+        Assert.assertEquals("Not the expected number of impacts", 10, analysisModel.getContents().size());
         FileUtils.deleteDirectory(file);
     }
 
@@ -118,7 +143,7 @@ public class AnalysisLauncherTest {
         File file = new File("src/test/resources/fullprojects/SimpleProject");
 
         AnalysisLauncher analysisLauncher = new AnalysisLauncher(file);
-        analysisLauncher.setInstrumentationType(InstrumentationType.BYTECODE);
+        analysisLauncher.setInstrumentationType(InstrumentationType.SOURCECODE);
         analysisLauncher.setOutputModel(new File(file, "analysis.xmi"));
 
         analysisLauncher.applyAfter(file1 -> {
