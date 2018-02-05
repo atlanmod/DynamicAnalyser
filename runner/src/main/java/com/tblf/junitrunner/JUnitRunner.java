@@ -81,6 +81,7 @@ public class JUnitRunner {
 
         return requests
                 .stream()
+                .filter(stringRequestEntry -> stringRequestEntry.getKey() != null && stringRequestEntry.getValue() != null)
                 .map(stringRequestEntry -> new AbstractMap.SimpleEntry<>(stringRequestEntry.getKey(), J_UNIT_CORE.run(stringRequestEntry.getValue())))
                 .collect(Collectors.toList());
     }

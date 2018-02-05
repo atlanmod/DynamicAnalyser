@@ -1,5 +1,6 @@
 package com.tblf.junitrunner;
 
+import com.tblf.linker.FileTracer;
 import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
@@ -28,8 +29,9 @@ public class JUnitRunnerTest {
 
         URLClassLoader urlClassLoader = new URLClassLoader(new URL[]{file.toURI().toURL()}, ClassLoader.getSystemClassLoader());
 
+        FileTracer.getInstance().startTrace();
         JUnitCore.runClasses(urlClassLoader.loadClass("com.tblf.SimpleProject.AppTest"));
-
+        FileTracer.getInstance().endTrace();
         FileUtils.deleteDirectory(file);
     }
 }
