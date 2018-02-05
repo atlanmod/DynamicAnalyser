@@ -8,7 +8,6 @@ import org.eclipse.modisco.java.composition.javaapplication.Java2File;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -22,8 +21,6 @@ public class ParallelGitCaller extends GitCaller {
 
         stringJava2FileMap = new ConcurrentHashMap<>();
 
-        // ((Java2Directory) resourceSet.getResources().get(0).getContents().get(0)).getDirectory().get(0).getPath()
-
         resourceSet.getResources()
                 .forEach(resource -> resource.getContents() //put all the resources java2files inside a concurrent map
                         .stream()
@@ -33,12 +30,6 @@ public class ParallelGitCaller extends GitCaller {
 
 
     }
-
-    // home/travis/build/orichalque/dynamic-analyser/diff/src/test/resources/fullprojects/SimpleProject
-
-    // src/test/java/com/tblf/SimpleProject/AppTest.java
-
-    // home/thibault/Documents/git/Dynamic-Analyser/diff/src/test/resources/fullprojects/SimpleProject/src/test/java/com/tblf/SimpleProject/AppTest.java
 
     //TODO: wont work if the models have been generated on a different machine
     @Override
@@ -61,9 +52,7 @@ public class ParallelGitCaller extends GitCaller {
 
                 diffFormatter.format(diffEntry);
 
-                fileHeader.toEditList().forEach(edit -> {
-                    manageEdit(diffEntry, edit, java2File);
-                });
+                fileHeader.toEditList().forEach(edit -> manageEdit(diffEntry, edit, java2File));
 
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, "An error was caught when analysis the diffentries", e);

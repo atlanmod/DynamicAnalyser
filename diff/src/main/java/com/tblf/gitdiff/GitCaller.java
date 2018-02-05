@@ -185,7 +185,11 @@ public class GitCaller extends VersionControlCaller {
                 if (!blockStmtAfter.getStatements().contains(statement) && statement.getRange().isPresent()) {
                     LOGGER.fine("In file " + diffEntry.getOldPath() + DiffUtils.statementToString(statement) + " modified.");
                     //Get the impacts at the statement level
-                    impactedTests.addAll(getMethodImpacts(java2File, statement).stream().map(methodDeclaration -> ((ClassDeclaration) methodDeclaration.eContainer()).getName() + "#" + methodDeclaration.getName()).collect(Collectors.toSet()));
+                    impactedTests.addAll(getMethodImpacts(java2File, statement)
+                            .stream()
+                            .map(methodDeclaration ->
+                                    ModelUtils.getQualifiedName(methodDeclaration.eContainer()) + "#" + methodDeclaration.getName())
+                            .collect(Collectors.toSet()));
                 }
             });
 
@@ -194,7 +198,13 @@ public class GitCaller extends VersionControlCaller {
                 if (!blockStmtBefore.getStatements().contains(statement) && statement.getRange().isPresent()) {
                     LOGGER.fine("In file " + diffEntry.getNewPath() + DiffUtils.statementToString(statement) + " added");
                     //Get the impacts at the method level
-                    impactedTests.addAll(getMethodImpacts(java2File, statement).stream().map(methodDeclaration -> ((ClassDeclaration) methodDeclaration.eContainer()).getName() + "#" + methodDeclaration.getName()).collect(Collectors.toSet()));
+
+                    //FIXME
+                    impactedTests.addAll(getMethodImpacts(java2File, statement)
+                            .stream()
+                            .map(methodDeclaration ->
+                                    ModelUtils.getQualifiedName(methodDeclaration.eContainer()) + "#" + methodDeclaration.getName())
+                            .collect(Collectors.toSet()));
                 }
             });
         }

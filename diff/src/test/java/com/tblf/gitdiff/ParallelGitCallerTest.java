@@ -5,7 +5,6 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.modisco.java.composition.javaapplication.Java2File;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
