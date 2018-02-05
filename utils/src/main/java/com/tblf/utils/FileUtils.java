@@ -4,9 +4,8 @@ import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -120,5 +119,33 @@ public class FileUtils {
         }
 
         return files;
+    }
+
+
+    /**
+     * Copy one file to another using NIO
+     */
+    public static void doCopy(final File source, final File destination)
+            throws IOException {
+        final Closer closer = new Closer();
+        final RandomAccessFile src, dst;
+        final FileChannel in, out;
+
+        try {
+            src = closer.add(new RandomAccessFile(source.getCanonicalFile(), "r"));
+            dst = closer.add(new RandomAccessFile(destination.getCanonicalFile(), "rw"));
+            in = closer.add(src.getChannel());
+            out = closer.add(dst.getChannel());
+            in.transferTo(0L, in.size(), out);
+            out.force(false);
+        } finally {
+            closer.close();
+        }
+    }
+
+    public static void clearFile(File file) throws FileNotFoundException {
+        PrintWriter printWriter = new PrintWriter(file);
+        printWriter.print("");
+        printWriter.close();
     }
 }
