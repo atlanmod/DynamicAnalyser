@@ -3,7 +3,6 @@ package com.tblf.instrumentation;
 import com.tblf.DotCP.DotCPParserBuilder;
 import com.tblf.classloading.SingleURLClassLoader;
 import com.tblf.instrumentation.bytecode.ByteCodeInstrumenter;
-import com.tblf.junitrunner.RunnerUtils;
 import com.tblf.linker.Calls;
 import com.tblf.linker.FileTracer;
 import com.tblf.parsing.ModelParser;
@@ -57,11 +56,6 @@ public class ByteCodeInstrumenterTest {
         Assert.assertTrue(callDependency.exists());
 
         SingleURLClassLoader.getInstance().addURLs(new URL[]{folder.toURI().toURL(), callDependency.toURI().toURL()});
-
-        FileTracer.getInstance().startTrace();
-        //Running the testClass instrumented with the Target instrumentation
-        System.out.println(RunnerUtils.results(JUnitCore.runClasses(aClass)));
-        FileTracer.getInstance().startTrace();
 
         FileUtils.deleteDirectory(folder);
     }

@@ -28,18 +28,6 @@ public class FileTracerTest {
 
         Assert.assertNotNull(f);
         Assert.assertTrue(f.exists());
-
-        traces.add(f);
-
-        FileTracer.getInstance().startTrace();
-        File f2 = ((FileTracer) FileTracer.getInstance()).getFile();
-
-        Assert.assertNotNull(f2);
-        Assert.assertTrue(f2.exists());
-
-        traces.add(f2);
-
-        Assert.assertNotEquals("The file should be different", f, f2);
     }
 
     @Test
@@ -126,7 +114,6 @@ public class FileTracerTest {
 
         FileTracer.getInstance().updateStatementsUsingLine("50");
 
-        Assert.assertEquals("", IOUtils.toString(file.toURI(), "UTF-8"));
         FileTracer.getInstance().endTrace();
 
         Assert.assertEquals("?:50\n", IOUtils.toString(file.toURI(), "UTF-8"));

@@ -1,9 +1,11 @@
 package com.tblf.linker;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
+import com.tblf.utils.FileUtils;
+import sun.misc.IOUtils;
+
+import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.OpenOption;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -20,6 +22,7 @@ public class FileTracer extends Tracer {
 
     private static FileTracer INSTANCE;
     private static final Logger LOGGER = Logger.getLogger("FileTracer");
+
     private String currentTarget;
     private String currentTest;
     private String currentTestMethod;
@@ -33,7 +36,7 @@ public class FileTracer extends Tracer {
      * Private constructor. This class must not be instanciated by the client
      */
     private FileTracer() {
-        this.reset();
+
     }
 
     /**
@@ -43,8 +46,9 @@ public class FileTracer extends Tracer {
     public static Tracer getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new FileTracer();
-            LOGGER.info("New FileTracer created");
+            INSTANCE.reset();
         }
+
 
         return INSTANCE;
     }
@@ -58,18 +62,25 @@ public class FileTracer extends Tracer {
      * Reset the {@link FileTracer}. creates a new trace and reset all the current tests and targets being executed
      */
     private void reset() {
+
         try {
 
-            this.file = File.createTempFile(String.valueOf(System.currentTimeMillis()), ".extr");
-            this.writer = Files.newBufferedWriter(this.file.toPath());
+            //this.file = File.createTempFile(String.valueOf(System.currentTimeMillis()), ".extr");
+            this.file = new File("executionTrace.extr");
+
+            if (this.file.exists())
+                FileUtils.clearFile(this.file);
+
+            this.writer = new FlushingBufferedWriter(new FileWriter(this.file));
+
             this.currentTarget = null;
             this.currentTest = null;
             this.currentTestMethod = null;
             this.currentTargetMethod = null;
             this.written = new HashMap<>();
-            LOGGER.info("Reseted the output file of the current Tracer. Now writing in: "+this.file.getAbsolutePath());
-        } catch (IOException var2) {
-            LOGGER.warning("Couldn't write in the file" + Arrays.toString(var2.getStackTrace()));
+            LOGGER.info("Now writing execution trace in: "+this.file.getAbsolutePath());
+        } catch (IOException e) {
+            LOGGER.warning("Couldn't reset the trace file" + Arrays.toString(e.getStackTrace()));
         }
 
     }
@@ -97,7 +108,6 @@ public class FileTracer extends Tracer {
             this.currentTargetMethod = null;
             this.stringBuilder = new StringBuilder();
             this.stringBuilder.append("&:").append(className).append(":").append(method).append("\n");
-
             try {
                 this.writer.write(this.stringBuilder.toString());
             } catch (IOException e) {
@@ -123,7 +133,7 @@ public class FileTracer extends Tracer {
             try {
                 this.writer.write(this.stringBuilder.toString());
             } catch (IOException e) {
-                LOGGER.warning("Couldn't write in the file" + Arrays.toString(e.getStackTrace()));
+                LOGGER.warning("Couldn't write the current target " + className+" - "+method +" in trace" + Arrays.toString(e.getStackTrace()));
             }
         }
 
@@ -142,9 +152,8 @@ public class FileTracer extends Tracer {
         try {
             this.writer.write(this.stringBuilder.toString());
         } catch (IOException e) {
-            LOGGER.warning("Couldn't write in the file" + Arrays.toString(e.getStackTrace()));
+            LOGGER.warning("Couldn't write the current statement "+startCol+":"+endCol+" in the file" + Arrays.toString(e.getStackTrace()));
         }
-
     }
 
     /**
@@ -163,7 +172,7 @@ public class FileTracer extends Tracer {
                 this.writer.write(this.stringBuilder.toString());
                 this.written.get(this.currentTarget).add(Integer.valueOf(line));
             } catch (IOException e) {
-                LOGGER.warning("Couldn't write in the file" + Arrays.toString(e.getStackTrace()));
+                LOGGER.warning("Couldn't write the current line "+line+" in the file" + Arrays.toString(e.getStackTrace()));
             }
         }
     }
@@ -175,9 +184,15 @@ public class FileTracer extends Tracer {
     public void endTrace() {
         try {
             this.writer.close();
+            LOGGER.info("trace file saved in "+this.file.getAbsolutePath());
         } catch (IOException e) {
             LOGGER.warning("Couldn't write in the file" + Arrays.toString(e.getStackTrace()));
         }
+    }
 
+    @Override
+    protected void finalize() throws Throwable {
+        INSTANCE.endTrace();
+        super.finalize();
     }
 }

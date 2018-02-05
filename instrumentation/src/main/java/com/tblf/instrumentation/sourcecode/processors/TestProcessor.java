@@ -69,6 +69,11 @@ public class TestProcessor extends AbstractProcessor<CtType<?>> {
                     CtCodeSnippetStatement ctCodeSnippetStatement = getFactory().Core().createCodeSnippetStatement();
                     ctCodeSnippetStatement.setValue(String.format("Calls.setTargetMethod(\"%s\", \"%s\")", ctType.getQualifiedName(), ctConstructor.getSimpleName()));
                     ctBlock.insertBegin(ctCodeSnippetStatement);
+
+
+                    ctCodeSnippetStatement = getFactory().Core().createCodeSnippetStatement();
+                    ctCodeSnippetStatement.setValue(String.format("System.out.println(\" hi lol %s %s \")", ctType.getQualifiedName(), ctConstructor.getSimpleName()));
+                    ctBlock.insertBegin(ctCodeSnippetStatement);
                 }
             });
         }

@@ -56,7 +56,9 @@ public class InstrumentationLinkageTest {
         try {
             //Running the class
             Class clazz = SingleURLClassLoader.getInstance().getClassLoader().loadClass("com.tblf.SimpleProject.AppTest");
+            FileTracer.getInstance().startTrace();
             JUnitCore.runClasses(clazz);
+            FileTracer.getInstance().endTrace();
         } catch (Throwable e) {
             Assert.fail(e.toString());
         }

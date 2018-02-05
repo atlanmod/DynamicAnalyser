@@ -9,16 +9,14 @@ import com.tblf.instrumentation.bytecode.visitors.TestClassVisitor;
 import com.tblf.linker.Calls;
 import com.tblf.utils.Configuration;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -91,6 +89,7 @@ public class ByteCodeInstrumenter implements Instrumenter {
                 LOGGER.fine("Instrumenting class "+t+" of classFile "+target.toString());
                 byte[] targetAsByte = instrumentTargetClass(target, t);
                 singleURLClassLoader.loadBytes(targetAsByte, t);
+                IOUtils.write(targetAsByte, new FileOutputStream(target));
                 scores[0]++;
             } catch (IOException e) {
                 LOGGER.log(Level.FINE, "Couldn't instrument " + t, e);
@@ -106,6 +105,7 @@ public class ByteCodeInstrumenter implements Instrumenter {
                 LOGGER.fine("Instrumenting class "+t+" of classFile "+target.toString());
                 byte[] targetAsByte = instrumentTestClass(target, t);
                 singleURLClassLoader.loadBytes(targetAsByte, t);
+                IOUtils.write(targetAsByte, new FileOutputStream(target));
                 scores[2]++;
             } catch (IOException e) {
                 LOGGER.log(Level.FINE, "Couldn't instrument "+t, e);
@@ -115,7 +115,11 @@ public class ByteCodeInstrumenter implements Instrumenter {
             }
         });
 
-        LOGGER.info(scores[0]+" targets loaded "+ scores[1]+ " target fails "+ scores[2]+" test loaded "+scores[3]+" test fails ");
+        LOGGER.info(scores[0]+
+                " targets loaded "+ scores[1]+
+                " target fails "+ scores[2]+
+                " test loaded "+scores[3]+
+                " test fails ");
     }
 
     private byte[] instrumentTargetClass(File target, String qualifiedName) throws IOException {
