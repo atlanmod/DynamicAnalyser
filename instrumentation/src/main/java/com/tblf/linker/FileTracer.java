@@ -1,16 +1,11 @@
 package com.tblf.linker;
 
+import com.google.common.collect.Range;
 import com.tblf.utils.FileUtils;
-import sun.misc.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.OpenOption;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,7 +25,9 @@ public class FileTracer extends Tracer {
     private Writer writer;
     private File file;
     private StringBuilder stringBuilder = new StringBuilder();
-    private Map<String, Collection<Integer>> written;
+
+    private Map<String, Collection<Integer>> lineWritten; //store a collection of written lines , in order to limit the size of the trace
+    private Map<String, Collection<AbstractMap.SimpleEntry<Integer, Integer>>> statementWritten; //store a collection of written statement, in order to limit the size of the trace
 
     /**
      * Private constructor. This class must not be instanciated by the client
@@ -77,7 +74,8 @@ public class FileTracer extends Tracer {
             this.currentTest = null;
             this.currentTestMethod = null;
             this.currentTargetMethod = null;
-            this.written = new HashMap<>();
+            this.lineWritten = new HashMap<>();
+            this.statementWritten = new HashMap<>();
             LOGGER.info("Now writing execution trace in: "+this.file.getAbsolutePath());
         } catch (IOException e) {
             LOGGER.warning("Couldn't reset the trace file" + Arrays.toString(e.getStackTrace()));
@@ -86,7 +84,7 @@ public class FileTracer extends Tracer {
     }
 
     /**
-     * Return the file being written
+     * Return the file being lineWritten
      * @return
      */
     public File getFile() {
@@ -101,7 +99,9 @@ public class FileTracer extends Tracer {
     @Override
     public void updateTest(String className, String method) {
         if (!className.equals(this.currentTest) || !method.equals(this.currentTestMethod)) {
-            this.written.clear();
+            this.lineWritten.clear();
+            this.statementWritten.clear();
+
             this.currentTest = className;
             this.currentTestMethod = method;
             this.currentTarget = null;
@@ -146,13 +146,21 @@ public class FileTracer extends Tracer {
      */
     @Override
     public void updateStatementsUsingColumn(String startCol, String endCol) {
-        this.stringBuilder = new StringBuilder();
-        this.stringBuilder.append("!:").append(startCol).append(":").append(endCol).append("\n");
+        this.statementWritten.computeIfAbsent(this.currentTarget, (k) -> new HashSet<>());
 
-        try {
-            this.writer.write(this.stringBuilder.toString());
-        } catch (IOException e) {
-            LOGGER.warning("Couldn't write the current statement "+startCol+":"+endCol+" in the file" + Arrays.toString(e.getStackTrace()));
+        //Check if the current statement has already been covered, so the test impact is not computed multiple times for this specific method
+        if (!this.statementWritten.get(this.currentTarget)
+                .contains(new AbstractMap.SimpleEntry<>(Integer.valueOf(startCol), Integer.valueOf(endCol)))) {
+
+            this.stringBuilder = new StringBuilder();
+            this.stringBuilder.append("!:").append(startCol).append(":").append(endCol).append("\n");
+
+            try {
+                this.writer.write(this.stringBuilder.toString());
+                this.statementWritten.get(this.currentTarget).add(new AbstractMap.SimpleEntry<>(Integer.valueOf(startCol), Integer.valueOf(endCol)));
+            } catch (IOException e) {
+                LOGGER.warning("Couldn't write the current statement " + startCol + ":" + endCol + " in the file" + Arrays.toString(e.getStackTrace()));
+            }
         }
     }
 
@@ -162,15 +170,15 @@ public class FileTracer extends Tracer {
      */
     @Override
     public void updateStatementsUsingLine(String line) {
-        this.written.computeIfAbsent(this.currentTarget, (k) -> new HashSet<>());
+        this.lineWritten.computeIfAbsent(this.currentTarget, (k) -> new HashSet<>());
 
-        if (!this.written.get(this.currentTarget).contains(Integer.valueOf(line))) {
+        if (!this.lineWritten.get(this.currentTarget).contains(Integer.valueOf(line))) {
             this.stringBuilder = new StringBuilder();
             this.stringBuilder.append("?:").append(line).append("\n");
 
             try {
                 this.writer.write(this.stringBuilder.toString());
-                this.written.get(this.currentTarget).add(Integer.valueOf(line));
+                this.lineWritten.get(this.currentTarget).add(Integer.valueOf(line));
             } catch (IOException e) {
                 LOGGER.warning("Couldn't write the current line "+line+" in the file" + Arrays.toString(e.getStackTrace()));
             }

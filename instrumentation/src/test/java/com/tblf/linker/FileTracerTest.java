@@ -85,8 +85,61 @@ public class FileTracerTest {
         Assert.assertEquals(oracle, s);
     }
 
+
+    @Test
+    public void checkUpdateStatementUsingColumnTwice() throws IOException {
+        FileTracer.getInstance().startTrace();
+
+        File file = ((FileTracer) FileTracer.getInstance()).getFile();
+        Assert.assertNotNull(file);
+        Assert.assertTrue(file.exists());
+
+        traces.add(file);
+
+        FileTracer.getInstance().updateTest("Test", "testMethod");
+        FileTracer.getInstance().updateTarget("Target", "targetMethod");
+        FileTracer.getInstance().updateStatementsUsingColumn("50", "70");
+        FileTracer.getInstance().updateStatementsUsingColumn("150", "170");
+        FileTracer.getInstance().updateStatementsUsingColumn("50", "70");
+        FileTracer.getInstance().endTrace();
+
+        String s = IOUtils.toString(file.toURI(), Charset.defaultCharset());
+        String oracle = "&:Test:testMethod\n" +
+                        "%:Target:targetMethod\n" +
+                        "!:50:70\n" +
+                        "!:150:170\n";
+
+        Assert.assertEquals(oracle, s);
+    }
+
     @Test
     public void checkUpdateStatementUsingLineNumber() throws IOException {
+        FileTracer.getInstance().startTrace();
+
+        File file = ((FileTracer) FileTracer.getInstance()).getFile();
+        Assert.assertNotNull(file);
+        Assert.assertTrue(file.exists());
+
+        traces.add(file);
+
+        FileTracer.getInstance().updateTest("Test", "testMethod");
+        FileTracer.getInstance().updateTarget("Target", "targetMethod");
+        FileTracer.getInstance().updateStatementsUsingLine("7");
+        FileTracer.getInstance().updateStatementsUsingLine("8");
+        FileTracer.getInstance().updateStatementsUsingLine("7");
+        FileTracer.getInstance().endTrace();
+
+        String s = IOUtils.toString(file.toURI(), Charset.defaultCharset());
+        String oracle = "&:Test:testMethod\n" +
+                        "%:Target:targetMethod\n" +
+                        "?:7\n" +
+                        "?:8\n";
+
+        Assert.assertEquals(oracle, s);
+    }
+
+    @Test
+    public void checkUpdateStatementUsingLineNumberTwice() throws IOException {
         FileTracer.getInstance().startTrace();
 
         File file = ((FileTracer) FileTracer.getInstance()).getFile();
