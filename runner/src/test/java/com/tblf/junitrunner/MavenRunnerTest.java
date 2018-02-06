@@ -12,7 +12,6 @@ public class MavenRunnerTest {
     @Test
     public void testRun() throws IOException {
 
-        System.setProperty("maven.home", "/usr/share/maven");
         ModelUtils.unzip(new File("src/test/resources/binaries/SimpleProject.zip"));
         File project = new File("src/test/resources/binaries/SimpleProject");
 
