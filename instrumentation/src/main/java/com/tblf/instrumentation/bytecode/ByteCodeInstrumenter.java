@@ -20,9 +20,8 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.nio.file.Files;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -34,7 +33,7 @@ public class ByteCodeInstrumenter implements Instrumenter {
 
     private static final Logger LOGGER = Logger.getAnonymousLogger();
 
-        /**
+    /**
      * The folder containing the SUT binaries
      */
     private File sutBinFolder;
@@ -64,6 +63,7 @@ public class ByteCodeInstrumenter implements Instrumenter {
 
     /**
      * Set the root directory of the project ton instrument
+     *
      * @param project the {@link File} directory
      */
     public void setProjectFolder(File project) {
@@ -83,43 +83,98 @@ public class ByteCodeInstrumenter implements Instrumenter {
             LOGGER.log(Level.WARNING, "Could not load the dependencies", e);
         }
 
-        targets.forEach(t -> {
+        Collection<File> allClasses = new HashSet<>();
+
+        try {
+            Files.walk(sutBinFolder.toPath()).filter(path -> path.toString().endsWith(".class")).forEach(path -> {
+                allClasses.add(path.toFile());
+            });
+
+            Files.walk(testBinFolder.toPath()).filter(path -> path.toString().endsWith(".class")).forEach(path -> {
+                allClasses.add(path.toFile());
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        HashMap<String, File> targetClasses = new HashMap<>();
+        HashMap<String, File> testClasses = new HashMap<>();
+        Collection<String> allClassesQualifiedNames = new ArrayList<>(targets);
+        allClassesQualifiedNames.addAll(tests);
+
+        sortClasses(allClassesQualifiedNames, targetClasses, testClasses, allClasses);
+
+        targetClasses.forEach((s, file) -> {
             try {
-                File target = InstrumentationUtils.getClassFile(sutBinFolder, t);
-                LOGGER.fine("Instrumenting class "+t+" of classFile "+target.toString());
-                byte[] targetAsByte = instrumentTargetClass(target, t);
-                singleURLClassLoader.loadBytes(targetAsByte, t);
-                IOUtils.write(targetAsByte, new FileOutputStream(target));
+                LOGGER.fine("Instrumenting class " + s + " of classFile " + file.toString());
+                byte[] targetAsByte = instrumentTargetClass(file, s);
+                singleURLClassLoader.loadBytes(targetAsByte);
+                IOUtils.write(targetAsByte, new FileOutputStream(file));
                 scores[0]++;
             } catch (IOException e) {
-                LOGGER.log(Level.FINE, "Couldn't instrument " + t, e);
+                LOGGER.log(Level.FINE, "Couldn't instrument " + s, e);
                 scores[1]++;
             } catch (LinkageError e) {
-                LOGGER.log(Level.FINE, "Error with instrumentation of: "+t, e);
+                LOGGER.log(Level.FINE, "Error with instrumentation of: " + s, e);
             }
         });
 
-        tests.forEach(t -> {
+        testClasses.forEach((s, file) -> {
             try {
-                File target = InstrumentationUtils.getClassFile(testBinFolder, t);
-                LOGGER.fine("Instrumenting class "+t+" of classFile "+target.toString());
-                byte[] targetAsByte = instrumentTestClass(target, t);
-                singleURLClassLoader.loadBytes(targetAsByte, t);
-                IOUtils.write(targetAsByte, new FileOutputStream(target));
+                LOGGER.fine("Instrumenting class " + s + " of classFile " + file.toString());
+                byte[] targetAsByte = instrumentTestClass(file, s);
+                singleURLClassLoader.loadBytes(targetAsByte);
+                IOUtils.write(targetAsByte, new FileOutputStream(file));
                 scores[2]++;
             } catch (IOException e) {
-                LOGGER.log(Level.FINE, "Couldn't instrument "+t, e);
+                LOGGER.log(Level.FINE, "Couldn't instrument " + s, e);
                 scores[3]++;
             } catch (LinkageError e) {
-                LOGGER.log(Level.FINE, "Error with instrumentation of: "+t, e);
+                LOGGER.log(Level.FINE, "Error with instrumentation of: " + s, e);
             }
         });
 
-        LOGGER.info(scores[0]+
-                " targets loaded "+ scores[1]+
-                " target fails "+ scores[2]+
-                " test loaded "+scores[3]+
+        LOGGER.info(scores[0] +
+                " targets loaded " + scores[1] +
+                " target fails " + scores[2] +
+                " test loaded " + scores[3] +
                 " test fails ");
+    }
+
+    /**
+     * Iterate over all the qualified names. Find their corresponding file, and classified them if they're a test of a target class.
+     * @param allClassesQualifiedNames a {@link Collection} of {@link String}
+     * @param targetClasses a {@link HashMap} with qualified names as key, and {@link File} as values
+     * @param testClasses   a {@link HashMap} with qualified names as key, and {@link File} as values
+     * @param allClasses a {@link Collection} containing all the compiled files
+     */
+    private void sortClasses(Collection<String> allClassesQualifiedNames,
+                             HashMap<String, File> targetClasses,
+                             HashMap<String, File> testClasses,
+                             Collection<File> allClasses) {
+
+        allClassesQualifiedNames.forEach(s ->
+            {
+                String[] split = s.split("\\.");
+                String name = split[split.length - 1]; //last segment
+                Collection<File> filesWithAMatchingName = allClasses.stream()
+                        .filter(file1 -> file1.getName().equals(name+".class"))
+                        .collect(Collectors.toList());
+
+                filesWithAMatchingName.forEach(file -> {
+                    if (file.getAbsolutePath().contains(sutBinFolder.getAbsolutePath())) {
+                        //is a target
+                        targetClasses.put(s, file);
+                    }
+
+                    if (file.getAbsolutePath().contains(testBinFolder.getAbsolutePath())) {
+                        //is a test class
+                        testClasses.put(s, file);
+                    }
+                });
+            }
+        );
     }
 
     private byte[] instrumentTargetClass(File target, String qualifiedName) throws IOException {
@@ -155,7 +210,7 @@ public class ByteCodeInstrumenter implements Instrumenter {
             LOGGER.warning("no .classpath file in the folder: load this project within an Eclipse application or run the goal 'mvn eclipse:eclipse'");
         }
 
-        LOGGER.info("Adding the following dependencies to the classpath: "+dependencies.toString());
+        LOGGER.info("Adding the following dependencies to the classpath: " + dependencies.toString());
 
         dependencies.add(new File(Calls.class.getProtectionDomain().getCodeSource().getLocation().toURI()));
         dependencies.add(sutBinFolder); //This is necessary to add the SUT classes before instrumentation.
@@ -166,7 +221,7 @@ public class ByteCodeInstrumenter implements Instrumenter {
             try {
                 url = file.toURI().toURL();
             } catch (MalformedURLException ignored) {
-                LOGGER.warning("Cannot add the dependency to the classpath: "+file.toURI());
+                LOGGER.warning("Cannot add the dependency to the classpath: " + file.toURI());
             }
             return url;
         }).collect(Collectors.toList()).toArray(new URL[dependencies.size()]);

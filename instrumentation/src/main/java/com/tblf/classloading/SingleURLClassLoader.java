@@ -67,6 +67,14 @@ public class SingleURLClassLoader {
     }
 
     /**
+     * Load the bytes
+     * @param bytes a byte array
+     */
+    public void loadBytes(byte[] bytes) {
+        urlClassLoader.loadBytes(ByteBuffer.wrap(bytes));
+    }
+
+    /**
      * Load a {@link ByteBuffer} in the {@link ClassLoader}
      * @param byteBuffer a {@link ByteBuffer}
      */

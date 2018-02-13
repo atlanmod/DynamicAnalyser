@@ -18,9 +18,9 @@ public class InstrumentationUtils {
      * @param qualifiedName
      * @return the .class {@link File}
      */
-    public static File getClassFile(File rootBinFolder, String qualifiedName) throws IOException {
+    public static File getClassFile(File rootBinFolder, String qualifiedName) throws FileNotFoundException {
         if (!rootBinFolder.exists() || !rootBinFolder.isDirectory()) {
-            throw new IOException("The binaries folder is incorrect");
+            throw new FileNotFoundException("The binaries folder is incorrect");
         }
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -37,7 +37,7 @@ public class InstrumentationUtils {
         if (file.exists()) {
             return file;
         } else {
-            throw new FileNotFoundException("Error while finding the class file: "+file.toString());
+            return null;
         }
     }
 

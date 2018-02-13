@@ -11,7 +11,13 @@ public class TargetClassVisitor extends ClassVisitor {
 
     public TargetClassVisitor(int i, ClassVisitor classVisitor, String name) {
         super(i, classVisitor);
-        this.name = name;
+        //this.name = name;
+    }
+
+    @Override
+    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+        this.name = name.replaceAll("/", "\\.");
+        super.visit(version, access, name, signature, superName, interfaces);
     }
 
     @Override
