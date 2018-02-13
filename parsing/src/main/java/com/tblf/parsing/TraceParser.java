@@ -18,6 +18,7 @@ import org.eclipse.modisco.kdm.source.extension.ASTNodeSourceRegion;
 import org.eclipse.modisco.kdm.source.extension.ExtensionPackage;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
@@ -26,7 +27,7 @@ import java.util.logging.Level;
 /**
  * Created by Thibault on 26/09/2017.
  */
-public class TraceParser extends Parser{
+public class TraceParser extends Parser {
     private static final String ANALYSIS_NAME = Configuration.getProperty("analysisName");
 
     private Map<String, Resource> packages;
@@ -87,14 +88,24 @@ public class TraceParser extends Parser{
         long currLine = 0;
         long maxLine = ParserUtils.getLineNumber(trace); //We iterate starting from 0
 
-        Scanner scanner;
+        Scanner scanner = null;
+
         try {
             scanner = new Scanner(new FileReader(trace));
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                //ParserUtils.printProgress(startTime, maxLine, currLine);
-                currLine += 1;
-                String[] split = line.split(":");
+        } catch (FileNotFoundException e) {
+            LOGGER.log(Level.WARNING, "Could not read the traces");
+        }
+
+        assert scanner != null;
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            //ParserUtils.printProgress(startTime, maxLine, currLine);
+            currLine += 1;
+            String[] split = line.split(":");
+
+            try {
+
+
                 switch (split[0]) {
                     case "&": //set the test
                         updateTest(split[1], split[2]); // {qualifiedName; methodName}
@@ -114,13 +125,15 @@ public class TraceParser extends Parser{
 
                         updateStatementUsingPosition(startPos, endPos);
                 }
-            }
 
-            //ParserUtils.endProgress(maxLine);
-            scanner.close();
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Couldn't parse the traces", e);
+            } catch (Exception e) {
+                LOGGER.log(Level.FINE, "Couldn't parse the traces at line: " + currLine, e);
+            }
         }
+
+        //ParserUtils.endProgress(maxLine);
+        scanner.close();
+
 
         try {
             outputModel.save(Collections.EMPTY_MAP);
@@ -201,6 +214,7 @@ public class TraceParser extends Parser{
         }
 
     }
+
     /**
      * Parse the {@link Java2Directory} model in order to find a class using its qualified name
      *
@@ -239,8 +253,10 @@ public class TraceParser extends Parser{
                 .findFirst() // and return the first one found
                 .orElse(null);
     }
+
     /**
      * Parse the {@link Java2File} children to file the node corresponding to the {@link MethodDeclaration} with the name given as a parameter
+     *
      * @param java2File  a {@link Java2File}
      * @param lineNumber a {@link Integer} contained inside the method block
      * @return the {@link org.eclipse.gmt.modisco.java.ASTNode} with the {@link MethodDeclaration} as a node
@@ -256,9 +272,10 @@ public class TraceParser extends Parser{
 
     /**
      * Parse the {@link Java2File} children to file the node corresponding to the {@link MethodDeclaration} with the name given as a parameter
+     *
      * @param java2File a {@link Java2File}
-     * @param startPos the start position of an element inside the method
-     * @param endPos the end position of an element inside the method
+     * @param startPos  the start position of an element inside the method
+     * @param endPos    the end position of an element inside the method
      * @return the {@link ASTNodeSourceRegion} with the {@link MethodDeclaration} as a node
      */
     private ASTNodeSourceRegion getMethodASTNodeFromJava2File(Java2File java2File, int startPos, int endPos) {
@@ -286,7 +303,6 @@ public class TraceParser extends Parser{
                 .findFirst() // and return the first one found
                 .orElse(null);
     }
-
 
 
     /**
@@ -330,6 +346,7 @@ public class TraceParser extends Parser{
      * Add this analysis to the Source {@link ASTNodeSourceRegion} and to the Target {@link ASTNodeSourceRegion}
      * Is usually a Statement pointing to a test {@link MethodDeclaration} node, or a SUT {@link MethodDeclaration} pointing to a test
      * {@link MethodDeclaration}.
+     *
      * @param source an {@link ASTNode}
      * @param target an {@link ASTNodeSourceRegion}
      */
@@ -339,8 +356,8 @@ public class TraceParser extends Parser{
                 && target != null
                 && target.getNode() instanceof MethodDeclaration
                 && source.getAnalysis().stream()
-                    .map(eObject -> (Analysis) eObject)
-                    .noneMatch(analysis -> analysis.getTarget().contains(target.getNode()))) {
+                .map(eObject -> (Analysis) eObject)
+                .noneMatch(analysis -> analysis.getTarget().contains(target.getNode()))) {
 
             Analysis analysis = ModelFactory.eINSTANCE.createAnalysis();
             analysis.setName(ANALYSIS_NAME);
