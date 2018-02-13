@@ -54,4 +54,28 @@ public class GitCallerTest {
 
         FileUtils.deleteDirectory(file);
     }
+
+    @Test
+    public void checkCompareCommitsTestClassAdded() throws IOException {
+        Logger rootLogger = LogManager.getLogManager().getLogger("");
+        rootLogger.setLevel(Level.FINE);
+        for (Handler h : rootLogger.getHandlers()) {
+            h.setLevel(Level.FINE);
+        }
+        ModelUtils.unzip(new File("src/test/resources/fullprojects/SimpleProject2.zip"));
+
+        File file = new File("src/test/resources/fullprojects/SimpleProject");
+        assert file.exists();
+
+        ResourceSet resourceSet = ModelUtils.buildResourceSet(file);
+
+        GitCaller gitCaller = new GitCaller(file, resourceSet);
+        gitCaller.compareCommits("HEAD~1", "HEAD");
+
+        Assert.assertEquals(1, gitCaller.getNewTests().size());
+
+        gitCaller.getNewTests().forEach(System.out::println);
+
+        FileUtils.deleteDirectory(file);
+    }
 }

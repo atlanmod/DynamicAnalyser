@@ -31,8 +31,6 @@ public class ParallelGitCallerTest {
 
         ResourceSet resourceSet = ModelUtils.buildResourceSet(file);
 
-        System.out.println(file.getAbsolutePath());
-
         //Set the uris of the Java2File elements in the model, in order to run this test on any machine
         //indeed the model uses absolute uri, and has been generated on a specific machine
         //since it is not generated in this test case, those uris remain the same

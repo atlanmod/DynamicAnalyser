@@ -5,7 +5,9 @@ import com.github.javaparser.ParseProblemException;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.google.common.collect.Range;
 import com.tblf.model.Analysis;
+import com.tblf.utils.Configuration;
 import com.tblf.utils.ModelUtils;
 import com.tblf.utils.ParserUtils;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -24,6 +26,7 @@ import org.eclipse.jgit.patch.FileHeader;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.modisco.java.composition.javaapplication.Java2File;
+import org.eclipse.modisco.kdm.source.extension.ASTNodeSourceRegion;
 
 import java.io.File;
 import java.io.IOException;
@@ -130,28 +133,13 @@ public class GitCaller extends VersionControlCaller {
 
         diffEntries.forEach(diffEntry -> {
             try {
-                FileHeader fileHeader = diffFormatter.toFileHeader(diffEntry);
+                if (!diffEntry.getNewPath().endsWith(".java"))
+                    throw new NonJavaFileException("The diff entry: " + diffEntry.getNewPath() + " does not concern a Java file");
 
-                String pkg;
-                String uri = diffEntry.getOldPath();
-
-                if (!uri.endsWith(".java"))
-                    throw new NonJavaFileException("The diff entry: " + uri + " does not concern a Java file");
-
-                LOGGER.fine("Analyzing impacts of " + uri + " modification");
-
-                pkg = ParserUtils.getPackageQNFromFile(new File(uri));
-
-                Resource sutPackage = ModelUtils.getPackageResource(pkg, resourceSet);
-                Java2File java2File = (Java2File) sutPackage.getContents()
-                        .stream()
-                        .filter(eObject -> eObject instanceof Java2File
-                                && ((Java2File) eObject).getJavaUnit().getOriginalFilePath().endsWith(fileHeader.getOldPath()))
-                        .findFirst()
-                        .orElseThrow(() -> new NonJavaFileException("The DiffEntry does not concern a Java file but: " + fileHeader.getOldPath() + " No impact computed from it"));
-
-                diffFormatter.format(diffEntry);
-                fileHeader.toEditList().forEach(edit -> manageEdit(diffEntry, edit, java2File));
+                if (diffEntry.getOldPath().equals("/dev/null"))
+                    manageNewFile(diffEntry);
+                else
+                    manageUpdatedFile(diffEntry);
 
             } catch (NonJavaFileException e) {
                 LOGGER.log(Level.FINE, e.toString());
@@ -163,6 +151,46 @@ public class GitCaller extends VersionControlCaller {
         LOGGER.info("Impact analysis completed");
     }
 
+    private void manageUpdatedFile(DiffEntry diffEntry) throws IOException {
+        String pkg;
+        String uri = diffEntry.getNewPath();
+
+        FileHeader fileHeader = diffFormatter.toFileHeader(diffEntry);
+
+        LOGGER.fine("Analyzing impacts of " + uri + " modification");
+
+        pkg = ParserUtils.getPackageQNFromFile(new File(uri));
+
+        Resource sutPackage = ModelUtils.getPackageResource(pkg, resourceSet);
+
+        //WONT GET NEW TEST FILES ???
+
+        Java2File java2File = (Java2File) sutPackage.getContents()
+                .stream()
+                .filter(eObject -> eObject instanceof Java2File
+                        && ((Java2File) eObject).getJavaUnit().getOriginalFilePath().endsWith(fileHeader.getOldPath()))
+                .findFirst()
+                .orElseThrow(() -> new NonJavaFileException("The DiffEntry does not concern a Java file but: " + fileHeader.getOldPath() + " No impact computed from it"));
+
+        diffFormatter.format(diffEntry);
+        fileHeader.toEditList().forEach(edit -> manageEdit(diffEntry, edit, java2File));
+
+    }
+
+    /**
+     * A new file has been added in this {@link DiffEntry}. If it's a new test class, it needs to be added to the tests to run
+     * @param diffEntry a {@link DiffEntry}
+     */
+    private void manageNewFile(DiffEntry diffEntry) {
+        try {
+            diffFormatter.toFileHeader(diffEntry).toEditList().forEach(edit -> {
+                manageInsertion(diffEntry, edit); //FIXME
+            });
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "couldn't analyze the new file "+diffEntry.getNewPath(), e);
+        }
+    }
+
     /**
      * Compute the statements modified by the commit
      *
@@ -172,7 +200,7 @@ public class GitCaller extends VersionControlCaller {
     protected void manageEdit(DiffEntry diffEntry, Edit edit, Java2File java2File) {
 
         if (edit.getType().equals(Edit.Type.INSERT)) {
-            manageInsertion(diffEntry, edit);
+            manageInsertion(diffEntry, edit, java2File);
         } else {
 
             BlockStmt blockStmtBefore = getStatementsAsBlockFromOldPath(diffEntry, edit);
@@ -210,6 +238,7 @@ public class GitCaller extends VersionControlCaller {
         }
     }
 
+
     /**
      * Manage an insertion. Since those statements are new, they haven't been analysed yet. Thus, their impacts are a bit harder to compute
      * If it's in a test: Re run this test
@@ -218,7 +247,7 @@ public class GitCaller extends VersionControlCaller {
      * @param diffEntry a {@link DiffEntry}
      * @param edit      an {@link Edit}
      */
-    private void manageInsertion(DiffEntry diffEntry, Edit edit) {
+    private void manageInsertion(DiffEntry diffEntry, Edit edit, Java2File java2File) {
         try {
             String fileAsString = DiffUtils.getFileContentFromCommit(repository, newTree, diffEntry.getNewPath());
             CompilationUnit compilationUnit = JavaParser.parse(fileAsString);
@@ -245,18 +274,27 @@ public class GitCaller extends VersionControlCaller {
             //Add all the new methods found edited to the tests to run
             //Map all the MethodDeclaration to a String as: Classname#MethodName
 
-            newTests.addAll(methodDeclarations
-                    .stream()
-                    .filter(methodDeclaration -> methodDeclaration.getAncestorOfType(ClassOrInterfaceDeclaration.class).isPresent())
-                    .map(methodDeclaration -> String.format("%s.%s#%s",
-                            compilationUnit.getPackageDeclaration().get().getName().asString(), //qualified package
-                            methodDeclaration.getAncestorOfType(ClassOrInterfaceDeclaration.class).get().getName().asString(), //class name
-                            methodDeclaration.getName().asString())) //methodName
-                    .collect(Collectors.toList())
-            );
+            if (diffEntry.getNewPath().contains(Configuration.getProperty("test"))) {
+                //The code added is inside test classes. They need to be added in the tests to run.
+                newTests.addAll(methodDeclarations
+                        .stream()
+                        .filter(methodDeclaration -> methodDeclaration.getAncestorOfType(ClassOrInterfaceDeclaration.class).isPresent())
+                        .map(methodDeclaration -> String.format("%s.%s#%s",
+                                compilationUnit.getPackageDeclaration().get().getName().asString(), //qualified package
+                                methodDeclaration.getAncestorOfType(ClassOrInterfaceDeclaration.class).get().getName().asString(), //class name
+                                methodDeclaration.getName().asString())) //methodName
+                        .collect(Collectors.toList()));
+            } else {
+                //The code added is inside SUT. Its impact through inheritance must be computed
+                methodDeclarations.forEach(methodDeclaration -> {
+                    getMethodImpacts(java2File, methodDeclaration);
+                });
+            }
+
+
 
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Could not parse the modified file: "+diffEntry.getNewPath(), e);
         }
     }
 
@@ -290,31 +328,55 @@ public class GitCaller extends VersionControlCaller {
     }
 
     /**
-     * Find all the impacts of the specified {@link com.github.javaparser.ast.stmt.Statement} on the tests
-     *
-     * @param java2File the file in which the {@link com.github.javaparser.ast.stmt.Statement} will be found
-     * @param statement the {@link com.github.javaparser.ast.stmt.Statement} that will be found in the {@link Java2File}
-     * @return all the test {@link MethodDeclaration} impacted by the {@link com.github.javaparser.ast.stmt.Statement}
+     * Get the tests that are impacted by insertion inside the {@link com.github.javaparser.ast.body.MethodDeclaration}
+     * @param java2File a {@link Java2File}
+     * @param methodDeclaration a {@link MethodDeclaration}
      */
-    private Collection<MethodDeclaration> getImpacts(Java2File java2File, com.github.javaparser.ast.stmt.Statement statement) {
-        Set<MethodDeclaration> methodDeclarationSet = new HashSet<>();
+    private void getMethodImpacts(Java2File java2File, com.github.javaparser.ast.body.MethodDeclaration methodDeclaration) {
+        Collection<ASTNodeSourceRegion> astNodeSourceRegions =
+                java2File.getChildren()
+                .stream()
+                .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof MethodDeclaration)
+                .filter(astNodeSourceRegion -> methodDeclaration.getRange().isPresent())
+                .filter(astNodeSourceRegion -> Range.open(astNodeSourceRegion.getStartLine(), astNodeSourceRegion.getEndLine())
+                            .isConnected(Range.open(methodDeclaration.getRange().get().begin.line, methodDeclaration.getRange().get().end.line)))
+                .collect(Collectors.toList());
 
+        if (astNodeSourceRegions.isEmpty()) {
+            //The impacted node cannot be found. We assume the method is new.
+            //Impacts must be computed at the declaration level
+
+            getDeclarationLevelImpacts(java2File, methodDeclaration);
+        } else {
+            astNodeSourceRegions
+                    .stream()
+                    .map(ASTNodeSourceRegion::getAnalysis) //Get all the impacts of the found methods using position comparison
+                    .flatMap(List::stream)
+                    .collect(Collectors.toList())
+                    .stream() //Merge all the analysis into a single stream
+                    .filter(eObject -> eObject instanceof MethodDeclaration)
+                    .map(eObject -> ((MethodDeclaration) eObject))
+                    .collect(Collectors.toList()); //Return all as a methodDeclaration list
+        }
+
+
+
+    }
+
+    /**
+     * Compute the impacts at the declaration level.
+     * We consider the method as new, if it overrides an existing method in a superclass,
+     * then the impacts of this supermethod must be considered.
+     * Nonetheless, only the impacts of the tests that executed the supermethod, of the child-class.
+     * @param java2File
+     * @param methodDeclaration
+     */
+    private void getDeclarationLevelImpacts(Java2File java2File, com.github.javaparser.ast.body.MethodDeclaration methodDeclaration) {
         java2File.getChildren()
                 .stream()
-                //Iterating over the Java2File children
-                .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof Statement
-                        && statement.getRange().isPresent()
-                        && astNodeSourceRegion.getStartLine() == statement.getRange().get().begin.line
-                        && astNodeSourceRegion.getEndLine() == statement.getRange().get().end.line
-                        && !astNodeSourceRegion.getAnalysis().isEmpty()) //The node is a java statement with the same statement position
-
-                //Iterating over the statement's analysis to get the impacts
-                .forEach(node -> node.getAnalysis().forEach(eObject -> {
-                    Analysis analysis = (Analysis) eObject;
-                    methodDeclarationSet.addAll(analysis.getTarget().stream().map(eObject1 -> (MethodDeclaration) eObject1).collect(Collectors.toSet()));
-                }));
-
-        return methodDeclarationSet;
+                .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof ClassDeclaration)
+                .filter(astNodeSourceRegion -> ((ClassDeclaration) astNodeSourceRegion.getNode()).getSuperClass() != null)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -374,5 +436,4 @@ public class GitCaller extends VersionControlCaller {
 
         return blockStmtAfter;
     }
-
 }
