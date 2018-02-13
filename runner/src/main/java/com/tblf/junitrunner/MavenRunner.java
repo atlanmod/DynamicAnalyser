@@ -3,10 +3,13 @@ package com.tblf.junitrunner;
 import com.tblf.linker.Calls;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.MavenUtils;
+import org.apache.commons.io.IOUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.logging.Level;
@@ -31,6 +34,8 @@ public class MavenRunner {
             System.setProperty("maven.home", Configuration.getProperty("MAVEN_HOME"));
 
         File pomDir = pom.getParentFile();
+
+        MavenUtils.addJVMOptionsToSurefireConfig(pom, "-noverify");
 
         //check that the project has been compiled
         if (! (new File(pomDir, "target").exists()
@@ -64,7 +69,6 @@ public class MavenRunner {
                 });
 
                 MavenUtils.addFileInPomTestClassPath(pom, new File(Calls.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()));
-
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, "Could not replace the existing classes with the instrumented ones", e);
             } catch (URISyntaxException e) {
