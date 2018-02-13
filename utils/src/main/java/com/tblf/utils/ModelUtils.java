@@ -1,5 +1,6 @@
 package com.tblf.utils;
 
+import com.tblf.model.ModelPackage;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -42,6 +43,7 @@ public class ModelUtils {
         JavaapplicationPackage.eINSTANCE.eClass();
         ExtensionPackage.eINSTANCE.eClass();
         KdmPackage.eINSTANCE.eClass();
+        ModelPackage.eINSTANCE.eClass();
 
         Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
         Map<String, Object> m = reg.getExtensionToFactoryMap();
@@ -369,5 +371,18 @@ public class ModelUtils {
                 .filter(eObject -> eObject.getAnnotations().stream().anyMatch(ModelUtils::isATestAnnotation)) //get test methods using @Test
                 .collect(Collectors.toList()); //collect
 
+    }
+
+    /**
+     * Get the {@link ClassDeclaration} containing the given {@link EObject}
+     * @param eObject an {@link EObject} such as {@link MethodDeclaration}
+     * @return a {@link ClassDeclaration} containing the {@link EObject}
+     */
+    public static ClassDeclaration getContainerClassDeclaration(EObject eObject) {
+        EObject container = eObject.eContainer();
+        if (container instanceof ClassDeclaration || container == null)
+            return (ClassDeclaration) container;
+
+        return getContainerClassDeclaration(container);
     }
 }

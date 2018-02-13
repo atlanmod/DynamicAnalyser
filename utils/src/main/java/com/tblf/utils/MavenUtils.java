@@ -40,10 +40,7 @@ public class MavenUtils {
 
             Invoker invoker = new DefaultInvoker();
 
-            //invoker.setInputStream(inputStream);
-            InvocationResult invocationResult = null;
-
-            invocationResult = invoker.execute(invocationRequest);
+            InvocationResult invocationResult = invoker.execute(invocationRequest);
             if (invocationResult.getExecutionException() != null) {
                 LOGGER.info(invocationResult.getExecutionException().getMessage());
                 invocationResult.getExecutionException().fillInStackTrace().printStackTrace();
@@ -70,16 +67,7 @@ public class MavenUtils {
                     .filter(p -> p.getArtifactId().equals("maven-surefire-plugin"))
                     .findAny();
 
-            Plugin plugin;
-            if (optPlugin.isPresent())
-                plugin = optPlugin.get();
-            else {
-                plugin = new Plugin();
-                plugin.setGroupId("org.apache.maven.plugins");
-                plugin.setArtifactId("maven-surefire-plugin");
-                plugin.setVersion("2.20.1");
-                model.getBuild().getPlugins().add(plugin);
-            }
+            Plugin plugin = getSureFirePlugin(model);
 
             Xpp3Dom addClassPathElts = new Xpp3Dom("additionalClasspathElements");
             Xpp3Dom addClassPathElt = new Xpp3Dom("additionalClasspathElement");
@@ -87,7 +75,6 @@ public class MavenUtils {
             addClassPathElts.addChild(addClassPathElt);
 
             Object conf = plugin.getConfiguration();
-
             if (conf == null)
                 plugin.setConfiguration(new Xpp3Dom("configuration"));
 
@@ -121,5 +108,66 @@ public class MavenUtils {
         } catch (MavenInvocationException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Add the specified option to the surefire configuration
+     * @param pom the {@link File} pom.xml
+     * @param opt the jvm options
+     */
+    public static void addJVMOptionsToSurefireConfig(File pom, String opt) {
+
+        Model model = null;
+        try {
+            model = new MavenXpp3Reader().read(new FileInputStream(pom));
+        } catch (IOException | XmlPullParserException e) {
+            e.printStackTrace();
+        }
+
+        Plugin plugin = getSureFirePlugin(model);
+
+        Object conf = plugin.getConfiguration();
+        if (conf == null)
+            plugin.setConfiguration(new Xpp3Dom("configuration"));
+
+        Xpp3Dom argLine = ((Xpp3Dom) plugin.getConfiguration()).getChild("argLine");
+
+        if (argLine == null) {
+            argLine = new Xpp3Dom("argLine");
+            ((Xpp3Dom) plugin.getConfiguration()).addChild(argLine);
+        }
+
+        argLine.setValue(opt);
+
+        MavenXpp3Writer mavenXpp3Writer = new MavenXpp3Writer();
+
+        try {
+            assert model != null;
+            mavenXpp3Writer.write(new FileOutputStream(pom), model);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static Plugin getSureFirePlugin(Model model) {
+        Optional<Plugin> optPlugin = model
+                .getBuild()
+                .getPlugins()
+                .stream()
+                .filter(p -> p.getArtifactId().equals("maven-surefire-plugin"))
+                .findAny();
+
+        Plugin plugin;
+        if (optPlugin.isPresent())
+            plugin = optPlugin.get();
+        else {
+            plugin = new Plugin();
+            plugin.setGroupId("org.apache.maven.plugins");
+            plugin.setArtifactId("maven-surefire-plugin");
+            plugin.setVersion("2.20.1");
+            model.getBuild().getPlugins().add(plugin);
+        }
+
+        return plugin;
     }
 }
