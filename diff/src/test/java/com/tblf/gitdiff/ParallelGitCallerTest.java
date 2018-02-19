@@ -45,7 +45,7 @@ public class ParallelGitCallerTest {
         GitCaller gitCaller = new ParallelGitCaller(file, resourceSet);
         gitCaller.compareCommits("HEAD~1", "HEAD");
 
-        Assert.assertEquals(1, gitCaller.getNewTests().size());
+        Assert.assertEquals(1, gitCaller.getImpactedTests().size());
 
         FileUtils.deleteDirectory(file);
     }

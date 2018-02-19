@@ -50,8 +50,8 @@ public class GitCallerTest {
         GitCaller gitCaller = new GitCaller(file, resourceSet);
         gitCaller.compareCommits("HEAD~1", "HEAD");
 
-        Assert.assertEquals(1, gitCaller.getNewTests().size());
-
+        Assert.assertEquals(1, gitCaller.getImpactedTests().size());
+        gitCaller.getImpactedTests().forEach(System.out::println);
         FileUtils.deleteDirectory(file);
     }
 
@@ -72,9 +72,9 @@ public class GitCallerTest {
         GitCaller gitCaller = new GitCaller(file, resourceSet);
         gitCaller.compareCommits("HEAD~1", "HEAD");
 
-        Assert.assertEquals(1, gitCaller.getNewTests().size());
+        Assert.assertEquals(1, gitCaller.getImpactedTests().size());
 
-        gitCaller.getNewTests().forEach(System.out::println);
+        gitCaller.getImpactedTests().forEach(System.out::println);
 
         FileUtils.deleteDirectory(file);
     }

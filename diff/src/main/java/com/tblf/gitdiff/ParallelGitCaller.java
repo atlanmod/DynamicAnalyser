@@ -28,36 +28,6 @@ public class ParallelGitCaller extends GitCaller {
                         .map(eObject -> (Java2File) eObject)
                         .forEach(java2File -> stringJava2FileMap.put(java2File.getJavaUnit().getOriginalFilePath(), java2File)));
 
-
     }
 
-    //TODO: wont work if the models have been generated on a different machine
-    @Override
-    protected void analyseDiffs(List<DiffEntry> diffEntries) {
-
-        diffEntries.parallelStream().forEach(diffEntry -> {
-            try {
-
-                FileHeader fileHeader = diffFormatter.toFileHeader(diffEntry);
-
-                String uri = fileHeader.getOldPath();
-
-                if (!uri.endsWith(".java"))
-                    throw new NonJavaFileException("The diff entry: "+uri+" does not concern a Java file");
-
-                Java2File java2File = stringJava2FileMap.get(folder.getAbsolutePath()+"/"+uri);
-
-                if (java2File == null)
-                    throw new FileNotFoundException("Could not find file "+uri+" in the model");
-
-                diffFormatter.format(diffEntry);
-
-                fileHeader.toEditList().forEach(edit -> manageEdit(diffEntry, edit, java2File));
-
-            } catch (IOException e) {
-                LOGGER.log(Level.WARNING, "An error was caught when analysis the diffentries", e);
-            }
-
-        });
-    }
 }

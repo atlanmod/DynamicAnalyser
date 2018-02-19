@@ -2,7 +2,6 @@ package com.tblf.gitdiff;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.stmt.Statement;
@@ -12,6 +11,7 @@ import com.tblf.utils.ModelUtils;
 import com.tblf.utils.ParserUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.gmt.modisco.java.AbstractMethodDeclaration;
 import org.eclipse.gmt.modisco.java.ClassDeclaration;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
@@ -22,10 +22,7 @@ import org.eclipse.modisco.kdm.source.extension.ASTNodeSourceRegion;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -35,17 +32,20 @@ public class GitDiffManager {
     private ResourceSet resourceSet;
     private Collection<DiffEntry> diffEntries;
     private static final Logger LOGGER = Logger.getAnonymousLogger();
-    private DiffFormatter diffFormatter = new DiffFormatter(new LogOutputStream(LOGGER, Level.FINE));
+    private DiffFormatter diffFormatter;
+    private File folder;
 
-    public GitDiffManager(ResourceSet resourceSet, Collection<DiffEntry> diffEntries) {
+    public GitDiffManager(File gitFolder, ResourceSet resourceSet, Collection<DiffEntry> diffEntries, DiffFormatter diffFormatter) {
         this.resourceSet = resourceSet;
         this.diffEntries = diffEntries;
+        this.diffFormatter = diffFormatter;
+        this.folder = gitFolder;
     }
 
-    public void analyse() {
+    public Collection<String> analyse() {
         Collection<String> testsToRun = new ArrayList<>();
-
         diffEntries.forEach(diffEntry -> {
+
             try {
 
                 // The file is not a Java File.
@@ -53,10 +53,12 @@ public class GitDiffManager {
                     throw new NonJavaFileException("The diff entry: " + diffEntry.getNewPath() + " does not concern a Java file");
 
                 if (diffEntry.getOldPath().equals("/dev/null")) {
+                    LOGGER.fine("File added in the current revision: "+diffEntry.getNewPath());
                     testsToRun.addAll(
                             manageNewFile(diffEntry) // The file is new
                     );
                 } else {
+                    LOGGER.fine("File updated in the current revision: "+diffEntry.getNewPath());
                     testsToRun.addAll(
                             manageUpdatedFile(diffEntry) // The file has been updated
                     );
@@ -66,6 +68,31 @@ public class GitDiffManager {
                 LOGGER.log(Level.INFO, "Could not analyze the diffEntry", e);
             }
         });
+
+        return testsToRun;
+    }
+
+    /**
+     * Get a diffEntry of a new file added in the previous commit and analyze it
+     *
+     * @param diffEntry a {@link DiffEntry}
+     * @return a {@link Collection} of Test names as {@link String} to run
+     * @throws IOException
+     */
+    private Collection<String> manageNewFile(DiffEntry diffEntry) throws IOException {
+        String uri = diffEntry.getNewPath();
+
+        if (uri.contains(Configuration.getProperty("test"))) {
+            //The new file is a test class
+            LOGGER.fine("File added is a test file: "+diffEntry.getNewPath());
+
+            CompilationUnit compilationUnit = JavaParser.parse(new File(folder, uri));
+            Collection<MethodDeclaration> methodDeclarations = compilationUnit.getChildNodesByType(MethodDeclaration.class);
+            return methodDeclarationsToStringCollection(methodDeclarations);
+        } else {
+            LOGGER.fine("File added is a SUT file: "+diffEntry.getNewPath()+" no impacts can be computed yet");
+            return Collections.emptyList();
+        }
     }
 
     /**
@@ -79,7 +106,7 @@ public class GitDiffManager {
         FileHeader fileHeader = diffFormatter.toFileHeader(diffEntry);
 
         //Get the package resource from the resourceSet
-        String packageQNFromFile = ParserUtils.getPackageQNFromFile(new File(diffEntry.getOldPath()));
+        String packageQNFromFile = ParserUtils.getPackageQNFromFile(new File(folder, diffEntry.getOldPath()));
         Resource sutPackage = ModelUtils.getPackageResource(packageQNFromFile, resourceSet);
 
         Java2File java2File = (Java2File) sutPackage.getContents()
@@ -114,46 +141,123 @@ public class GitDiffManager {
      * @return a {@link Collection} of test methods qualified name to run
      */
     private Collection<String> manageEdit(DiffEntry diffEntry, Edit edit, Java2File java2File) {
-        Collection<String> methodDeclarationQualifiedNames = new ArrayList<>();
+        Collection<String> testMethodQualifiedNamesToExecute = new ArrayList<>();
 
         if (diffEntry.getNewPath().contains(Configuration.getProperty("test"))) {
             //get all the methods edited, and map their name to Strings qualified name, ready to run.
-            methodDeclarationQualifiedNames.addAll(
+            testMethodQualifiedNamesToExecute.addAll(
                     getMethodDeclarationsEdited(diffEntry.getNewPath(), Range.open(edit.getBeginB(), edit.getEndB()))
                             .stream()
                             .map(GitDiffManager::methodDeclarationToStringQualifiedName)
                             .collect(Collectors.toList())
             );
+
         } else switch (edit.getType()) {
             case INSERT:
-                //Collection of the changed methodDeclarations
-                Collection<MethodDeclaration> methodDeclarations = getMethodDeclarationsEdited(diffEntry.getNewPath(), Range.open(edit.getBeginB(), edit.getEndB()));
-
-                //if new method => get the impacts at the inheritance level
-                //else just rerun the method
-
-
+                testMethodQualifiedNamesToExecute.addAll(
+                        manageInsertion(diffEntry, edit, java2File)
+                );
                 break;
             case DELETE:
-                //Code has been deleted. The impacted methods are gathered, their impacts are computed, and returned as test methods Qualified names
-                methodDeclarations = getMethodDeclarationsEdited(diffEntry.getOldPath(), Range.open(edit.getBeginA(), edit.getEndA()));
-                methodDeclarationQualifiedNames.addAll(
-                        methodDeclarations.stream()
-                        .map(methodDeclaration -> getImpactsAtMethodLevel(java2File, methodDeclaration))
-                        .flatMap(Collection::stream)
-                        .map(GitDiffManager::methodDeclarationToStringQualifiedName)
-                        .collect(Collectors.toList())
+                testMethodQualifiedNamesToExecute.addAll(
+                        manageDeletion(diffEntry, edit, java2File)
                 );
-
                 break;
             case REPLACE:
-
+                testMethodQualifiedNamesToExecute.addAll(
+                        manageReplacement(diffEntry, edit, java2File)
+                );
                 break;
             default:
 
         }
 
-        return methodDeclarationQualifiedNames;
+        return testMethodQualifiedNamesToExecute;
+    }
+
+    /**
+     * Manage an Insertion in the source code
+     *
+     * @param diffEntry the {@link DiffEntry} considering the diffs between the two revisions
+     * @param edit      the {@link Edit} with {@link org.eclipse.jgit.diff.Edit.Type}.INSERT as type
+     * @param java2File the {@link Java2File} containing the impact analysis results to used to get the impacted methods
+     * @return the Qualified names of the methods impacted, ready to re-execute
+     */
+    private List<String> manageInsertion(DiffEntry diffEntry, Edit edit, Java2File java2File) {
+        //Collection of the changed methodDeclarations
+        Collection<MethodDeclaration> methodDeclarationsEdited = getMethodDeclarationsEdited(diffEntry.getNewPath(), Range.open(edit.getBeginB(), edit.getEndB()));
+        Collection<org.eclipse.gmt.modisco.java.MethodDeclaration> methodDeclarationsImpacted =
+                methodDeclarationsEdited.stream().map(methodDeclaration -> getImpactsAtMethodLevel(java2File, methodDeclaration))
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.toList());
+
+        if (methodDeclarationsImpacted.size() == 0) {
+            //No impacts, is this method new ?
+            Collection<MethodDeclaration> newMethods = getNewMethods(java2File, methodDeclarationsEdited);
+            //Get the impacts of newly added method by checking its class inheritance
+            return newMethods.stream().map(methodDeclaration -> getImpactsAtInheritanceLevel(java2File, methodDeclaration))
+                    .flatMap(Collection::stream)
+                    .map(GitDiffManager::methodDeclarationToStringQualifiedName)
+                    .collect(Collectors.toList());
+        } else {
+            //Add to the tests to execute the test method impacted
+            return methodDeclarationsImpacted
+                    .stream()
+                    .map(GitDiffManager::methodDeclarationToStringQualifiedName)
+                    .collect(Collectors.toList());
+        }
+    }
+
+    /**
+     * Manage a deletion in the source code
+     *
+     * @param diffEntry the {@link DiffEntry} considering the diffs between the two revisions
+     * @param edit      the {@link Edit} with {@link org.eclipse.jgit.diff.Edit.Type}.DELETE as type
+     * @param java2File the {@link Java2File} containing the impact analysis results to used to get the impacted methods
+     * @return the Qualified names of the methods impacted, ready to re-execute
+     */
+    private List<String> manageDeletion(DiffEntry diffEntry, Edit edit, Java2File java2File) {
+        //Code has been deleted. The impacted methods are gathered, their impacts are computed, and returned as test methods Qualified names
+        Collection<MethodDeclaration> methodDeclarationsEdited = getMethodDeclarationsEdited(diffEntry.getOldPath(), Range.open(edit.getBeginA(), edit.getEndA()));
+        return methodDeclarationsEdited.stream()
+                .map(methodDeclaration -> getImpactsAtMethodLevel(java2File, methodDeclaration))
+                .flatMap(Collection::stream)
+                .map(GitDiffManager::methodDeclarationToStringQualifiedName)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Manage a replacement in the source code, considering the impacts at the statement level
+     *
+     * @param diffEntry the {@link DiffEntry} considering the diffs between the two revisions
+     * @param edit      the {@link Edit} with {@link org.eclipse.jgit.diff.Edit.Type}.REPLACE as type
+     * @param java2File the {@link Java2File} containing the impact analysis results to used to get the impacted methods
+     * @return the Qualified names of the methods impacted, ready to re-execute
+     */
+    private Collection<? extends String> manageReplacement(DiffEntry diffEntry, Edit edit, Java2File java2File) {
+        Collection<Statement> statementsReplaced = getStatementEdited(diffEntry.getOldPath(), Range.open(edit.getBeginA(), edit.getEndA()));
+        return statementsReplaced.stream()
+                .map(statement -> getImpactsAtMethodLevel(java2File, statement))
+                .flatMap(Collection::stream)
+                .map(GitDiffManager::methodDeclarationToStringQualifiedName)
+                .collect(Collectors.toList());
+    }
+
+
+    /**
+     * Compare a set of modified methods to the existing model in order to check if the methods have been recently added in the model
+     *
+     * @param java2File                {@link Java2File}, the model before modifying the code
+     * @param methodDeclarationsEdited a {@link Collection} of {@link MethodDeclaration} recently edited
+     */
+    private Collection<MethodDeclaration> getNewMethods(Java2File java2File, Collection<MethodDeclaration> methodDeclarationsEdited) {
+        Collection<String> methodSignaturesAsString = ModelUtils.getMethodDeclarationFromJava2File(java2File)
+                .stream()
+                .map(ModelUtils::getMethodSignature)
+                .collect(Collectors.toList());
+
+        return methodDeclarationsEdited.stream().filter(methodDeclaration -> !methodSignaturesAsString.contains(methodDeclaration.getSignature().asString())).collect(Collectors.toList());
+
     }
 
     /**
@@ -167,7 +271,7 @@ public class GitDiffManager {
         Collection<MethodDeclaration> methodDeclarations = new LinkedList<>();
 
         try {
-            CompilationUnit compilationUnit = JavaParser.parse(new File(fileName));
+            CompilationUnit compilationUnit = JavaParser.parse(new File(folder, fileName));
 
             methodDeclarations.addAll(compilationUnit.getChildNodesByType(MethodDeclaration.class).stream()
                     .filter(methodDeclaration -> methodDeclaration.getRange().isPresent())
@@ -182,48 +286,91 @@ public class GitDiffManager {
         return methodDeclarations;
     }
 
+
+    /**
+     * Parse the file edited. First get the modified methods, and then get the impacts at the statement level
+     *
+     * @param path  the path to the file updated
+     * @param range a continuous set of modified lines of code
+     * @return a Collection of replaced statements
+     */
+    private Collection<Statement> getStatementEdited(String path, Range<Integer> range) {
+
+        return getMethodDeclarationsEdited(path, range)
+                .stream()
+                .map(methodDeclaration -> methodDeclaration.getChildNodesByType(Statement.class)
+                        .stream()
+                        .filter(statement -> statement.getRange().isPresent()
+                                && range.isConnected(Range.open(statement.getRange().get().begin.line, statement.getRange().get().end.line)))
+                        .collect(Collectors.toList()))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+    }
+
+
     /**
      * Get all the test methods impacted by changes on a MethodDeclaration
      *
-     * @param java2File
-     * @param methodDeclaration
-     * @return
+     * @param java2File         the {@link Java2File} containing the impact analysis results to used to get the impacted methods
+     * @param methodDeclaration a {@link org.eclipse.gmt.modisco.java.MethodDeclaration} to find in the model
+     * @return a set of Impacted test {@link org.eclipse.gmt.modisco.java.MethodDeclaration}
      */
     private Collection<org.eclipse.gmt.modisco.java.MethodDeclaration> getImpactsAtMethodLevel(Java2File java2File, MethodDeclaration methodDeclaration) {
         return java2File.getChildren()
                 .stream()
                 .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof org.eclipse.gmt.modisco.java.MethodDeclaration)
-                .filter(astNodeSourceRegion -> ((org.eclipse.gmt.modisco.java.MethodDeclaration) astNodeSourceRegion.getNode()).getName().equals(methodDeclaration.getName().toString()))
+                .filter(astNodeSourceRegion -> GitDiffManager.methodDeclarationToStringQualifiedName((org.eclipse.gmt.modisco.java.MethodDeclaration) astNodeSourceRegion.getNode()).equals(methodDeclaration.getSignature().asString()))
                 .map(ASTNodeSourceRegion::getAnalysis)
                 .flatMap(Collection::stream)
                 .map(eObject -> ((org.eclipse.gmt.modisco.java.MethodDeclaration) eObject))
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Get all the test methods impacted by changes of a specific {@link Statement}, using the position of the {@link Statement} to find the impacts in the model
+     *
+     * @param java2File a {@link Java2File}
+     * @param statement a {@link Statement}
+     * @return a set of Impacted test {@link org.eclipse.gmt.modisco.java.MethodDeclaration}
+     */
     private Collection<org.eclipse.gmt.modisco.java.MethodDeclaration> getImpactsAtMethodLevel(Java2File java2File, Statement statement) {
-
-        return null;
+        return java2File.getChildren()
+                .stream()
+                .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof org.eclipse.gmt.modisco.java.Statement)
+                .filter(astNodeSourceRegion -> astNodeSourceRegion.getStartLine() == statement.getRange().get().begin.line && astNodeSourceRegion.getEndLine() == statement.getRange().get().end.line)
+                //.filter(astNodeSourceRegion -> astNodeSourceRegion.getStartPosition() == statement.getRange().get().begin.column && astNodeSourceRegion.getEndPosition() == statement.getRange().get().end.column)
+                .map(ASTNodeSourceRegion::getAnalysis)
+                .map(eObject -> ((org.eclipse.gmt.modisco.java.MethodDeclaration) eObject))
+                .collect(Collectors.toList());
     }
 
+
     /**
-     * Get a diffEntry of a new file added in the previous commit and analyze it
+     * Get the impacts using inheritance.
      *
-     * @param diffEntry a {@link DiffEntry}
-     * @return a {@link Collection} of Test names as {@link String} to run
-     * @throws IOException
+     * @param java2File         a {@link Java2File} from the MoDisco Model
+     * @param methodDeclaration a {@link MethodDeclaration} newly added in the source code
+     * @return a {@link Collection} of impacted test methods
      */
-    private Collection<String> manageNewFile(DiffEntry diffEntry) throws IOException {
-        String uri = diffEntry.getNewPath();
+    private Collection<org.eclipse.gmt.modisco.java.MethodDeclaration> getImpactsAtInheritanceLevel(Java2File java2File, MethodDeclaration methodDeclaration) {
+        AbstractMethodDeclaration overridenMethod = ModelUtils.getOverridenMethod(java2File, methodDeclaration.getSignature().asString());
 
-        if (uri.contains(Configuration.getProperty("test"))) {
-            //The new file is a test class
+        //The parent method has been found, its impacts must be gathered, in the java2kdm model
 
-            CompilationUnit compilationUnit = JavaParser.parse(new File(uri));
-            Collection<MethodDeclaration> methodDeclarations = compilationUnit.getChildNodesByType(MethodDeclaration.class);
-            return methodDeclarationsToStringCollection(methodDeclarations);
-        } else {
-            return Collections.emptyList();
+        if (overridenMethod != null && overridenMethod.eContainer() != null && overridenMethod.eContainer() instanceof ClassDeclaration) {
+            ClassDeclaration classDeclaration = (ClassDeclaration) overridenMethod.eContainer(); //class containing the overriden method
+            File file = ModelUtils.getSrcFromClass(classDeclaration);
+            try {
+                Java2File superClassJava2File = ModelUtils.getJava2FileInResourceSetFromPathAsString(resourceSet, file.getAbsolutePath());
+                return ModelUtils.getASTNodeFromJavaElementInJava2File(superClassJava2File, overridenMethod)
+                        .getAnalysis().stream().map(eObject -> ((org.eclipse.gmt.modisco.java.MethodDeclaration) eObject)).collect(Collectors.toList());
+
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Could not find the super class " + file.getAbsolutePath() + " in the model", e);
+            }
         }
+
+        return Collections.emptyList();
     }
 
     /**
@@ -242,6 +389,7 @@ public class GitDiffManager {
 
     /**
      * Return the qualified name of a {@link MethodDeclaration} as a {@link String}
+     *
      * @param methodDeclaration a {@link MethodDeclaration}
      * @return a {@link String} such as "pkg.classname#methodname"
      */
@@ -265,6 +413,7 @@ public class GitDiffManager {
 
     /**
      * Return the qualified name of a {@link org.eclipse.gmt.modisco.java.MethodDeclaration} as a {@link String}
+     *
      * @param methodDeclaration a {@link org.eclipse.gmt.modisco.java.MethodDeclaration}
      * @return a {@link String} such as "pkg.classname#methodname"
      */
@@ -279,6 +428,4 @@ public class GitDiffManager {
 
         return String.format("%s#%s", qualifiedName, methodDeclaration.getName());
     }
-
-
 }
