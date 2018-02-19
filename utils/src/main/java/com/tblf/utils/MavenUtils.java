@@ -1,6 +1,7 @@
 package com.tblf.utils;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -150,6 +151,11 @@ public class MavenUtils {
     }
 
     private static Plugin getSureFirePlugin(Model model) {
+
+        Build build = model.getBuild();
+        if (build == null)
+            model.setBuild(new Build());
+
         Optional<Plugin> optPlugin = model
                 .getBuild()
                 .getPlugins()
@@ -169,5 +175,8 @@ public class MavenUtils {
         }
 
         return plugin;
+    }
+
+    private static void addBuild(Model model) {
     }
 }

@@ -1,11 +1,14 @@
 package com.tblf.utils;
 
+import com.github.javaparser.JavaParser;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.gmt.modisco.java.ClassDeclaration;
-import org.eclipse.gmt.modisco.java.Model;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.gmt.modisco.java.*;
 import org.eclipse.gmt.modisco.java.Package;
 import org.eclipse.gmt.modisco.java.emf.JavaFactory;
 import org.eclipse.modisco.java.composition.javaapplication.Java2Directory;
+import org.eclipse.modisco.java.composition.javaapplication.Java2File;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -139,6 +142,59 @@ public class ModelUtilsTest {
         Assert.assertNotNull(java2Directory);
     }
 
+    @Test
+    public void checkGetMethodSignature() throws IOException {
+        ModelUtils.unzip(new File("src/test/resources/projects/SimpleProject3.zip"));
+
+        File file = new File("src/test/resources/projects/SimpleProject");
+        assert file.exists();
+
+        ResourceSet resourceSet = ModelUtils.buildResourceSet(file);
+
+        Java2File j2File = resourceSet.getResources().stream()
+                .map(Resource::getContents)
+                .flatMap(Collection::stream)
+                .filter(eObject -> eObject instanceof Java2File)
+                .map(eObject -> ((Java2File) eObject))
+                .filter(java2File -> java2File.getJavaUnit().getOriginalFilePath().endsWith("/App.java"))
+                .findAny().get();
+
+        MethodDeclaration method =
+                j2File.getChildren().stream()
+                .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof org.eclipse.gmt.modisco.java.MethodDeclaration)
+                .map(astNodeSourceRegion -> ((org.eclipse.gmt.modisco.java.MethodDeclaration) astNodeSourceRegion.getNode()))
+                .filter(methodDeclaration -> methodDeclaration.getName().equals("method") && methodDeclaration.getParameters().size() > 0 )
+                .findFirst().get();
+
+        Assert.assertEquals("method(String, String)", ModelUtils.getMethodSignature(method));
+
+        FileUtils.deleteDirectory(file);
+    }
+
+    @Test
+    public void checkGetOverridenMethod() throws IOException {
+        ModelUtils.unzip(new File("src/test/resources/projects/SimpleProject3.zip"));
+
+        File file = new File("src/test/resources/projects/SimpleProject");
+        assert file.exists();
+
+        ResourceSet resourceSet = ModelUtils.buildResourceSet(file);
+
+        Java2File j2File = resourceSet.getResources().stream()
+                .map(Resource::getContents)
+                .flatMap(Collection::stream)
+                .filter(eObject -> eObject instanceof Java2File)
+                .map(eObject -> ((Java2File) eObject))
+                .filter(java2File -> java2File.getJavaUnit().getOriginalFilePath().endsWith("/App.java"))
+                .findAny().get();
+
+        System.out.println(j2File.getUnit());
+
+        AbstractTypeDeclaration abstractTypeDeclaration = j2File.getJavaUnit().getTypes().stream().findFirst().orElseThrow(() -> new IOException("Type Declaration not found"));
+
+        FileUtils.deleteDirectory(file);
+    }
+
     @After
     public void cleanUp() throws IOException {
         File file = new File("src/test/resources");
@@ -148,4 +204,5 @@ public class ModelUtilsTest {
 
         Files.walk(file.toPath()).filter(path -> path.toFile().isDirectory() && path.toFile().listFiles().length == 0).forEach(path -> path.toFile().delete());
     }
+
 }
