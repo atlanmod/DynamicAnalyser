@@ -17,7 +17,7 @@ public class Main {
             h.setLevel(Level.FINE);
         }
 
-        File project = new File("/home/thibault/Documents/git/Dynamic-Analyser/diff/src/test/resources/fullprojects/SimpleProject");
+        File project = new File(args[0]);
         File script = new File("management/src/main/resources/modelbuilder.sh");
 
         if (!script.exists())
