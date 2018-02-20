@@ -49,6 +49,16 @@ public class ParserUtils {
     }
 
     /**
+     * Return the class qualified name from the class {@link File}
+     * @param file a {@link File} ending with .java
+     * @return the qualified name as a String: package1.package2.MyClazz
+     */
+    public static String getClassQNFromFile(File file) {
+        String className = file.getName().replace(".java", "");
+        return getPackageQNFromFile(file)+"."+className;
+    }
+
+    /**
      * Parse the URI of a SUT Class file and return the package QN of its container. Uses the {@link Configuration} file
      *
      * @param file a {@link File} such as "src/main/java/com/tblf/SimpleProject/App.java"

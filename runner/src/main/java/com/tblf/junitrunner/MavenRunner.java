@@ -60,6 +60,10 @@ public class MavenRunner {
                     if (!path.toFile().isDirectory()) {
                         String s = path.toAbsolutePath().toString().replace(instrumentedBinaries.getAbsolutePath(), testClasses.getAbsolutePath());
                         try {
+                            File tmp = new File(s);
+                            if (!tmp.exists())
+                                tmp.createNewFile();
+
                             Files.copy(path, new File(s).toPath(), StandardCopyOption.REPLACE_EXISTING);
                             LOGGER.fine("Replaced "+path.toString()+" by "+s);
                         } catch (IOException e) {

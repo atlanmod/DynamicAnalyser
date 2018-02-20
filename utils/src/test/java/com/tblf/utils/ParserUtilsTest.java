@@ -25,6 +25,14 @@ public class ParserUtilsTest {
     }
 
     @Test
+    public void checkGetClassQNFromSUTClassUri() {
+        File file = new File("src/main/java/com/tblf/SimpleProject/App.java");
+
+        String classQN = ParserUtils.getClassQNFromFile(file);
+        Assert.assertEquals("com.tblf.SimpleProject.App", classQN);
+    }
+
+    @Test
     public void checkPrintProgress() throws InterruptedException {
         long time = System.currentTimeMillis();
         for (int i = 0; i <= 100; ++i) {
