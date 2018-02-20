@@ -31,6 +31,7 @@ public class TraceParser extends Parser {
     private static final String ANALYSIS_NAME = Configuration.getProperty("analysisName");
 
     private Map<String, Resource> packages;
+    private Map<String, Java2File> classQNJava2File;
 
     private String currentTestPackageQN;
     private Resource currentTestPackage;
@@ -75,6 +76,14 @@ public class TraceParser extends Parser {
                 .forEach(resource -> packages.put(resource.getURI().lastSegment().replace("_java2kdm.xmi", ""), resource));
 
         query = new StreamQuery();
+
+        classQNJava2File = new HashMap<>();
+        resourceSet.getAllContents().forEachRemaining(notifier -> {
+            if (notifier instanceof Java2File) {
+                Java2File java2File = (Java2File) notifier;
+                classQNJava2File.put(ParserUtils.getClassQNFromFile(new File(java2File.getJavaUnit().getOriginalFilePath())), java2File);
+            }
+        });
     }
 
     /**
@@ -166,7 +175,8 @@ public class TraceParser extends Parser {
 
         if (currentTest == null || !currentTestQN.equals(testQN)) {
             LOGGER.fine("Updating the current test class: " + testQN);
-            currentTest = getJava2FileFromJava2Directory(currentTestPackage, testQN);
+            //currentTest = getJava2FileFromJava2Directory(currentTestPackage, testQN);
+            currentTest = getJava2File(testQN);
             currentTestQN = testQN;
         }
 
@@ -203,7 +213,8 @@ public class TraceParser extends Parser {
 
         if (currentTarget == null || !currentTargetQN.equals(targetQn)) {
             LOGGER.fine("Updating the current target class: " + targetQn);
-            currentTarget = getJava2FileFromJava2Directory(currentTargetPackage, targetQn);
+            //currentTarget = getJava2FileFromJava2Directory(currentTargetPackage, targetQn);
+            currentTarget = getJava2File(targetQn);
             currentTargetQN = targetQn;
         }
 
@@ -235,6 +246,19 @@ public class TraceParser extends Parser {
                 .filter(eObject -> (((Java2File) eObject).getJavaUnit().getName() // check that the compilation unit is the file corresponding to the
                         .equals(finalName.concat(".java")))) //Might have some issues with internal classes
                 .findFirst().orElse(null);
+    }
+
+    /**
+     * Get the Java2File using the QN of the class. If it's an internal class, we just use the container class name instead
+     * @param name
+     * @return
+     */
+    private Java2File getJava2File(String name) {
+        while (name.contains("$")) {
+            name = name.substring(name.lastIndexOf("$"));
+        }
+
+        return classQNJava2File.get(name);
     }
 
     /**
