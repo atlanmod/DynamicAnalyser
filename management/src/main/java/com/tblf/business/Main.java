@@ -11,11 +11,6 @@ import java.util.logging.Logger;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        Logger rootLogger = LogManager.getLogManager().getLogger("");
-        rootLogger.setLevel(Level.FINE);
-        for (Handler h : rootLogger.getHandlers()) {
-            h.setLevel(Level.FINE);
-        }
 
         File project = new File(args[0]);
         File script = new File("management/src/main/resources/modelbuilder.sh");

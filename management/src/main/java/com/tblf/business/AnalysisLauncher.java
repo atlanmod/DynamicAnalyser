@@ -93,10 +93,14 @@ public class AnalysisLauncher {
 
                 LOGGER.info("Instrumenting the code in: " + source.getName());
                 instrumenter.instrument(modelParser.getTargets().keySet(), modelParser.getTests().keySet());
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "An error was caught during the impact analysis", e);
+            }
 
-                LOGGER.info("Running the tests ");
-                // Running the tests to build the execution trace
+            LOGGER.info("Running the tests ");
+            // Running the tests to build the execution trace
 
+            try {
                 File exTrace;
 
                 //new JUnitRunner(instrumenter.getClassLoader()).runTests(modelParser.getTests().keySet());
