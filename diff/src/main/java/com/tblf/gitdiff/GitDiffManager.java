@@ -9,7 +9,6 @@ import com.google.common.collect.Range;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.ModelUtils;
 import com.tblf.utils.ParserUtils;
-import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.gmt.modisco.java.AbstractMethodDeclaration;
 import org.eclipse.gmt.modisco.java.ClassDeclaration;
@@ -21,6 +20,7 @@ import org.eclipse.modisco.java.composition.javaapplication.Java2File;
 import org.eclipse.modisco.kdm.source.extension.ASTNodeSourceRegion;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
@@ -28,18 +28,30 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class GitDiffManager {
+    private static final Logger LOGGER = Logger.getAnonymousLogger();
+    private static final RangeFactory<Integer> RANGE_FACTORY = new RangeFactory<>();
 
     private ResourceSet resourceSet;
     private Collection<DiffEntry> diffEntries;
-    private static final Logger LOGGER = Logger.getAnonymousLogger();
+
     private DiffFormatter diffFormatter;
     private File folder;
+
+    private Map<String, Java2File> classQNJava2File;
 
     public GitDiffManager(File gitFolder, ResourceSet resourceSet, Collection<DiffEntry> diffEntries, DiffFormatter diffFormatter) {
         this.resourceSet = resourceSet;
         this.diffEntries = diffEntries;
         this.diffFormatter = diffFormatter;
         this.folder = gitFolder;
+
+        classQNJava2File = new HashMap<>();
+        resourceSet.getAllContents().forEachRemaining(notifier -> {
+            if (notifier instanceof Java2File) {
+                Java2File java2File = (Java2File) notifier;
+                classQNJava2File.put(ParserUtils.getClassQNFromFile(new File(java2File.getJavaUnit().getOriginalFilePath())), java2File);
+            }
+        });
     }
 
     public Collection<String> analyse() {
@@ -53,12 +65,12 @@ public class GitDiffManager {
                     throw new NonJavaFileException("The diff entry: " + diffEntry.getNewPath() + " does not concern a Java file");
 
                 if (diffEntry.getOldPath().equals("/dev/null")) {
-                    LOGGER.fine("File added in the current revision: "+diffEntry.getNewPath());
+                    LOGGER.fine("File added in the current revision: " + diffEntry.getNewPath());
                     testsToRun.addAll(
                             manageNewFile(diffEntry) // The file is new
                     );
                 } else {
-                    LOGGER.fine("File updated in the current revision: "+diffEntry.getNewPath());
+                    LOGGER.fine("File updated in the current revision: " + diffEntry.getNewPath());
                     testsToRun.addAll(
                             manageUpdatedFile(diffEntry) // The file has been updated
                     );
@@ -84,13 +96,13 @@ public class GitDiffManager {
 
         if (uri.contains(Configuration.getProperty("test"))) {
             //The new file is a test class
-            LOGGER.fine("File added is a test file: "+diffEntry.getNewPath());
+            LOGGER.fine("File added is a test file: " + diffEntry.getNewPath());
 
             CompilationUnit compilationUnit = JavaParser.parse(new File(folder, uri));
             Collection<MethodDeclaration> methodDeclarations = compilationUnit.getChildNodesByType(MethodDeclaration.class);
             return methodDeclarationsToStringCollection(methodDeclarations);
         } else {
-            LOGGER.fine("File added is a SUT file: "+diffEntry.getNewPath()+" no impacts can be computed yet");
+            LOGGER.fine("File added is a SUT file: " + diffEntry.getNewPath() + " no impacts can be computed yet");
             return Collections.emptyList();
         }
     }
@@ -106,15 +118,12 @@ public class GitDiffManager {
         FileHeader fileHeader = diffFormatter.toFileHeader(diffEntry);
 
         //Get the package resource from the resourceSet
-        String packageQNFromFile = ParserUtils.getPackageQNFromFile(new File(folder, diffEntry.getOldPath()));
-        Resource sutPackage = ModelUtils.getPackageResource(packageQNFromFile, resourceSet);
+        String classQNFromFile = ParserUtils.getClassQNFromFile(new File(folder, diffEntry.getOldPath()));
 
-        Java2File java2File = (Java2File) sutPackage.getContents()
-                .stream()
-                .filter(eObject -> eObject instanceof Java2File
-                        && ((Java2File) eObject).getJavaUnit().getOriginalFilePath().endsWith(fileHeader.getOldPath()))
-                .findFirst()
-                .orElseThrow(() -> new NonJavaFileException("The DiffEntry does not concern a Java file but: " + fileHeader.getOldPath() + " No impact computed from it"));
+        Java2File java2File = classQNJava2File.get(classQNFromFile);
+
+        if (java2File == null)
+            throw new FileNotFoundException("Could not find the class " + classQNFromFile + " in the model");
 
         diffFormatter.format(diffEntry); //Will display in the logs the diff results
 
@@ -145,8 +154,10 @@ public class GitDiffManager {
 
         if (diffEntry.getNewPath().contains(Configuration.getProperty("test"))) {
             //get all the methods edited, and map their name to Strings qualified name, ready to run.
+            //FIXME : use rangeFactory
+
             testMethodQualifiedNamesToExecute.addAll(
-                    getMethodDeclarationsEdited(diffEntry.getNewPath(), Range.open(edit.getBeginB(), edit.getEndB()))
+                    getMethodDeclarationsEdited(diffEntry.getNewPath(), RANGE_FACTORY.createOpenOrSingletonRange(edit.getBeginB(), edit.getEndB()))
                             .stream()
                             .map(GitDiffManager::methodDeclarationToStringQualifiedName)
                             .collect(Collectors.toList())
@@ -185,7 +196,7 @@ public class GitDiffManager {
      */
     private List<String> manageInsertion(DiffEntry diffEntry, Edit edit, Java2File java2File) {
         //Collection of the changed methodDeclarations
-        Collection<MethodDeclaration> methodDeclarationsEdited = getMethodDeclarationsEdited(diffEntry.getNewPath(), Range.open(edit.getBeginB(), edit.getEndB()));
+        Collection<MethodDeclaration> methodDeclarationsEdited = getMethodDeclarationsEdited(diffEntry.getNewPath(), RANGE_FACTORY.createOpenOrSingletonRange(edit.getBeginB(), edit.getEndB()));
         Collection<org.eclipse.gmt.modisco.java.MethodDeclaration> methodDeclarationsImpacted =
                 methodDeclarationsEdited.stream().map(methodDeclaration -> getImpactsAtMethodLevel(java2File, methodDeclaration))
                         .flatMap(Collection::stream)
@@ -235,7 +246,7 @@ public class GitDiffManager {
      * @return the Qualified names of the methods impacted, ready to re-execute
      */
     private Collection<? extends String> manageReplacement(DiffEntry diffEntry, Edit edit, Java2File java2File) {
-        Collection<Statement> statementsReplaced = getStatementEdited(diffEntry.getOldPath(), Range.open(edit.getBeginA(), edit.getEndA()));
+        Collection<Statement> statementsReplaced = getStatementEdited(diffEntry.getOldPath(), RANGE_FACTORY.createOpenOrSingletonRange(edit.getBeginA(), edit.getEndA()));
         return statementsReplaced.stream()
                 .map(statement -> getImpactsAtMethodLevel(java2File, statement))
                 .flatMap(Collection::stream)
@@ -275,9 +286,7 @@ public class GitDiffManager {
 
             methodDeclarations.addAll(compilationUnit.getChildNodesByType(MethodDeclaration.class).stream()
                     .filter(methodDeclaration -> methodDeclaration.getRange().isPresent())
-                    .filter(methodDeclaration -> Range.open(methodDeclaration.getRange().get().begin.line,
-                            methodDeclaration.getRange().get().end.line)
-                            .isConnected(range))
+                    .filter(methodDeclaration -> range.isConnected(RANGE_FACTORY.createOpenOrSingletonRange(methodDeclaration.getRange().get().begin.line, methodDeclaration.getRange().get().end.line)))
                     .collect(Collectors.toList()));
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Could not parse the file " + fileName, e);
@@ -300,8 +309,8 @@ public class GitDiffManager {
                 .stream()
                 .map(methodDeclaration -> methodDeclaration.getChildNodesByType(Statement.class)
                         .stream()
-                        .filter(statement -> statement.getRange().isPresent()
-                                && range.isConnected(Range.open(statement.getRange().get().begin.line, statement.getRange().get().end.line)))
+                        .filter(statement -> statement.getRange().isPresent())
+                        .filter(statement -> range.isConnected(RANGE_FACTORY.createOpenOrSingletonRange(statement.getRange().get().begin.line, statement.getRange().get().end.line)))
                         .collect(Collectors.toList()))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
@@ -322,6 +331,7 @@ public class GitDiffManager {
                 .filter(astNodeSourceRegion -> GitDiffManager.methodDeclarationToStringQualifiedName((org.eclipse.gmt.modisco.java.MethodDeclaration) astNodeSourceRegion.getNode()).equals(methodDeclaration.getSignature().asString()))
                 .map(ASTNodeSourceRegion::getAnalysis)
                 .flatMap(Collection::stream)
+                .filter(MethodDeclaration.class::isInstance)
                 .map(eObject -> ((org.eclipse.gmt.modisco.java.MethodDeclaration) eObject))
                 .collect(Collectors.toList());
     }
@@ -340,10 +350,11 @@ public class GitDiffManager {
                 .filter(astNodeSourceRegion -> astNodeSourceRegion.getStartLine() == statement.getRange().get().begin.line && astNodeSourceRegion.getEndLine() == statement.getRange().get().end.line)
                 //.filter(astNodeSourceRegion -> astNodeSourceRegion.getStartPosition() == statement.getRange().get().begin.column && astNodeSourceRegion.getEndPosition() == statement.getRange().get().end.column)
                 .map(ASTNodeSourceRegion::getAnalysis)
+                .flatMap(Collection::stream)
+                .filter(MethodDeclaration.class::isInstance)
                 .map(eObject -> ((org.eclipse.gmt.modisco.java.MethodDeclaration) eObject))
                 .collect(Collectors.toList());
     }
-
 
     /**
      * Get the impacts using inheritance.
