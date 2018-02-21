@@ -39,9 +39,11 @@ public class MavenUtils {
             invocationRequest.setInputStream(inputStream);
             invocationRequest.setJavaHome(new File(Configuration.getProperty("JAVA_HOME")));
 
-            Invoker invoker = new DefaultInvoker();
-
-            InvocationResult invocationResult = invoker.execute(invocationRequest);
+            DefaultInvoker defaultInvoker = new DefaultInvoker();
+            InvokerLogger invokerLogger = new SystemOutLogger();
+            invokerLogger.setThreshold(2);
+            defaultInvoker.setLogger(invokerLogger);
+            InvocationResult invocationResult = defaultInvoker.execute(invocationRequest);
             if (invocationResult.getExecutionException() != null) {
                 LOGGER.info(invocationResult.getExecutionException().getMessage());
                 invocationResult.getExecutionException().fillInStackTrace().printStackTrace();

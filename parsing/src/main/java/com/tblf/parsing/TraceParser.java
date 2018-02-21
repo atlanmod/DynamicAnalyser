@@ -30,14 +30,7 @@ import java.util.logging.Level;
 public class TraceParser extends Parser {
     private static final String ANALYSIS_NAME = Configuration.getProperty("analysisName");
 
-    private Map<String, Resource> packages;
     private Map<String, Java2File> classQNJava2File;
-
-    private String currentTestPackageQN;
-    private Resource currentTestPackage;
-
-    private String currentTargetPackageQN;
-    private Resource currentTargetPackage;
 
     private String currentTestQN;
     private Java2File currentTest;
@@ -69,11 +62,6 @@ public class TraceParser extends Parser {
         Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
         Map<String, Object> m = reg.getExtensionToFactoryMap();
         m.put("xmi", new XMIResourceFactoryImpl());
-
-        packages = new HashMap<>();
-        resourceSet.getResources().stream()
-                .filter(resource -> resource.getURI().segment(resource.getURI().segmentCount() - 2).equals(Configuration.getProperty("fragmentFolder")))
-                .forEach(resource -> packages.put(resource.getURI().lastSegment().replace("_java2kdm.xmi", ""), resource));
 
         query = new StreamQuery();
 
@@ -161,17 +149,6 @@ public class TraceParser extends Parser {
      * @param method the method name: MyMethod
      */
     private void updateTest(String testQN, String method) {
-        String packageName = ParserUtils.getPackageQNFromClassQN(testQN);
-
-        // Refreshing the current package containing the test, to lighten the number of queries to the model
-        if (currentTestPackage == null || !currentTestPackageQN.equals(packageName)) {
-            LOGGER.fine("Updating the current test package: " + packageName);
-
-            currentTestPackage = packages.get(packageName);
-
-            LOGGER.fine("Found the resource with URI: " + currentTestPackage.getURI());
-            currentTestPackageQN = packageName;
-        }
 
         if (currentTest == null || !currentTestQN.equals(testQN)) {
             LOGGER.fine("Updating the current test class: " + testQN);
@@ -201,15 +178,6 @@ public class TraceParser extends Parser {
      * @param method   the method's name: MyMethod()
      */
     private void updateTarget(String targetQn, String method) {
-        String packageName = ParserUtils.getPackageQNFromClassQN(targetQn);
-
-        // Refreshing the current package containing the test, to lighten the number of queries to the model
-        if (currentTargetPackage == null || !currentTargetPackageQN.equals(packageName)) {
-            LOGGER.fine("Updating the current target package: " + packageName);
-
-            currentTargetPackage = packages.get(packageName);
-            currentTargetPackageQN = packageName;
-        }
 
         if (currentTarget == null || !currentTargetQN.equals(targetQn)) {
             LOGGER.fine("Updating the current target class: " + targetQn);
@@ -227,35 +195,13 @@ public class TraceParser extends Parser {
     }
 
     /**
-     * Parse the {@link Java2Directory} model in order to find a class using its qualified name
-     *
-     * @param resource A {@link Resource} containing {@link Java2File}s
-     * @param name     the name of the {@link org.eclipse.gmt.modisco.java.ClassDeclaration}
-     * @return the {@link Java2File}
-     */
-    private Java2File getJava2FileFromJava2Directory(Resource resource, String name) {
-        name = name.substring(name.lastIndexOf(".") + 1); //We only keep the last part of the qualified name of the class
-
-        while (name.contains("$")) { //This is an internal class
-            name = name.substring(0, name.lastIndexOf("$")); //We remove the sub class part to find the right compilation unit
-        }
-
-        String finalName = name;
-        return (Java2File) resource.getContents() // get all the Java2File
-                .stream() // as a stream
-                .filter(eObject -> (((Java2File) eObject).getJavaUnit().getName() // check that the compilation unit is the file corresponding to the
-                        .equals(finalName.concat(".java")))) //Might have some issues with internal classes
-                .findFirst().orElse(null);
-    }
-
-    /**
      * Get the Java2File using the QN of the class. If it's an internal class, we just use the container class name instead
      * @param name
      * @return
      */
     private Java2File getJava2File(String name) {
         while (name.contains("$")) {
-            name = name.substring(name.lastIndexOf("$"));
+            name = name.substring(0, name.lastIndexOf("$"));
         }
 
         return classQNJava2File.get(name);
