@@ -61,7 +61,7 @@ public class GitDiffManager {
             try {
 
                 // The file is not a Java File.
-                if (!diffEntry.getNewPath().endsWith(".java"))
+                if (! diffEntry.getNewPath().equals("/dev/null") && !diffEntry.getNewPath().endsWith(".java"))
                     throw new NonJavaFileException("The diff entry: " + diffEntry.getNewPath() + " does not concern a Java file");
 
                 if (diffEntry.getOldPath().equals("/dev/null")) {
@@ -69,8 +69,10 @@ public class GitDiffManager {
                     testsToRun.addAll(
                             manageNewFile(diffEntry) // The file is new
                     );
+
                 } else {
-                    LOGGER.fine("File updated in the current revision: " + diffEntry.getNewPath());
+
+                    LOGGER.fine("File updated in the current revision: " + diffEntry.getOldPath());
                     testsToRun.addAll(
                             manageUpdatedFile(diffEntry) // The file has been updated
                     );
@@ -84,6 +86,7 @@ public class GitDiffManager {
         return testsToRun;
     }
 
+
     /**
      * Get a diffEntry of a new file added in the previous commit and analyze it
      *
@@ -94,11 +97,17 @@ public class GitDiffManager {
     private Collection<String> manageNewFile(DiffEntry diffEntry) throws IOException {
         String uri = diffEntry.getNewPath();
 
+        File file = new File(folder, diffEntry.getNewPath());
+
+        if (! file.exists()) {
+            throw new IOException(file.getAbsolutePath()+" does not exist");
+        }
+
         if (uri.contains(Configuration.getProperty("test"))) {
             //The new file is a test class
             LOGGER.fine("File added is a test file: " + diffEntry.getNewPath());
 
-            CompilationUnit compilationUnit = JavaParser.parse(new File(folder, uri));
+            CompilationUnit compilationUnit = JavaParser.parse(file);
             Collection<MethodDeclaration> methodDeclarations = compilationUnit.getChildNodesByType(MethodDeclaration.class);
             return methodDeclarationsToStringCollection(methodDeclarations);
         } else {
@@ -106,6 +115,7 @@ public class GitDiffManager {
             return Collections.emptyList();
         }
     }
+
 
     /**
      * Analyse the {@link DiffEntry} of an existing file, and return the merged {@link Collection}s of Methods Qualified names
@@ -194,7 +204,7 @@ public class GitDiffManager {
      * @param java2File the {@link Java2File} containing the impact analysis results to used to get the impacted methods
      * @return the Qualified names of the methods impacted, ready to re-execute
      */
-    private List<String> manageInsertion(DiffEntry diffEntry, Edit edit, Java2File java2File) {
+    private Collection<String> manageInsertion(DiffEntry diffEntry, Edit edit, Java2File java2File) {
         //Collection of the changed methodDeclarations
         Collection<MethodDeclaration> methodDeclarationsEdited = getMethodDeclarationsEdited(diffEntry.getNewPath(), RANGE_FACTORY.createOpenOrSingletonRange(edit.getBeginB(), edit.getEndB()));
         Collection<org.eclipse.gmt.modisco.java.MethodDeclaration> methodDeclarationsImpacted =
@@ -227,14 +237,29 @@ public class GitDiffManager {
      * @param java2File the {@link Java2File} containing the impact analysis results to used to get the impacted methods
      * @return the Qualified names of the methods impacted, ready to re-execute
      */
-    private List<String> manageDeletion(DiffEntry diffEntry, Edit edit, Java2File java2File) {
-        //Code has been deleted. The impacted methods are gathered, their impacts are computed, and returned as test methods Qualified names
-        Collection<MethodDeclaration> methodDeclarationsEdited = getMethodDeclarationsEdited(diffEntry.getOldPath(), Range.open(edit.getBeginA(), edit.getEndA()));
-        return methodDeclarationsEdited.stream()
-                .map(methodDeclaration -> getImpactsAtMethodLevel(java2File, methodDeclaration))
-                .flatMap(Collection::stream)
-                .map(GitDiffManager::methodDeclarationToStringQualifiedName)
-                .collect(Collectors.toList());
+    private Collection<String> manageDeletion(DiffEntry diffEntry, Edit edit, Java2File java2File) {
+
+        if (diffEntry.getNewPath().equals("/dev/null")) {
+            //The whole class has been deleted
+            //FIXME
+            return java2File.getChildren()
+                    .stream()
+                    .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof org.eclipse.gmt.modisco.java.MethodDeclaration)
+                    .map(ASTNodeSourceRegion::getAnalysis)
+                    .flatMap(Collection::stream)
+                    .filter(eObject -> eObject instanceof org.eclipse.gmt.modisco.java.MethodDeclaration)
+                    .map(eObject -> GitDiffManager.methodDeclarationToStringQualifiedName((org.eclipse.gmt.modisco.java.MethodDeclaration) eObject))
+                    .collect(Collectors.toSet());
+
+        } else {
+            //Code has been deleted. The impacted methods are gathered, their impacts are computed, and returned as test methods Qualified names
+            Collection<MethodDeclaration> methodDeclarationsEdited = getMethodDeclarationsEdited(diffEntry.getOldPath(), RANGE_FACTORY.createOpenOrSingletonRange(edit.getBeginA(), edit.getEndA()));
+            return methodDeclarationsEdited.stream()
+                    .map(methodDeclaration -> getImpactsAtMethodLevel(java2File, methodDeclaration))
+                    .flatMap(Collection::stream)
+                    .map(GitDiffManager::methodDeclarationToStringQualifiedName)
+                    .collect(Collectors.toList());
+        }
     }
 
     /**

@@ -78,6 +78,9 @@ public class GitCaller extends VersionControlCaller {
      */
     @Override
     public void compareCommits(String currentCommitID, String nextCommitID) {
+
+        LOGGER.info("Comparing commits "+currentCommitID+" and "+nextCommitID);
+
         try {
             ObjectId current = repository.resolve(currentCommitID);
             ObjectId future = repository.resolve(nextCommitID);
