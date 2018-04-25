@@ -2,7 +2,6 @@ package com.tblf.instrumentation.bytecode;
 
 import com.tblf.DotCP.DotCPParserBuilder;
 import com.tblf.classloading.SingleURLClassLoader;
-import com.tblf.instrumentation.InstrumentationUtils;
 import com.tblf.instrumentation.Instrumenter;
 import com.tblf.instrumentation.bytecode.visitors.TargetClassVisitor;
 import com.tblf.instrumentation.bytecode.visitors.TestClassVisitor;
@@ -10,6 +9,7 @@ import com.tblf.linker.Calls;
 import com.tblf.utils.Configuration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.NotImplementedException;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -29,47 +29,39 @@ import java.util.stream.Collectors;
 /**
  * Created by Thibault on 20/09/2017.
  */
-public class ByteCodeInstrumenter implements Instrumenter {
+public class ByteCodeInstrumenter extends Instrumenter {
 
     private static final Logger LOGGER = Logger.getAnonymousLogger();
 
     /**
      * The folder containing the SUT binaries
      */
-    private File sutBinFolder;
+    private File sutDirectory;
 
     /**
      * The folder containing the test binaries
      */
-    private File testBinFolder;
+    private File testDirectory;
 
     /**
      * The directory containing the project
      */
-    private File projectFolder;
+    private File directory;
 
     /**
      * A singleton class loading the bytes arrays instrumented
      */
     private static SingleURLClassLoader singleURLClassLoader = SingleURLClassLoader.getInstance();
 
-    public ByteCodeInstrumenter() {
-
-    }
-
-    public ByteCodeInstrumenter(File project) {
-        this.setProjectFolder(project);
-    }
-
     /**
      * Set the root directory of the project ton instrument
      *
      * @param project the {@link File} directory
      */
-    public void setProjectFolder(File project) {
-        this.projectFolder = project;
-        this.testBinFolder = new File(project, Configuration.getProperty("testBinaries"));
-        this.sutBinFolder = new File(project, Configuration.getProperty("sutBinaries"));
+    public void setDirectory(File project) {
+        this.directory = project;
+        this.testDirectory = new File(project, Configuration.getProperty("testBinaries"));
+        this.sutDirectory = new File(project, Configuration.getProperty("sutBinaries"));
     }
 
     @Override
@@ -78,7 +70,7 @@ public class ByteCodeInstrumenter implements Instrumenter {
 
         int[] scores = new int[]{0, 0, 0, 0};
         try {
-            getDependencies();
+            fetchDependencies();
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Could not load the dependencies", e);
         }
@@ -86,11 +78,11 @@ public class ByteCodeInstrumenter implements Instrumenter {
         Collection<File> allClasses = new HashSet<>();
 
         try {
-            Files.walk(sutBinFolder.toPath()).filter(path -> path.toString().endsWith(".class")).forEach(path -> {
+            Files.walk(sutDirectory.toPath()).filter(path -> path.toString().endsWith(".class")).forEach(path -> {
                 allClasses.add(path.toFile());
             });
 
-            Files.walk(testBinFolder.toPath()).filter(path -> path.toString().endsWith(".class")).forEach(path -> {
+            Files.walk(testDirectory.toPath()).filter(path -> path.toString().endsWith(".class")).forEach(path -> {
                 allClasses.add(path.toFile());
             });
         } catch (IOException e) {
@@ -142,6 +134,11 @@ public class ByteCodeInstrumenter implements Instrumenter {
                 " test fails ");
     }
 
+    @Override
+    public void instrument(Collection<Object> processors) {
+        throw new NotImplementedException("not implemented yet");
+    }
+
     /**
      * Iterate over all the qualified names. Find their corresponding file, and classified them if they're a test of a target class.
      * @param allClassesQualifiedNames a {@link Collection} of {@link String}
@@ -163,12 +160,12 @@ public class ByteCodeInstrumenter implements Instrumenter {
                         .collect(Collectors.toList());
 
                 filesWithAMatchingName.forEach(file -> {
-                    if (file.getAbsolutePath().contains(sutBinFolder.getAbsolutePath())) {
+                    if (file.getAbsolutePath().contains(sutDirectory.getAbsolutePath())) {
                         //is a target
                         targetClasses.put(s, file);
                     }
 
-                    if (file.getAbsolutePath().contains(testBinFolder.getAbsolutePath())) {
+                    if (file.getAbsolutePath().contains(testDirectory.getAbsolutePath())) {
                         //is a test class
                         testClasses.put(s, file);
                     }
@@ -198,11 +195,11 @@ public class ByteCodeInstrumenter implements Instrumenter {
         return classWriter.toByteArray();
     }
 
-    private void getDependencies() throws ParserConfigurationException, SAXException, IOException, URISyntaxException {
+    private void fetchDependencies() throws ParserConfigurationException, SAXException, IOException, URISyntaxException {
         List<File> dependencies = new ArrayList<>();
 
         //Getting the dependencies from the .classpath file, assuming it is located in the same folder as the zip
-        File dotCP = FileUtils.getFile(projectFolder, ".classpath");
+        File dotCP = FileUtils.getFile(directory, ".classpath");
 
         if (dotCP.exists()) {
             dependencies.addAll(new DotCPParserBuilder().create().parse(dotCP));
@@ -213,8 +210,8 @@ public class ByteCodeInstrumenter implements Instrumenter {
         LOGGER.info("Adding the following dependencies to the classpath: " + dependencies.toString());
 
         dependencies.add(new File(Calls.class.getProtectionDomain().getCodeSource().getLocation().toURI()));
-        dependencies.add(sutBinFolder); //This is necessary to add the SUT classes before instrumentation.
-        dependencies.add(testBinFolder); //This is necessary to add the test classes before instrumentation.
+        dependencies.add(sutDirectory); //This is necessary to add the SUT classes before instrumentation.
+        dependencies.add(testDirectory); //This is necessary to add the test classes before instrumentation.
 
         URL[] dependencyArray = dependencies.stream().map(file -> {
             URL url = null;

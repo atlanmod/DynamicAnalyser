@@ -40,7 +40,8 @@ public class SourceCodeInstrumenterTest {
             FileUtils.deleteDirectory(binOut);
 
         Assert.assertTrue(proj.exists());
-        SourceCodeInstrumenter instrumenter = new SourceCodeInstrumenter(proj);
+        SourceCodeInstrumenter instrumenter = new SourceCodeInstrumenter();
+        instrumenter.setDirectory(proj);
         instrumenter.setBinDirectory(binOut);
 
         instrumenter.instrument(Collections.singletonList("com.tblf.SimpleProject.App"), Collections.singletonList("com.tblf.SimpleProject.AppTest"));

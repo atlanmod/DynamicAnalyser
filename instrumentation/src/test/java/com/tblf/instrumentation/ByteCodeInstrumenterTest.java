@@ -46,7 +46,8 @@ public class ByteCodeInstrumenterTest {
         Assert.assertTrue(folder.exists());
 
         //Getting a TestClass
-        ByteCodeInstrumenter byteCodeInstrumenter = new ByteCodeInstrumenter(folder);
+        ByteCodeInstrumenter byteCodeInstrumenter = new ByteCodeInstrumenter();
+        byteCodeInstrumenter.setDirectory(folder);
         byteCodeInstrumenter.instrument(Collections.singletonList("org.junit.internal.matchers.StacktracePrintingMatcherTest"), new ArrayList<>());
 
         Class aClass = SingleURLClassLoader.getInstance().getClassLoader().loadClass("org.junit.internal.matchers.StacktracePrintingMatcherTest");
@@ -75,7 +76,9 @@ public class ByteCodeInstrumenterTest {
         SingleURLClassLoader.getInstance().addURLs(new URL[]{folder.toURI().toURL(), callDependency.toURI().toURL()});
 
         //Getting a TestClass
-        ByteCodeInstrumenter byteCodeInstrumenter = new ByteCodeInstrumenter(folder);
+        ByteCodeInstrumenter byteCodeInstrumenter = new ByteCodeInstrumenter();
+        byteCodeInstrumenter.setDirectory(folder);
+
         byteCodeInstrumenter.instrument(Collections.singletonList("com.tblf.SimpleProject.App"), Collections.singletonList("com.tblf.SimpleProject.AppTest"));
 
         Class aClass = SingleURLClassLoader.getInstance().getClassLoader().loadClass("com.tblf.SimpleProject.AppTest");
@@ -137,7 +140,8 @@ public class ByteCodeInstrumenterTest {
 
         SingleURLClassLoader.getInstance().addURLs(urls);
 
-        ByteCodeInstrumenter byteCodeInstrumenter = new ByteCodeInstrumenter(assertJFolder);
+        ByteCodeInstrumenter byteCodeInstrumenter = new ByteCodeInstrumenter();
+        byteCodeInstrumenter.setDirectory(assertJFolder);
 
         try {
             byteCodeInstrumenter.instrument(modelParser.getTargets().keySet(),
