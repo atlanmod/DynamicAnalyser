@@ -2,6 +2,7 @@ package com.tblf.gitdiff;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.stmt.Statement;
@@ -49,7 +50,11 @@ public class GitDiffManager {
         resourceSet.getAllContents().forEachRemaining(notifier -> {
             if (notifier instanceof Java2File) {
                 Java2File java2File = (Java2File) notifier;
-                classQNJava2File.put(ParserUtils.getClassQNFromFile(new File(java2File.getJavaUnit().getOriginalFilePath())), java2File);
+                try {
+                    classQNJava2File.put(ParserUtils.getClassQNFromFile(new File(java2File.getJavaUnit().getOriginalFilePath())), java2File);
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Could not add " + java2File.getFile().toString() + " to the map");
+                }
             }
         });
     }
@@ -61,8 +66,15 @@ public class GitDiffManager {
             try {
 
                 // The file is not a Java File.
-                if (! diffEntry.getNewPath().equals("/dev/null") && !diffEntry.getNewPath().endsWith(".java"))
+                if (!diffEntry.getNewPath().equals("/dev/null") && !diffEntry.getNewPath().endsWith(".java"))
                     throw new NonJavaFileException("The diff entry: " + diffEntry.getNewPath() + " does not concern a Java file");
+
+
+                try {
+                    diffFormatter.format(diffEntry);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 if (diffEntry.getOldPath().equals("/dev/null")) {
                     LOGGER.fine("File added in the current revision: " + diffEntry.getNewPath());
@@ -99,8 +111,8 @@ public class GitDiffManager {
 
         File file = new File(folder, diffEntry.getNewPath());
 
-        if (! file.exists()) {
-            throw new IOException(file.getAbsolutePath()+" does not exist");
+        if (!file.exists()) {
+            throw new IOException(file.getAbsolutePath() + " does not exist");
         }
 
         if (uri.contains(Configuration.getProperty("test"))) {
@@ -109,6 +121,7 @@ public class GitDiffManager {
 
             CompilationUnit compilationUnit = JavaParser.parse(file);
             Collection<MethodDeclaration> methodDeclarations = compilationUnit.getChildNodesByType(MethodDeclaration.class);
+            System.out.println(methodDeclarations.size() + " NEW TEST METHODS");
             return methodDeclarationsToStringCollection(methodDeclarations);
         } else {
             LOGGER.fine("File added is a SUT file: " + diffEntry.getNewPath() + " no impacts can be computed yet");
@@ -160,11 +173,16 @@ public class GitDiffManager {
      * @return a {@link Collection} of test methods qualified name to run
      */
     private Collection<String> manageEdit(DiffEntry diffEntry, Edit edit, Java2File java2File) {
-        Collection<String> testMethodQualifiedNamesToExecute = new ArrayList<>();
+        Collection<String> testMethodQualifiedNamesToExecute = new HashSet<>();
 
         if (diffEntry.getNewPath().contains(Configuration.getProperty("test"))) {
             //get all the methods edited, and map their name to Strings qualified name, ready to run.
             //FIXME : use rangeFactory
+            testMethodQualifiedNamesToExecute.addAll(
+                    manageTestCase(diffEntry, edit)
+                            .stream()
+                            .map(GitDiffManager::methodDeclarationToStringQualifiedName)
+                            .collect(Collectors.toList()));
 
             testMethodQualifiedNamesToExecute.addAll(
                     getMethodDeclarationsEdited(diffEntry.getNewPath(), RANGE_FACTORY.createOpenOrSingletonRange(edit.getBeginB(), edit.getEndB()))
@@ -197,6 +215,27 @@ public class GitDiffManager {
     }
 
     /**
+     * Manage a test case: if annotations are @Before or @After all the test cases have to be selected for a rerun
+     *
+     * @param diffEntry a {@link DiffEntry}
+     * @param edit      en {@link Edit}
+     */
+    private Collection<MethodDeclaration> manageTestCase(DiffEntry diffEntry, Edit edit) {
+        Collection<MethodDeclaration> methodDeclarations = getMethodDeclarationsEdited(diffEntry.getNewPath(), RANGE_FACTORY.createOpenOrSingletonRange(edit.getBeginB(), edit.getEndB()));
+
+        boolean containsBeforeOrAfterAnnotation = methodDeclarations.stream()
+                .map(BodyDeclaration::getAnnotations)
+                .flatMap(Collection::stream)
+                .anyMatch(annotationExpr -> annotationExpr.getNameAsString().contains("@Before") || annotationExpr.getNameAsString().contains("@After"));
+
+        if (containsBeforeOrAfterAnnotation)
+            return getAllTestMethods(diffEntry.getNewPath());
+
+        return methodDeclarations;
+    }
+
+
+    /**
      * Manage an Insertion in the source code
      *
      * @param diffEntry the {@link DiffEntry} considering the diffs between the two revisions
@@ -215,6 +254,9 @@ public class GitDiffManager {
         if (methodDeclarationsImpacted.size() == 0) {
             //No impacts, is this method new ?
             Collection<MethodDeclaration> newMethods = getNewMethods(java2File, methodDeclarationsEdited);
+
+            System.out.println("NEW METHODS IN EXISTING FILE: " + newMethods.size());
+
             //Get the impacts of newly added method by checking its class inheritance
             return newMethods.stream().map(methodDeclaration -> getImpactsAtInheritanceLevel(java2File, methodDeclaration))
                     .flatMap(Collection::stream)
@@ -241,7 +283,6 @@ public class GitDiffManager {
 
         if (diffEntry.getNewPath().equals("/dev/null")) {
             //The whole class has been deleted
-            //FIXME
             return java2File.getChildren()
                     .stream()
                     .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() instanceof org.eclipse.gmt.modisco.java.MethodDeclaration)
@@ -253,7 +294,7 @@ public class GitDiffManager {
 
         } else {
             //Code has been deleted. The impacted methods are gathered, their impacts are computed, and returned as test methods Qualified names
-            Collection<MethodDeclaration> methodDeclarationsEdited = getMethodDeclarationsEdited(diffEntry.getOldPath(), RANGE_FACTORY.createOpenOrSingletonRange(edit.getBeginA(), edit.getEndA()));
+            Collection<MethodDeclaration> methodDeclarationsEdited = getMethodDeclarationsEdited(diffEntry.getNewPath(), RANGE_FACTORY.createOpenOrSingletonRange(edit.getBeginA(), edit.getEndA()));
             return methodDeclarationsEdited.stream()
                     .map(methodDeclaration -> getImpactsAtMethodLevel(java2File, methodDeclaration))
                     .flatMap(Collection::stream)
@@ -313,6 +354,29 @@ public class GitDiffManager {
                     .filter(methodDeclaration -> methodDeclaration.getRange().isPresent())
                     .filter(methodDeclaration -> range.isConnected(RANGE_FACTORY.createOpenOrSingletonRange(methodDeclaration.getRange().get().begin.line, methodDeclaration.getRange().get().end.line)))
                     .collect(Collectors.toList()));
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Could not parse the file " + fileName, e);
+        }
+
+        return methodDeclarations;
+    }
+
+    /**
+     * Return all test cases in a test file
+     *
+     * @param fileName the name of the file as a {@link String}
+     * @return a {@link Collection} of {@link MethodDeclaration}
+     */
+    private Collection<MethodDeclaration> getAllTestMethods(String fileName) {
+        Collection<MethodDeclaration> methodDeclarations = new LinkedList<>();
+
+        try {
+            CompilationUnit compilationUnit = JavaParser.parse(new File(folder, fileName));
+
+            methodDeclarations.addAll(compilationUnit.getChildNodesByType(MethodDeclaration.class).stream()
+                    .filter(methodDeclaration -> methodDeclaration.getAnnotations().stream().anyMatch(annotationExpr -> annotationExpr.getNameAsString().contains("@Test")))
+                    .collect(Collectors.toList()));
+
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Could not parse the file " + fileName, e);
         }
@@ -398,8 +462,10 @@ public class GitDiffManager {
             File file = ModelUtils.getSrcFromClass(classDeclaration);
             try {
                 Java2File superClassJava2File = ModelUtils.getJava2FileInResourceSetFromPathAsString(resourceSet, file.getAbsolutePath());
-                return ModelUtils.getASTNodeFromJavaElementInJava2File(superClassJava2File, overridenMethod)
-                        .getAnalysis().stream().map(eObject -> ((org.eclipse.gmt.modisco.java.MethodDeclaration) eObject)).collect(Collectors.toList());
+
+                ASTNodeSourceRegion astNodeSourceRegion = ModelUtils.getASTNodeFromJavaElementInJava2File(superClassJava2File, overridenMethod);
+                if (astNodeSourceRegion != null)
+                    return astNodeSourceRegion.getAnalysis().stream().map(eObject -> ((org.eclipse.gmt.modisco.java.MethodDeclaration) eObject)).collect(Collectors.toList());
 
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, "Could not find the super class " + file.getAbsolutePath() + " in the model", e);

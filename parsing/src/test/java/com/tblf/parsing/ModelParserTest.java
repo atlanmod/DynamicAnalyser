@@ -21,33 +21,14 @@ public class ModelParserTest {
     public void checkParse() throws Exception {
         Resource model = ModelUtils.loadModelFromZip(new File("src/test/resources/models/junit_java.zip"));
 
-        Map<String, File> tests = new HashMap<>();
-        Map<String, File> targets = new HashMap<>();
-
-        model.getAllContents().forEachRemaining(object -> {
-            if (object instanceof ClassDeclaration) {
-                ClassDeclaration classDeclaration = (ClassDeclaration) object;
-
-                if (classDeclaration.getOriginalCompilationUnit() != null) {
-                    File file = ModelUtils.getSrcFromClass(classDeclaration);
-
-                    if (ModelUtils.isATestClass(classDeclaration)) {
-                        tests.put(ModelUtils.getQualifiedName(classDeclaration), file);
-                    } else {
-                        targets.put(ModelUtils.getQualifiedName(classDeclaration), file);
-                    }
-                }
-            }
-        });
-
         ModelParser modelParser = new ModelParser();
         modelParser.parse(model);
 
         Assert.assertFalse("No targets", modelParser.getTargets().isEmpty());
         Assert.assertFalse("No tests", modelParser.getTests().isEmpty());
 
-        Assert.assertEquals("Different number of targets", targets.size(), modelParser.getTargets().size());
-        Assert.assertEquals("Different number of tests", tests.size(), modelParser.getTests().size());
+        Assert.assertEquals("Different number of targets", 335, modelParser.getTargets().size());
+        Assert.assertEquals("Different number of tests", 135, modelParser.getTests().size());
 
         FileUtils.forceDelete(new File("src/test/resources/models/junit_java.xmi"));
     }
@@ -80,7 +61,7 @@ public class ModelParserTest {
         Assert.assertFalse("No targets", modelParser.getTargets().isEmpty());
         Assert.assertFalse("No tests", modelParser.getTests().isEmpty());
 
-        Assert.assertEquals("Different number of targets", targets.size(), modelParser.getTargets().size());
+        Assert.assertEquals("Different number of targets", 195, modelParser.getTargets().size());
         Assert.assertEquals("Different number of tests", tests.size(), modelParser.getTests().size());
 
         FileUtils.forceDelete(new File("src/test/resources/models/joda-time_java.xmi"));

@@ -18,6 +18,7 @@
         <module>parsing</module>
         <module>runner</module>
         <module>management</module>
+        <module>energy</module>
         <!--<module>discovery</module>-->
     </modules>
 
@@ -151,13 +152,13 @@
 
                 </configuration>
                 <executions>
-    <!--                <execution>
+                    <execution>
                         <id>assemble-all</id>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
-                    </execution>-->
+                    </execution>
                 </executions>
             </plugin>
 

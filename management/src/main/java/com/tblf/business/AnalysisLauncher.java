@@ -76,7 +76,7 @@ public class AnalysisLauncher {
 
             LOGGER.info("Computing the impact analysis of " + source.getName());
             this.resourceSet = ModelUtils.buildResourceSet(source);
-            instrumenter.setProjectFolder(source);
+            instrumenter.setDirectory(source);
 
             try {
                 Resource javaModel = this.resourceSet.getResources()

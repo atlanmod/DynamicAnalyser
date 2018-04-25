@@ -91,7 +91,8 @@ public class GitCaller extends VersionControlCaller {
 
             oldTree = new RevWalk(repository).parseCommit(current).getTree();
             newTree = new RevWalk(repository).parseCommit(future).getTree();
-            diffFormatter = new DiffFormatter(new LogOutputStream(LOGGER, Level.FINE));
+            //diffFormatter = new DiffFormatter(new LogOutputStream(LOGGER, Level.FINE));
+            diffFormatter = new DiffFormatter(System.out);
             diffFormatter.setDiffComparator(RawTextComparator.WS_IGNORE_ALL);
             diffFormatter.setRepository(repository);
             diffFormatter.setDetectRenames(true);

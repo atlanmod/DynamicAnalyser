@@ -4,6 +4,7 @@ import com.tblf.linker.Calls;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.MavenUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -61,8 +62,11 @@ public class MavenRunner {
                         String s = path.toAbsolutePath().toString().replace(instrumentedBinaries.getAbsolutePath(), testClasses.getAbsolutePath());
                         try {
                             File tmp = new File(s);
-                            if (!tmp.exists())
+                            if (!tmp.exists()) {
+                                if (!tmp.getParentFile().exists())
+                                    new File(tmp.getParentFile().getAbsolutePath()).mkdirs();
                                 tmp.createNewFile();
+                            }
 
                             Files.copy(path, new File(s).toPath(), StandardCopyOption.REPLACE_EXISTING);
                             LOGGER.fine("Replaced "+path.toString()+" by "+s);

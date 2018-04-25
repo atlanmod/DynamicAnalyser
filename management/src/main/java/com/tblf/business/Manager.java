@@ -79,15 +79,17 @@ public class Manager {
         switch (InstrumentationType.valueOf(mode)) {
 
             case BYTECODE:
-                instrumenter = new ByteCodeInstrumenter(project);
+                instrumenter = new ByteCodeInstrumenter();
                 break;
             case SOURCECODE:
-                instrumenter = new SourceCodeInstrumenter(project);
+                instrumenter = new SourceCodeInstrumenter();
                 break;
             default:
                 LOGGER.warning("No instrumentation chosen");
                 return null;
         }
+
+        instrumenter.setDirectory(project);
 
         instrumenter.instrument(this.sutClasses, this.testClasses);
 

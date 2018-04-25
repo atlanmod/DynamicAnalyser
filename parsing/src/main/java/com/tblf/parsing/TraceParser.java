@@ -69,7 +69,11 @@ public class TraceParser extends Parser {
         resourceSet.getAllContents().forEachRemaining(notifier -> {
             if (notifier instanceof Java2File) {
                 Java2File java2File = (Java2File) notifier;
-                classQNJava2File.put(ParserUtils.getClassQNFromFile(new File(java2File.getJavaUnit().getOriginalFilePath())), java2File);
+                try {
+                    classQNJava2File.put(ParserUtils.getClassQNFromFile(new File(java2File.getJavaUnit().getOriginalFilePath())), java2File);
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Couldn't add the java2file "+java2File.getFile().toString()+" in the map");
+                }
             }
         });
     }

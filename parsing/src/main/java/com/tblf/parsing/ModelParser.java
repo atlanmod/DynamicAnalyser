@@ -1,6 +1,8 @@
 package com.tblf.parsing;
 
+import com.tblf.utils.FileUtils;
 import com.tblf.utils.ModelUtils;
+import com.tblf.utils.ParserUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.gmt.modisco.java.ClassDeclaration;
 import org.eclipse.gmt.modisco.java.Model;
@@ -36,11 +38,11 @@ public class ModelParser {
 
         targets = targetCollection  .stream()
                                     .filter(classDeclaration -> classDeclaration.getOriginalCompilationUnit() != null)
-                                    .collect(Collectors.toMap(ModelUtils::getQualifiedName, ModelUtils::getSrcFromClass, (s, s2) -> s));
+                                    .collect(Collectors.toMap(clazz -> ParserUtils.getClassQNFromFile(ModelUtils.getSrcFromClass(clazz)), ModelUtils::getSrcFromClass, (s, s2) -> s));
 
         tests = testCollection  .stream()
                                 .filter(classDeclaration -> classDeclaration.getOriginalCompilationUnit() != null)
-                                .collect(Collectors.toMap(ModelUtils::getQualifiedName, ModelUtils::getSrcFromClass, (s, s2) -> s));
+                                .collect(Collectors.toMap(clazz -> ParserUtils.getClassQNFromFile(ModelUtils.getSrcFromClass(clazz)), ModelUtils::getSrcFromClass, (s, s2) -> s));
     }
 
     public Map<String, File> getTargets() {

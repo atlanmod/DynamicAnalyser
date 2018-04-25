@@ -291,6 +291,8 @@ public class ModelUtils {
      * @return the {@link File}
      */
     public static File getSrcFromClass(ClassDeclaration classDeclaration) {
+        if (classDeclaration.getOriginalCompilationUnit() == null)
+            return null;
         return new File(classDeclaration.getOriginalCompilationUnit().getOriginalFilePath());
     }
 
@@ -522,7 +524,7 @@ public class ModelUtils {
     public static ASTNodeSourceRegion getASTNodeFromJavaElementInJava2File(Java2File java2File, EObject eObject) {
         return java2File.getChildren()
                 .stream()
-                .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode() == eObject)
+                .filter(astNodeSourceRegion -> astNodeSourceRegion.getNode().equals(eObject))
                 .findFirst()
                 .orElse(null);
     }
