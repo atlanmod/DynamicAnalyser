@@ -8,4 +8,4 @@ notifications:
 
 install:
     - cd $TRAVIS_BUILD_DIR/ && mvn clean
-    - cd $TRAVIS_BUILD_DIR/ && mvn install
+    - cd $TRAVIS_BUILD_DIR/ && mvn install -Ptravis
