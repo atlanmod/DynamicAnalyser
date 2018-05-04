@@ -12,6 +12,13 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>com.tblf</groupId>
@@ -23,7 +30,26 @@
             <artifactId>instrumentation</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
-
+        <dependency>
+            <groupId>net.openhft</groupId>
+            <artifactId>chronicle-queue</artifactId>
+            <version>4.5.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.orichalque.bitwatts</groupId>
+            <artifactId>bitwatts-core</artifactId>
+            <version>0799ea4266</version>
+        </dependency>
+<!--        <dependency>
+            <groupId>com.github.orichalque.bitwatts</groupId>
+            <artifactId>bitwatts-cli</artifactId>
+            <version>0799ea4266</version>
+        </dependency>-->
+        <dependency>
+            <groupId>bitwatts</groupId>
+            <artifactId>bitwatts-cli</artifactId>
+            <version>1.2</version>
+        </dependency>
     </dependencies>
 
 </project>
