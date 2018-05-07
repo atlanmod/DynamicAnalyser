@@ -5,7 +5,9 @@ import org.junit.Test;
 public class CallsTest {
 
     @Test
-    public void testCalls() {
-
+    public void testUpdateTest() {
+        Calls.setTestMethod("myTest", "myMethod");
     }
+
+
 }

@@ -2,6 +2,7 @@ package com.tblf.integration;
 
 import com.tblf.classloading.SingleURLClassLoader;
 import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
+import com.tblf.linker.Calls;
 import com.tblf.linker.FileTracer;
 import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
@@ -24,6 +25,7 @@ public class InstrumentationLinkageTest {
 
     @Before
     public void setup() throws IOException {
+        Calls.setTracer(FileTracer.getInstance());
         ModelUtils.unzip(new File("src/test/resources/sources/SimpleProject.zip"));
     }
 

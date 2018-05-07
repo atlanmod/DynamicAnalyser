@@ -11,6 +11,7 @@ import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
@@ -33,7 +34,10 @@ import java.util.stream.Collectors;
  */
 
 public class ByteCodeInstrumenterTest {
-
+    @Before
+    public void setUp() {
+        Calls.setTracer(FileTracer.getInstance());
+    }
     @Test
     public void checkInstrumentTarget() throws ClassNotFoundException, IOException, URISyntaxException {
         File file = new File("src/test/resources/binaries/junit.zip");

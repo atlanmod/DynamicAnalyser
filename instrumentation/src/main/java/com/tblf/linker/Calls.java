@@ -4,10 +4,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Is a static class. Those methods will be called by the instrumented code
+ * Is a static class. Those methods will be called by the instrumented code.
+ * This class is a facade calling Tracer methods. This more complicated to directly use the Tracer in the instrumented code,
+ * In fact, Strings are inserted, either in the ByteCode or SourceCode, and inserting "Calls.setTestMethod(....)"
+ * for instance is simpler than adapting the instrumentation according to the Tracer.
+ * And more reusable, as it is easy to change the Tracer currently used, than re-instrumenting the entire code in order to change it.
  */
 public class Calls {
-    private static Tracer tracer = FileTracer.getInstance();
+    private static Tracer tracer;
     private static final Logger LOGGER = Logger.getLogger("Calls");
 
     /**
@@ -24,8 +28,8 @@ public class Calls {
     public static void setTestMethod(String className, String method) {
         try {
             tracer.updateTest(className, method);
-        } catch (Throwable var3) {
-            var3.printStackTrace();
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Exception caught when setting the test method", e);
         }
 
     }
@@ -38,8 +42,8 @@ public class Calls {
     public static void setTargetMethod(String className, String method) {
         try {
             tracer.updateTarget(className, method);
-        } catch (Throwable var3) {
-            var3.printStackTrace();
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Exception caught when setting the target method", e);
         }
 
     }
@@ -57,7 +61,7 @@ public class Calls {
     }
 
     /**
-     * trace the statement beinf executed using its line in the source code
+     * trace the statement being executed using its line in the source code
      * @param className the name of the class
      * @param method the name of the method
      * @param line the line number
@@ -73,7 +77,11 @@ public class Calls {
      * @param endCol the end position at the file level
      */
     public static void match(String startCol, String endCol) {
-        tracer.updateStatementsUsingColumn(startCol, endCol);
+        try {
+            tracer.updateStatementsUsingColumn(startCol, endCol);
+        } catch (Exception e) {
+            LOGGER.log(Level.FINE, "Cannot trace the line "+startCol+" -> "+endCol, e);
+        }
     }
 
     /**
@@ -83,15 +91,24 @@ public class Calls {
     public static void match(String line) {
         try {
             tracer.updateStatementsUsingLine(line);
-        } catch (Throwable t) {
-            LOGGER.log(Level.FINE, "Cannot trace the line "+line, t);
+        } catch (Exception e) {
+            LOGGER.log(Level.FINE, "Cannot trace the line "+line, e);
         }
 
+    }
+
+    public static Tracer getTracer() {
+        return tracer;
+    }
+
+    public static void setTracer(Tracer tracer) {
+        Calls.tracer = tracer;
     }
 
     /**
      * End the trace.
      */
+
     public static void end() {
         tracer.endTrace();
     }

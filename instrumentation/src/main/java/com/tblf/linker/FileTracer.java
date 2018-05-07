@@ -1,10 +1,11 @@
 package com.tblf.linker;
 
-import com.google.common.collect.Range;
 import com.tblf.utils.FileUtils;
-import org.apache.commons.lang3.tuple.Pair;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -13,7 +14,7 @@ import java.util.logging.Logger;
  * Trace the execution of an application and store it into a file
  * Is a singleton. Indeed, this class would be called by the instrumented code, and instantiating it at the beginning of each call would be really costly
  */
-public class FileTracer extends Tracer {
+public class FileTracer implements Tracer {
 
     private static FileTracer INSTANCE;
     private static final Logger LOGGER = Logger.getLogger("FileTracer");

@@ -2,21 +2,52 @@ package com.tblf.instrumentation;
 
 import com.tblf.instrumentation.bytecode.ByteCodeInstrumenter;
 import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
+import com.tblf.linker.Calls;
+import com.tblf.linker.FileTracer;
+import com.tblf.linker.QueueTracer;
+import com.tblf.linker.Tracer;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Builder creating an {@link Instrumenter}
  */
 public class InstrumenterBuilder {
 
-    private Instrumenter instrumenter;
+    private InstrumentationType instrumentationType;
+
+    private Class tracer;
+
+    private File onDirectory;
+    private File outputDirectory;
+    private Collection<File> dependencies;
+    private File testDirectory;
+    private File sutDirectory;
 
     /**
      * @return the {@link Instrumenter}
      */
     public Instrumenter build() {
+
+        try {
+            Calls.setTracer((Tracer) tracer.newInstance());
+        } catch (IllegalAccessException | InstantiationException e) {
+            Logger.getAnonymousLogger().log(Level.WARNING, "Could not instantiate the execution trace monitor");
+        }
+
+        Instrumenter instrumenter = instrumentationType.equals(InstrumentationType.BYTECODE) ?
+                new ByteCodeInstrumenter() :
+                new SourceCodeInstrumenter();
+
+        instrumenter.setDirectory(onDirectory);
+        instrumenter.setOutputDirectory(outputDirectory);
+        instrumenter.setTestDirectory(testDirectory);
+        instrumenter.setSutDirectory(sutDirectory);
+        instrumenter.getDependencies().addAll(dependencies);
+
         return instrumenter;
     }
 
@@ -25,7 +56,7 @@ public class InstrumenterBuilder {
      * @return this, the current {@link InstrumenterBuilder}
      */
     public InstrumenterBuilder withSourceCodeInstrumenter() {
-        instrumenter = new SourceCodeInstrumenter();
+        instrumentationType = InstrumentationType.SOURCECODE;
         return this;
     }
 
@@ -34,22 +65,44 @@ public class InstrumenterBuilder {
      * @return this, the current {@link InstrumenterBuilder}
      */
     public InstrumenterBuilder withByteCodeInstrumenter() {
-        instrumenter = new ByteCodeInstrumenter();
+        instrumentationType = InstrumentationType.BYTECODE;
         return this;
     }
 
+    /**
+     * Instantiate a @{@link com.tblf.linker.FileTracer} to trace the execution
+     * @return this, the current {@link InstrumenterBuilder}
+     */
+    public InstrumenterBuilder withSingleFileExecutionTrace() {
+        tracer = FileTracer.class;
+        return this;
+    }
+
+    /**
+     * Instantiate a {@link com.tblf.linker.QueueTracer} to trace the execution. Faster and safer
+     * @return this, the current {@link InstrumenterBuilder}
+     */
+    public InstrumenterBuilder withQueueExecutionTrace() {
+        tracer = QueueTracer.class;
+        return this;
+    }
     /**
      * Specify the directory to instrument
      * @param directory a {@link File}
      * @return this, the current {@link InstrumenterBuilder}
      */
     public InstrumenterBuilder onDirectory(File directory) {
-        instrumenter.setDirectory(directory);
+        onDirectory = directory;
         return this;
     }
 
+    /**
+     * Specify the output directory for the instrumented files
+     * @param outputDirectory a {@link File} directory
+     * @return this, the current {@link InstrumenterBuilder}
+     */
     public InstrumenterBuilder withOutputDirectory(File outputDirectory) {
-        instrumenter.setOutputDirectory(outputDirectory);
+        this.outputDirectory = outputDirectory;
         return this;
     }
 
@@ -59,7 +112,7 @@ public class InstrumenterBuilder {
      * @return this, the current {@link InstrumenterBuilder}
      */
     public InstrumenterBuilder setTestDirectory(File testFolder) {
-        instrumenter.setTestDirectory(testFolder);
+        testDirectory = testFolder;
         return this;
     }
 
@@ -69,7 +122,7 @@ public class InstrumenterBuilder {
      * @return this, the current {@link InstrumenterBuilder}
      */
     public InstrumenterBuilder setSUTDirectory(File sutFolder) {
-        instrumenter.setSutDirectory(sutFolder);
+        sutDirectory = sutFolder;
         return this;
     }
 
@@ -79,7 +132,8 @@ public class InstrumenterBuilder {
      * @return this, the current {@link InstrumenterBuilder}
      */
     public InstrumenterBuilder withDependencies(Collection<File> dependencies) {
-        instrumenter.getDependencies().addAll(dependencies);
+
+        this.dependencies = dependencies;
         return this;
     }
 }
