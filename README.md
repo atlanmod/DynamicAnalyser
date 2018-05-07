@@ -1,4 +1,20 @@
 # MDE4RTS
+
+#### Table of Contents
+  * [Model driven dynamic impact analysis](#model-driven-dynamic-impact-analysis)
+    + [Discovery](#discovery)
+    + [Instrumentation](#instrumentation)
+    + [Execution](#execution)
+    + [Parsing](#parsing)
+  * [API](#api)
+    + [Generating the model](#generating-the-model)
+      - [Instrumentation](#instrumentation-1)
+      - [Runner](#runner)
+      - [Parsing](#parsing-1)
+    + [Performing a Regression Test Selection](#performing-a-regression-test-selection)
+  * [Model](#model)
+    + [MetaModel](#metamodel)
+    
 ## Model driven dynamic impact analysis
 
 This application generates a model of the dynamic aspects of a program.
@@ -48,6 +64,41 @@ analysisLauncher.applyAfter(Consumer<File> method);
 ```
 
 This allows the user to run methods on the project once the Impact Analysis Model is generated.
+
+#### Instrumentation
+
+The module `instrumentation` contains the code used to instrument the code. The `InstrumenterBuilder` creates the `Instrumenter` used, regarding the parameters given:  
+
+```
+new InstrumenterBuilder()
+.withSourceCodeInstrumenter()
+.onDirectory(directory)
+.withQueueExecutionTrace()
+.withOutputDirectory(output)
+.build() //Returns an Instrumenter, either SCI or BCI
+.run(); //Instruments the given code
+```
+
+This previous sample instruments the entire code of a given directory. The compiled classes can then be loaded, and executed to generate traces. 
+
+#### Runner 
+
+The runner mainly used works using Maven. The `-noverify` option is given, in order to ignore the ByteCode modifications induced by the Instrumentation. The Instrumented code (either after a BCI, or the compiled instrumented Source code) is classloaded over the standard classes, and the following goal is run: 
+
+`mvn -Djacoco.skip -DtestFailureIgnore=true surefire:test`
+
+Hence, the instrumented code is used to run all the test cases, and the execution trace is generated. 
+
+#### Parsing
+
+The module `parsing` contains the code used to parse the previously generated execution traces. The current version of the code only computes the traces written in a single file. A faster version is coming soon, using fast messaging queues instead.
+
+```
+Resource r; //The Model conforming to the Metamodel defined in the Model module
+r = new TraceParser(File theFile, File theOutputModel.xmi, ResourceSet moDiscoModel).parse();
+```
+
+This code would generate a XMI model representing the execution of the program. We use this model for RTS here, but the usage of MDE offers a easy reusability, for other purposes. 
 
 ### Performing a Regression Test Selection
 
