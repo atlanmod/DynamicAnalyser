@@ -23,6 +23,7 @@
             <artifactId>DotCP</artifactId>
             <version>1.0.0</version>
         </dependency>
+
         <!-- Instrumentation -->
         <dependency>
             <groupId>org.ow2.asm</groupId>
@@ -34,6 +35,14 @@
             <artifactId>spoon-core</artifactId>
             <version>6.1.0-SNAPSHOT</version>
         </dependency>
+
+        <!-- Queue -->
+        <dependency>
+            <groupId>net.openhft</groupId>
+            <artifactId>chronicle-queue</artifactId>
+            <version>4.5.2</version>
+        </dependency>
+
 
         <!-- Tests -->
         <dependency>

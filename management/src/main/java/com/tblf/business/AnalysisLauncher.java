@@ -2,6 +2,7 @@ package com.tblf.business;
 
 import com.tblf.instrumentation.InstrumentationType;
 import com.tblf.instrumentation.Instrumenter;
+import com.tblf.instrumentation.InstrumenterBuilder;
 import com.tblf.instrumentation.bytecode.ByteCodeInstrumenter;
 import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
 import com.tblf.junitrunner.MavenRunner;
@@ -32,6 +33,7 @@ public class AnalysisLauncher {
     private ResourceSet resourceSet;
     private File outputModel;
     private Instrumenter instrumenter;
+    private InstrumenterBuilder instrumenterBuilder;
 
     private List<Consumer<File>> before;
     private List<Consumer<File>> after;
@@ -76,7 +78,7 @@ public class AnalysisLauncher {
 
             LOGGER.info("Computing the impact analysis of " + source.getName());
             this.resourceSet = ModelUtils.buildResourceSet(source);
-            instrumenter.setDirectory(source);
+            instrumenterBuilder = instrumenterBuilder.onDirectory(source);
 
             try {
                 Resource javaModel = this.resourceSet.getResources()
@@ -92,7 +94,7 @@ public class AnalysisLauncher {
                 LOGGER.log(Level.INFO, modelParser.getTargets().size() + " SUT classes and " + modelParser.getTests().size() + " test classes");
 
                 LOGGER.info("Instrumenting the code in: " + source.getName());
-                instrumenter.instrument(modelParser.getTargets().keySet(), modelParser.getTests().keySet());
+                instrumenterBuilder.build().instrument(modelParser.getTargets().keySet(), modelParser.getTests().keySet());
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "An error was caught during the impact analysis", e);
             }
@@ -128,6 +130,8 @@ public class AnalysisLauncher {
      * Set the dependencies before running the impact analysis
      */
     private void setUp() {
+        instrumenterBuilder = new InstrumenterBuilder();
+
         if (isPomAtRoot)
             sources = FileUtils.getAllModules(root).stream().filter(FileUtils::isAnalysable).collect(Collectors.toList());
         else
@@ -135,10 +139,10 @@ public class AnalysisLauncher {
 
         switch (InstrumentationType.valueOf(Configuration.getProperty("mode"))) {
             case BYTECODE:
-                instrumenter = new ByteCodeInstrumenter();
+                instrumenterBuilder = instrumenterBuilder.withByteCodeInstrumenter();
                 break;
             case SOURCECODE:
-                instrumenter = new SourceCodeInstrumenter();
+                instrumenterBuilder = instrumenterBuilder.withSourceCodeInstrumenter();
                 break;
             default:
                 LOGGER.warning("No instrumentation chosen");
@@ -146,6 +150,8 @@ public class AnalysisLauncher {
 
         if (outputModel == null)
             outputModel = new File(root, Configuration.getProperty("outputModel") + "." + Configuration.getProperty("outputFormat"));
+
+        instrumenterBuilder = instrumenterBuilder.withOutputDirectory(outputModel);
     }
 
     /**

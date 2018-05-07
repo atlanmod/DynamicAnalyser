@@ -1,6 +1,7 @@
 package com.tblf.business;
 
 import com.tblf.instrumentation.InstrumentationType;
+import com.tblf.linker.Calls;
 import com.tblf.linker.FileTracer;
 import com.tblf.linker.Tracer;
 import com.tblf.utils.Configuration;
@@ -43,6 +44,7 @@ public class AnalysisLauncherTest {
     @Before
     public void setUp() throws IOException {
         File file = new File("src/test/resources/fullprojects/SimpleProject");
+        Calls.setTracer(FileTracer.getInstance());
         if (file.exists())
             FileUtils.deleteDirectory(file);
     }
