@@ -36,20 +36,22 @@ For portability purposes, MoDisco is not included in the project. You have to ge
 Consumer methods are available for that purpose:
 
 ```
-analysisLauncher.applyBefore(A_Class::discoverModel);
+analysisLauncher.applyBefore(Consumer<File> method);
 ```
 
-This consumer method would be called before actually running the Instrumentation. It has to be a static method, that takes as a parameter the project to instrument as a java.io.File
+This consumer method would be called before actually running the Instrumentation. It has to be a static method, that takes as a parameter the project to instrument as a java.io.File. 
+
+A consumer method to call after the impact analysis is also available: 
 
 ```
 analysisLauncher.applyAfter(Consumer<File> method);
 ```
 
-Also exist, in order to run methods on the project once the Impact Analysis Model is generated.
+This allows the user to run methods on the project once the Impact Analysis Model is generated.
 
 ### Performing a Regression Test Selection
 
-The `GitCaller` class exists for that purpose:
+The `GitCaller` class exists for that purpose. It takes the Version Control System folder (The one containing the .git folder), but also the ResourceSet containing the Impact Analysis Model. 
 
 ```
 GitCaller gitCaller = new GitCaller(rootFolder, resourceSet);
