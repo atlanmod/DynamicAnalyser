@@ -20,7 +20,9 @@ Running the instrumented code generates an execution trace of this program's exe
 
 Parsing the previously generated trace would enhance the modisco static model with dynamic informations
 
-## API: generating the model
+## API
+
+### Generating the model
 
 This phase is rather long, and is meant to be computed beforehand, more specifically in a context of Continuous Integration
 In order to generate a model of the Java Project containined in the directory `directory`:
@@ -45,7 +47,7 @@ analysisLauncher.applyAfter(Consumer<File> method);
 
 Also exist, in order to run methods on the project once the Impact Analysis Model is generated.
 
-## API: performing a Regression Test Selection
+### Performing a Regression Test Selection
 
 The `GitCaller` class exists for that purpose:
 
