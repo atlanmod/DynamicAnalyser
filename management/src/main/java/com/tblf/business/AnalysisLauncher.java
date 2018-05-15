@@ -6,6 +6,7 @@ import com.tblf.instrumentation.InstrumenterBuilder;
 import com.tblf.instrumentation.bytecode.ByteCodeInstrumenter;
 import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
 import com.tblf.junitrunner.MavenRunner;
+import com.tblf.linker.Calls;
 import com.tblf.parsing.ModelParser;
 import com.tblf.parsing.TraceParser;
 import com.tblf.utils.Configuration;
@@ -94,7 +95,13 @@ public class AnalysisLauncher {
                 LOGGER.log(Level.INFO, modelParser.getTargets().size() + " SUT classes and " + modelParser.getTests().size() + " test classes");
 
                 LOGGER.info("Instrumenting the code in: " + source.getName());
-                instrumenterBuilder.build().instrument(modelParser.getTargets().keySet(), modelParser.getTests().keySet());
+
+                instrumenter = instrumenterBuilder.build();
+
+                instrumenter.getDependencies().add(new File(Calls.class.getProtectionDomain().getCodeSource().getLocation().toURI()));
+                instrumenter.getDependencies().add(new File(Configuration.class.getProtectionDomain().getCodeSource().getLocation().toURI()));
+
+                instrumenter.instrument(modelParser.getTargets().keySet(), modelParser.getTests().keySet());
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "An error was caught during the impact analysis", e);
             }
@@ -148,10 +155,21 @@ public class AnalysisLauncher {
                 LOGGER.warning("No instrumentation chosen");
         }
 
+        switch (Configuration.getProperty("trace")) {
+            case "queue":
+                instrumenterBuilder = instrumenterBuilder.withQueueExecutionTrace();
+                break;
+            case "file":
+                instrumenterBuilder = instrumenterBuilder.withSingleFileExecutionTrace();
+                break;
+            default:
+                LOGGER.warning("No instrumentation chosen");
+        }
+
         if (outputModel == null)
             outputModel = new File(root, Configuration.getProperty("outputModel") + "." + Configuration.getProperty("outputFormat"));
 
-        instrumenterBuilder = instrumenterBuilder.withOutputDirectory(outputModel);
+        instrumenterBuilder = instrumenterBuilder.withOutputDirectory(new File(root, Configuration.getProperty("instrumentedSources")));
     }
 
     /**
