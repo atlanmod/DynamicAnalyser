@@ -35,6 +35,7 @@ public class SourceCodeInstrumenter extends Instrumenter {
 
     /**
      * Set the root directory of the project ton instrument
+     *
      * @param directory the {@link File} directory
      */
     public void setDirectory(File directory) {
@@ -94,6 +95,7 @@ public class SourceCodeInstrumenter extends Instrumenter {
     /**
      * Generate the {@link Launcher} using Spoon.
      * The properties of the directory will decide if a standard {@link Launcher} is created, or the {@link MavenLauncher}
+     *
      * @return a {@link Launcher}
      */
     private Launcher generateSpoonLauncher() {
@@ -132,8 +134,6 @@ public class SourceCodeInstrumenter extends Instrumenter {
 
         launcher.setBinaryOutputDirectory(binDirectory);
         launcher.setSourceOutputDirectory(outputDirectory);
-        launcher.addInputResource(testDirectory.getAbsolutePath());
-        launcher.addInputResource(sutDirectory.getAbsolutePath());
 
         return launcher;
     }
@@ -146,11 +146,12 @@ public class SourceCodeInstrumenter extends Instrumenter {
 
     private void addDependencies() throws IOException, URISyntaxException {
         dependencies.add(new File(Calls.class.getProtectionDomain().getCodeSource().getLocation().toURI()));
+        dependencies.add(new File(Configuration.class.getProtectionDomain().getCodeSource().getLocation().toURI()));
     }
 
     private void computeDependencies() throws IOException, ParserConfigurationException, SAXException {
         File dotCP = FileUtils.getFile(directory, ".classpath");
-        if (! dotCP.exists()) {
+        if (!dotCP.exists()) {
             LOGGER.warning("no .classpath file in the folder: load this project within an Eclipse application \n" +
                     "or run the goal 'mvn eclipse:eclipse' \n" +
                     "if external dependencies have to be automatically computed \n");

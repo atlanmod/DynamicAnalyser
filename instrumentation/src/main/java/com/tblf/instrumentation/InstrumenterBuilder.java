@@ -6,8 +6,10 @@ import com.tblf.linker.Calls;
 import com.tblf.linker.FileTracer;
 import com.tblf.linker.QueueTracer;
 import com.tblf.linker.Tracer;
+import com.tblf.utils.Configuration;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,7 +25,7 @@ public class InstrumenterBuilder {
 
     private File onDirectory;
     private File outputDirectory;
-    private Collection<File> dependencies;
+    private Collection<File> dependencies = new ArrayList<>();
     private File testDirectory;
     private File sutDirectory;
 
@@ -31,12 +33,6 @@ public class InstrumenterBuilder {
      * @return the {@link Instrumenter}
      */
     public Instrumenter build() {
-
-        try {
-            Calls.setTracer((Tracer) tracer.newInstance());
-        } catch (IllegalAccessException | InstantiationException e) {
-            Logger.getAnonymousLogger().log(Level.WARNING, "Could not instantiate the execution trace monitor");
-        }
 
         Instrumenter instrumenter = instrumentationType.equals(InstrumentationType.BYTECODE) ?
                 new ByteCodeInstrumenter() :
@@ -75,6 +71,9 @@ public class InstrumenterBuilder {
      */
     public InstrumenterBuilder withSingleFileExecutionTrace() {
         tracer = FileTracer.class;
+        System.setProperty("myProperty", "trace");
+
+        Configuration.setProperty("myProperty", "trace");
         return this;
     }
 
@@ -84,6 +83,8 @@ public class InstrumenterBuilder {
      */
     public InstrumenterBuilder withQueueExecutionTrace() {
         tracer = QueueTracer.class;
+        System.setProperty("myProperty", "queue");
+        Configuration.setProperty("myProperty", "queue");
         return this;
     }
     /**

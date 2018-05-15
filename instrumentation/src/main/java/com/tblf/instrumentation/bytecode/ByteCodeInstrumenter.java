@@ -196,7 +196,6 @@ public class ByteCodeInstrumenter extends Instrumenter {
     }
 
     private void fetchDependencies() throws ParserConfigurationException, SAXException, IOException, URISyntaxException {
-        List<File> dependencies = new ArrayList<>();
 
         //Getting the dependencies from the .classpath file, assuming it is located in the same folder as the zip
         File dotCP = FileUtils.getFile(directory, ".classpath");
@@ -209,7 +208,6 @@ public class ByteCodeInstrumenter extends Instrumenter {
 
         LOGGER.info("Adding the following dependencies to the classpath: " + dependencies.toString());
 
-        dependencies.add(new File(Calls.class.getProtectionDomain().getCodeSource().getLocation().toURI()));
         dependencies.add(sutDirectory); //This is necessary to add the SUT classes before instrumentation.
         dependencies.add(testDirectory); //This is necessary to add the test classes before instrumentation.
 
