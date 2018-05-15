@@ -10,6 +10,7 @@ import java.io.*;
 
 public class QueueReader extends BufferedReader {
     private Wire wire;
+    private File file;
 
     public QueueReader(File file) throws FileNotFoundException {
         super(new Reader(file) {
@@ -27,6 +28,7 @@ public class QueueReader extends BufferedReader {
         if (!file.exists())
             throw new FileNotFoundException("The file "+file.getAbsolutePath()+" does not exist");
 
+        this.file = file;
         ExcerptAppender excerptAppender = SingleChronicleQueueBuilder.binary(file).build().acquireAppender();
         ExcerptTailer excerptTailer = excerptAppender.queue().createTailer().toStart();
         wire = excerptTailer.readingDocument().wire();

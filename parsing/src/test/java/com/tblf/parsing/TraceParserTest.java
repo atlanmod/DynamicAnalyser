@@ -2,6 +2,7 @@ package com.tblf.parsing;
 
 import com.tblf.model.Analysis;
 import com.tblf.model.ModelPackage;
+import com.tblf.utils.Configuration;
 import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.common.util.URI;
@@ -39,6 +40,7 @@ public class TraceParserTest {
 
     @Before
     public void setUpRealCode() throws IOException {
+        Configuration.setProperty("trace", "file");
         resourceSet = new ResourceSetImpl();
 
         EPackage.Registry.INSTANCE.put(JavaPackage.eNS_URI, JavaPackage.eINSTANCE);

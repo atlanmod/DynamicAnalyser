@@ -14,6 +14,7 @@ import java.util.Map;
 
 /**
  * Created by Thibault on 19/09/2017.
+ * @FIXME Those tests are platform dependants, and will only work on Linux
  */
 public class ModelParserTest {
 
@@ -27,8 +28,8 @@ public class ModelParserTest {
         Assert.assertFalse("No targets", modelParser.getTargets().isEmpty());
         Assert.assertFalse("No tests", modelParser.getTests().isEmpty());
 
-        Assert.assertEquals("Different number of targets", 335, modelParser.getTargets().size());
-        Assert.assertEquals("Different number of tests", 135, modelParser.getTests().size());
+        Assert.assertEquals("Different number of targets", 339, modelParser.getTargets().size());
+        Assert.assertEquals("Different number of tests", 137, modelParser.getTests().size());
 
         FileUtils.forceDelete(new File("src/test/resources/models/junit_java.xmi"));
     }

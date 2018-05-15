@@ -1,11 +1,18 @@
 package com.tblf.parsing;
 
+import com.tblf.model.ModelPackage;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
+import org.eclipse.gmt.modisco.java.emf.JavaPackage;
+import org.eclipse.gmt.modisco.omg.kdm.kdm.KdmPackage;
+import org.eclipse.modisco.java.composition.javaapplication.JavaapplicationPackage;
+import org.eclipse.modisco.kdm.source.extension.ExtensionPackage;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,6 +33,16 @@ public abstract class Parser {
      */
     public Parser(File traceFile, File outputModel, ResourceSet resourceSet) {
         this.trace = traceFile;
+
+        JavaPackage.eINSTANCE.eClass();
+        JavaapplicationPackage.eINSTANCE.eClass();
+        ExtensionPackage.eINSTANCE.eClass();
+        KdmPackage.eINSTANCE.eClass();
+        ModelPackage.eINSTANCE.eClass();
+
+        Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
+        Map<String, Object> m = reg.getExtensionToFactoryMap();
+        m.put("xmi", new XMIResourceFactoryImpl());
 
         try {
             if (!outputModel.exists() && !outputModel.createNewFile()) {

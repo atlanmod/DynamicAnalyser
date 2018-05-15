@@ -1,13 +1,12 @@
 package com.tblf.parsing;
 
-import com.tblf.utils.FileUtils;
 import com.tblf.utils.ModelUtils;
 import com.tblf.utils.ParserUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.gmt.modisco.java.ClassDeclaration;
-import org.eclipse.gmt.modisco.java.Model;
 
 import java.io.File;
+import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,11 +37,14 @@ public class ModelParser {
 
         targets = targetCollection  .stream()
                                     .filter(classDeclaration -> classDeclaration.getOriginalCompilationUnit() != null)
-                                    .collect(Collectors.toMap(clazz -> ParserUtils.getClassQNFromFile(ModelUtils.getSrcFromClass(clazz)), ModelUtils::getSrcFromClass, (s, s2) -> s));
+                                    .map(ModelUtils::getSrcFromClass)
+                                    .collect(Collectors.toMap(ParserUtils::getClassQNFromFile, o -> o, (o1, o2) -> o1));
 
-        tests = testCollection  .stream()
-                                .filter(classDeclaration -> classDeclaration.getOriginalCompilationUnit() != null)
-                                .collect(Collectors.toMap(clazz -> ParserUtils.getClassQNFromFile(ModelUtils.getSrcFromClass(clazz)), ModelUtils::getSrcFromClass, (s, s2) -> s));
+
+        tests = testCollection      .stream()
+                                    .filter(classDeclaration -> classDeclaration.getOriginalCompilationUnit() != null)
+                                    .map(ModelUtils::getSrcFromClass)
+                                    .collect(Collectors.toMap(ParserUtils::getClassQNFromFile, o -> o, (o1, o2) -> o1));
     }
 
     public Map<String, File> getTargets() {

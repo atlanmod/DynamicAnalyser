@@ -17,10 +17,7 @@ import org.eclipse.modisco.java.composition.javaapplication.JavaapplicationPacka
 import org.eclipse.modisco.kdm.source.extension.ASTNodeSourceRegion;
 import org.eclipse.modisco.kdm.source.extension.ExtensionPackage;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -45,6 +42,7 @@ public class TraceParser extends Parser {
     private ASTNodeSourceRegion currentTargetMethod;
 
     private Query query;
+    private BufferedReader reader;
 
     /**
      * @param traceFile   the file containing the execution trace
@@ -52,16 +50,6 @@ public class TraceParser extends Parser {
      */
     public TraceParser(File traceFile, File outputModel, ResourceSet resourceSet) {
         super(traceFile, outputModel, resourceSet);
-
-        JavaPackage.eINSTANCE.eClass();
-        JavaapplicationPackage.eINSTANCE.eClass();
-        ExtensionPackage.eINSTANCE.eClass();
-        KdmPackage.eINSTANCE.eClass();
-        ModelPackage.eINSTANCE.eClass();
-
-        Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
-        Map<String, Object> m = reg.getExtensionToFactoryMap();
-        m.put("xmi", new XMIResourceFactoryImpl());
 
         query = new StreamQuery();
 
@@ -76,6 +64,7 @@ public class TraceParser extends Parser {
                 }
             }
         });
+
     }
 
     /**
@@ -85,56 +74,61 @@ public class TraceParser extends Parser {
      * @return a impact analysis model
      */
     public Resource parse() {
-        long startTime = System.currentTimeMillis();
-        long currLine = 0;
-        long maxLine = ParserUtils.getLineNumber(trace); //We iterate starting from 0
 
-        Scanner scanner = null;
-
+        //Generate the right trace reader
         try {
-            scanner = new Scanner(new FileReader(trace));
-        } catch (FileNotFoundException e) {
-            LOGGER.log(Level.WARNING, "Could not read the traces");
-        }
-
-        assert scanner != null;
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
-            //ParserUtils.printProgress(startTime, maxLine, currLine);
-            currLine += 1;
-            String[] split = line.split(":");
-
-            try {
-
-
-                switch (split[0]) {
-                    case "&": //set the test
-                        updateTest(split[1], split[2]); // {qualifiedName; methodName}
-                        break;
-
-                    case "%": //set the SUT
-                        updateTarget(split[1], split[2]); // {qualifiedName; methodName}
-                        break;
-
-                    case "?": //get the statement using its line
-                        int lineNumber = Integer.parseInt(split[1]);
-                        updateStatementUsingLine(lineNumber);
-                        break;
-                    case "!": //get the statement using its position
-                        int startPos = Integer.parseInt(split[1]);
-                        int endPos = Integer.parseInt(split[2]);
-
-                        updateStatementUsingPosition(startPos, endPos);
-                }
-
-            } catch (Exception e) {
-                LOGGER.log(Level.FINE, "Couldn't parse the traces at line: " + currLine, e);
+            switch (Configuration.getProperty("trace")) {
+                case "file":
+                    reader = new BufferedReader(new FileReader(trace));
+                    break;
+                case "queue":
+                    reader = new QueueReader(trace);
+                    break;
+                default:
+                    reader = (trace.isFile()) ? new BufferedReader(new FileReader(trace)) : new QueueReader(trace);
             }
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Could not read the traces", e);
         }
 
-        //ParserUtils.endProgress(maxLine);
-        scanner.close();
+        //Parsing the trace
+        long currLine = 0;
+        String line ;
+        try {
+            while ((line = reader.readLine()) != null) {
 
+                //ParserUtils.printProgress(startTime, maxLine, currLine);
+                currLine += 1;
+                String[] split = line.split(":");
+
+                try {
+                    switch (split[0]) {
+                        case "&": //set the test
+                            updateTest(split[1], split[2]); // {qualifiedName; methodName}
+                            break;
+
+                        case "%": //set the SUT
+                            updateTarget(split[1], split[2]); // {qualifiedName; methodName}
+                            break;
+
+                        case "?": //get the statement using its line
+                            int lineNumber = Integer.parseInt(split[1]);
+                            updateStatementUsingLine(lineNumber);
+                            break;
+                        case "!": //get the statement using its position
+                            int startPos = Integer.parseInt(split[1]);
+                            int endPos = Integer.parseInt(split[2]);
+
+                            updateStatementUsingPosition(startPos, endPos);
+                    }
+
+                } catch (Exception e) {
+                    LOGGER.log(Level.FINE, "Couldn't parse the traces at line: " + currLine, e);
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Could not parse trace file", e);
+        }
 
         try {
             outputModel.save(Collections.EMPTY_MAP);
