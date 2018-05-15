@@ -1,6 +1,4 @@
-# dynamic-analyser
-Library parsing MoDisco models 
-=======
+
 # MDE4RTS
 
 #### Table of Contents
@@ -123,5 +121,6 @@ The test cases gathered here can be executed using JUnit4 API, or the mvn Surefi
 The Meta-model is available in the Model package. It has been generated for NeoEMF, but is compatible with standard XMI format. This meta-model is really simple, and represents the link between two elements in the MoDisco model (e.g. between a Statement and a Test Method for instance.) 
 
 Examples coming soon. 
+
 
 [![Build Status](https://travis-ci.com/orichalque/dynamic-analyser.svg?token=xAKoZhwQpQtJ2iQvzzQ8&branch=travis)](https://travis-ci.com/orichalque/dynamic-analyser)
