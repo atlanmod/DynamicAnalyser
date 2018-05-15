@@ -1,7 +1,9 @@
 package com.tblf.utils;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.model.Build;
+import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -12,7 +14,9 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -54,6 +58,46 @@ public class MavenUtils {
     }
 
     /**
+     * Adds a new maven dependency to a specified pom.
+     * @param pom the pom.xml {@link File} in which to add the dependency
+     * @param file the pom.xml {@link File} dependency
+     */
+    public static void addDependencyToPom(File pom, File file) {
+        MavenXpp3Reader mavenXpp3Reader = new MavenXpp3Reader();
+        try {
+            Model pomModelToUpdate = mavenXpp3Reader.read(new FileInputStream(pom));
+            Model pomModelToUse = mavenXpp3Reader.read(new FileInputStream(file));
+
+            String artifactId = pomModelToUse.getArtifactId();
+            String groupId = pomModelToUse.getGroupId();
+            String version = pomModelToUse.getVersion();
+
+            if (groupId == null)
+                groupId = pomModelToUse.getParent().getGroupId();
+
+            if (version == null)
+                version = pomModelToUse.getParent().getVersion();
+
+            Collection<Dependency> dependencyCollection;
+            dependencyCollection = pomModelToUpdate.getDependencies();
+
+            if (dependencyCollection == null)
+                dependencyCollection = new ArrayList<>();
+
+            Dependency dependency = new Dependency();
+            dependency.setArtifactId(artifactId);
+            dependency.setVersion(version);
+            dependency.setGroupId(groupId);
+
+            dependencyCollection.add(dependency);
+
+            new MavenXpp3Writer().write(new FileOutputStream(pom), pomModelToUpdate);
+        } catch (XmlPullParserException | IOException e) {
+            LOGGER.log(Level.WARNING, "Could not update the pom", e);
+        }
+    }
+
+    /**
      * Add a specific file in the maven surefire plugin classpath configuration
      *
      * @param file a {@link File}
@@ -72,20 +116,30 @@ public class MavenUtils {
 
             Plugin plugin = getSureFirePlugin(model);
 
-            Xpp3Dom addClassPathElts = new Xpp3Dom("additionalClasspathElements");
+            Xpp3Dom configuration = (Xpp3Dom) plugin.getConfiguration();
+
+            if (configuration == null) {
+                configuration = new Xpp3Dom("configuration");
+                plugin.setConfiguration(configuration);
+            }
+
+            Xpp3Dom addClassPathElts;
+            addClassPathElts = configuration.getChild("additionalClasspathElements");
+
+            if (addClassPathElts == null) {
+                addClassPathElts = new Xpp3Dom("additionalClasspathElements");
+                configuration.addChild(addClassPathElts);
+            }
+
+
             Xpp3Dom addClassPathElt = new Xpp3Dom("additionalClasspathElement");
             addClassPathElt.setValue(file.getAbsolutePath());
             addClassPathElts.addChild(addClassPathElt);
 
-            Object conf = plugin.getConfiguration();
-            if (conf == null)
-                plugin.setConfiguration(new Xpp3Dom("configuration"));
-
-            ((Xpp3Dom) plugin.getConfiguration()).addChild(addClassPathElts);
-
             MavenXpp3Writer mavenXpp3Writer = new MavenXpp3Writer();
             mavenXpp3Writer.write(new FileOutputStream(pom), model);
 
+            System.out.println(FileUtils.readFileToString(pom, Charset.defaultCharset()));
         } catch (IOException | XmlPullParserException e) {
             LOGGER.log(Level.WARNING, "Could not add: "+file.getAbsolutePath()+" in the surefire classpath", e);
         }
@@ -109,7 +163,7 @@ public class MavenUtils {
             if (invocationResult.getExecutionException() != null)
                 LOGGER.log(Level.WARNING, "Could not run all the tests", invocationResult.getExecutionException().fillInStackTrace());
         } catch (MavenInvocationException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Could not run the tests", e);
         }
     }
 
@@ -148,10 +202,15 @@ public class MavenUtils {
             assert model != null;
             mavenXpp3Writer.write(new FileOutputStream(pom), model);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Could not add surefire option to the pom", e);
         }
     }
 
+    /**
+     * Returns the surefire {@link Plugin} inside a {@link Model} or creates it if it does not exist
+     * @param model a {@link Model}
+     * @return the {@link Plugin}
+     */
     private static Plugin getSureFirePlugin(Model model) {
 
         Build build = model.getBuild();
@@ -181,4 +240,6 @@ public class MavenUtils {
 
     private static void addBuild(Model model) {
     }
+
 }
+

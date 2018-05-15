@@ -2,12 +2,12 @@ package com.tblf.utils;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.Charset;
 
 public class MavenUtilsTest {
@@ -46,5 +46,51 @@ public class MavenUtilsTest {
 
         Assert.assertTrue(IOUtils.toString(new FileInputStream(pom), Charset.defaultCharset()).contains("THE_OPTION"));
         FileUtils.deleteDirectory(project);
+    }
+
+    @Test
+    public void checkMavenAddDependency() throws IOException {
+        Model source = new Model();
+
+        source.setArtifactId("artifactId");
+        source.setGroupId("groupId");
+        source.setVersion("1.0.0");
+
+        File folder = new File("src/test/resources/checkMavenAddDependency");
+
+        assert folder.exists() || folder.mkdir();
+
+        File pomSource = new File(folder, "pomSource.xml");
+
+        assert pomSource.exists() || pomSource.createNewFile();
+
+        new MavenXpp3Writer().write(new FileOutputStream(pomSource), source);
+
+        String pomSourceAsString = FileUtils.readFileToString(pomSource, Charset.defaultCharset());
+
+        Assert.assertFalse(pomSourceAsString.contains("dependencyArtifactId"));
+        Assert.assertFalse(pomSourceAsString.contains("dependencyGroupId"));
+        Assert.assertFalse(pomSourceAsString.contains("2.0.0"));
+
+        Model depToAdd = new Model();
+
+        depToAdd.setArtifactId("dependencyArtifactId");
+        depToAdd.setGroupId("dependencyGroupId");
+        depToAdd.setVersion("2.0.0");
+
+        File pom = new File(folder, "pom.xml");
+
+        assert pom.exists() || pom.createNewFile();
+
+        new MavenXpp3Writer().write(new FileOutputStream(pom), depToAdd);
+
+        MavenUtils.addDependencyToPom(pomSource, pom);
+
+        pomSourceAsString = FileUtils.readFileToString(pomSource, Charset.defaultCharset());
+
+        Assert.assertTrue(pomSourceAsString.contains("dependencyArtifactId"));
+        Assert.assertTrue(pomSourceAsString.contains("dependencyGroupId"));
+        Assert.assertTrue(pomSourceAsString.contains("2.0.0"));
+
     }
 }
