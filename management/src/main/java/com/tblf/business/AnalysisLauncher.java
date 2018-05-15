@@ -114,7 +114,8 @@ public class AnalysisLauncher {
 
                 //new JUnitRunner(instrumenter.getClassLoader()).runTests(modelParser.getTests().keySet());
                 new MavenRunner(new File(source, "pom.xml")).run();
-                exTrace = new File(source, "executionTrace.extr");
+
+                exTrace = new File(source, Configuration.getProperty("traceFile"));
 
                 if (!exTrace.exists())
                     throw new IOException("Cannot get the execution trace file.");

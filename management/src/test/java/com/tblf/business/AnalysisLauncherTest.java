@@ -67,7 +67,6 @@ public class AnalysisLauncherTest {
         FileUtils.deleteDirectory(file);
     }
 
-    @Ignore
     @Test
     public void checkParseSCIQueue() throws IOException {
         File zip = new File("src/test/resources/fullprojects/SimpleProject.zip");
