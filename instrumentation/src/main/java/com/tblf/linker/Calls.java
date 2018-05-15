@@ -1,5 +1,7 @@
 package com.tblf.linker;
 
+import com.tblf.utils.Configuration;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,6 +16,22 @@ public class Calls {
     private static Tracer tracer;
     private static final Logger LOGGER = Logger.getLogger("Calls");
 
+    static {
+        switch(Configuration.getProperty("trace")) {
+            case "queue": {
+                tracer = new QueueTracer();
+                break;
+            }
+            case "file": {
+                tracer = FileTracer.getInstance();
+                break;
+            }
+            default: {
+                tracer = new QueueTracer();
+            }
+        }
+    }
+
     /**
      * This private constructor forces the class to -not- be instanciated
      */
@@ -26,6 +44,7 @@ public class Calls {
      * @param method the name of the method being executed
      */
     public static void setTestMethod(String className, String method) {
+
         try {
             tracer.updateTest(className, method);
         } catch (Exception e) {
