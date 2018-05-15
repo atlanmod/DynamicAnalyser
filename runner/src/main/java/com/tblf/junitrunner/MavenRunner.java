@@ -9,6 +9,7 @@ import org.apache.commons.lang.StringUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -52,6 +53,7 @@ public class MavenRunner {
         File instrumentedBinaries = new File(pomDir, Configuration.getProperty("instrumentedBinaries"));
         File targetClasses = new File(pomDir, Configuration.getProperty("sutBinaries"));
         File testClasses = new File(pomDir, Configuration.getProperty("testBinaries"));
+
         if (instrumentedBinaries.exists() && instrumentedBinaries.isDirectory() && instrumentedBinaries.listFiles() != null) {
 
             //Moves all the instrumented binaries inside the maven compiled classes folder.
@@ -76,14 +78,13 @@ public class MavenRunner {
                     }
                 });
 
-                MavenUtils.addFileInPomTestClassPath(pom, new File(Calls.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()));
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, "Could not replace the existing classes with the instrumented ones", e);
-            } catch (URISyntaxException e) {
-                LOGGER.log(Level.WARNING, "Could not get the Jar", e);
             }
         }
 
+        MavenUtils.addDependencyToPom(pom, new File("pom.xml")); //Used to run the instrumented code.
+        Configuration.save(new File(pom.getParentFile(), "config.properties")); //Save the conf inside the instrumented code.
         MavenUtils.runTestsOnly(pom);
     }
 
