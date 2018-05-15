@@ -30,6 +30,8 @@ public class Calls {
                 tracer = new QueueTracer();
             }
         }
+
+        tracer.startTrace();
     }
 
     /**

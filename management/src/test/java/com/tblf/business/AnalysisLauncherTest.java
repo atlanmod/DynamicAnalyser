@@ -10,6 +10,7 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -64,9 +65,31 @@ public class AnalysisLauncherTest {
 
         Assert.assertEquals(10, analysisModel.getContents().size());
         FileUtils.deleteDirectory(file);
-
     }
 
+    @Ignore
+    @Test
+    public void checkParseSCIQueue() throws IOException {
+        File zip = new File("src/test/resources/fullprojects/SimpleProject.zip");
+        ModelUtils.unzip(zip);
+
+        File file = new File("src/test/resources/fullprojects/SimpleProject");
+
+        Configuration.setProperty("trace", "queue");
+        Configuration.setProperty("type", String.valueOf(InstrumentationType.SOURCECODE));
+
+        AnalysisLauncher analysisLauncher = new AnalysisLauncher(file);
+        analysisLauncher.setOutputModel(new File(file, "analysis.xmi"));
+        analysisLauncher.run();
+
+        File model = new File(file, "analysis.xmi");
+        Assert.assertTrue(model.exists());
+
+        Resource analysisModel = ModelUtils.loadModel(model);
+
+        Assert.assertEquals(10, analysisModel.getContents().size());
+        FileUtils.deleteDirectory(file);
+    }
     @Test
     public void checkParseBCI() throws IOException {
 
@@ -83,6 +106,7 @@ public class AnalysisLauncherTest {
 
         File file = new File("src/test/resources/fullprojects/SimpleProject");
 
+        Configuration.setProperty("trace", "file");
         AnalysisLauncher analysisLauncher = new AnalysisLauncher(file);
         analysisLauncher.setInstrumentationType(InstrumentationType.BYTECODE);
         analysisLauncher.setOutputModel(new File(file, "analysis.xmi"));

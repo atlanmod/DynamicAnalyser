@@ -8,7 +8,7 @@ import net.openhft.chronicle.wire.DocumentContext;
 import java.io.File;
 import java.io.IOException;
 
-public class QueueTracer implements Tracer {
+public class QueueTracer implements Tracer, AutoCloseable {
     private DocumentContext documentContext;
     private File file = new File("trace");
 
@@ -58,5 +58,10 @@ public class QueueTracer implements Tracer {
 
     public File getFile() {
         return file;
+    }
+
+    @Override
+    public void close() throws Exception {
+        documentContext.close();
     }
 }
