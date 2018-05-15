@@ -143,7 +143,13 @@ public class FileUtils {
         }
     }
 
-    public static void clearFile(File file) throws FileNotFoundException {
+    public static void clearFile(File file) throws IOException {
+        if (file.isDirectory())
+            org.apache.commons.io.FileUtils.deleteDirectory(file);
+
+        if (!file.exists())
+            file.createNewFile();
+
         PrintWriter printWriter = new PrintWriter(file);
         printWriter.print("");
         printWriter.close();

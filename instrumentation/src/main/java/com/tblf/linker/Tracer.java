@@ -3,7 +3,7 @@ package com.tblf.linker;
 /**
  * Abstract class defining the class generating the execution traces when being called
  */
-public interface Tracer {
+public interface Tracer extends AutoCloseable{
 
     /**
      * Update the current test being executed

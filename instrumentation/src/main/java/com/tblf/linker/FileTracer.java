@@ -1,5 +1,6 @@
 package com.tblf.linker;
 
+import com.tblf.utils.Configuration;
 import com.tblf.utils.FileUtils;
 
 import java.io.File;
@@ -64,7 +65,7 @@ public class FileTracer implements Tracer {
         try {
 
             //this.file = File.createTempFile(String.valueOf(System.currentTimeMillis()), ".extr");
-            this.file = new File("executionTrace.extr");
+            this.file = new File(Configuration.getProperty("traceFile"));
 
             if (this.file.exists())
                 FileUtils.clearFile(this.file);
@@ -79,7 +80,7 @@ public class FileTracer implements Tracer {
             this.statementWritten = new HashMap<>();
             LOGGER.info("Now writing execution trace in: "+this.file.getAbsolutePath());
         } catch (IOException e) {
-            LOGGER.warning("Couldn't reset the trace file" + Arrays.toString(e.getStackTrace()));
+            LOGGER.log(Level.WARNING, "Couldn't reset the trace file", e);
         }
 
     }
@@ -203,5 +204,10 @@ public class FileTracer implements Tracer {
     protected void finalize() throws Throwable {
         INSTANCE.endTrace();
         super.finalize();
+    }
+
+    @Override
+    public void close() throws Exception {
+        endTrace();
     }
 }

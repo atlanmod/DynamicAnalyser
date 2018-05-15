@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 public class ByteCodeInstrumenterTest {
     @Before
     public void setUp() {
-        Calls.setTracer(FileTracer.getInstance());
+        Configuration.setProperty("trace", "file");
     }
     @Test
     public void checkInstrumentTarget() throws ClassNotFoundException, IOException, URISyntaxException {

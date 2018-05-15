@@ -71,9 +71,6 @@ public class InstrumenterBuilder {
      */
     public InstrumenterBuilder withSingleFileExecutionTrace() {
         tracer = FileTracer.class;
-        System.setProperty("myProperty", "trace");
-
-        Configuration.setProperty("myProperty", "trace");
         return this;
     }
 
@@ -83,10 +80,9 @@ public class InstrumenterBuilder {
      */
     public InstrumenterBuilder withQueueExecutionTrace() {
         tracer = QueueTracer.class;
-        System.setProperty("myProperty", "queue");
-        Configuration.setProperty("myProperty", "queue");
         return this;
     }
+
     /**
      * Specify the directory to instrument
      * @param directory a {@link File}

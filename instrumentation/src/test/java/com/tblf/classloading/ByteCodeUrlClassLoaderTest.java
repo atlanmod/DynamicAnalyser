@@ -1,6 +1,5 @@
 package com.tblf.classloading;
 
-import com.tblf.parsing.ModelParser;
 import com.tblf.utils.ModelUtils;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import org.apache.commons.io.FileUtils;
@@ -27,8 +26,11 @@ public class ByteCodeUrlClassLoaderTest {
         }
 
         URL[] urls = new URL[]{file.toURI().toURL()};
+        Assert.assertFalse(new FastClasspathScanner().scan().getNamesOfAllClasses().contains("Main.Main"));
 
         URLClassLoader urlClassLoader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader());
+
+        Assert.assertTrue(new FastClasspathScanner().addClassLoader(urlClassLoader).scan().getNamesOfAllClasses().contains("Main.Main"));
 
         try {
             Class aClass = urlClassLoader.loadClass("Main.Main");
@@ -50,7 +52,11 @@ public class ByteCodeUrlClassLoaderTest {
 
         URL[] urls = new URL[]{file.toURI().toURL()};
 
+        Assert.assertFalse(new FastClasspathScanner().scan().getNamesOfAllClasses().contains("Main.Main"));
+
         URLClassLoader urlClassLoader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader());
+
+        Assert.assertTrue(new FastClasspathScanner().addClassLoader(urlClassLoader).scan().getNamesOfAllClasses().contains("Main.Main"));
 
         try {
             Class aClass = urlClassLoader.loadClass("Main.Main");
@@ -62,44 +68,6 @@ public class ByteCodeUrlClassLoaderTest {
         FileUtils.deleteDirectory(file);
     }
 
-    @Test
-    public void loadJUnitBins() throws Exception {
-        ModelUtils.unzip(new File("src/test/resources/binaries/junit.zip"));
 
-        File file = new File("src/test/resources/binaries/junit/bin");
-        if (! file.exists()){
-            Assert.fail("Cannot find the junit binaries");
-        }
-
-        URLClassLoader urlClassLoader = new URLClassLoader(new URL[]{file.toURI().toURL()}, ClassLoader.getSystemClassLoader());
-
-        Assert.assertTrue(new FastClasspathScanner()
-                .scan()
-                .getNamesOfAllClasses()
-                .stream()
-                .anyMatch(s -> s.contains("org.junit.runners.Parameterized")));
-
-        ModelParser modelParser = new ModelParser();
-        modelParser.parse(ModelUtils.loadModelFromZip(new File("src/test/resources/models/junit_java.zip")));
-
-        modelParser.getTargets().forEach((s, f) -> {
-            try {
-                urlClassLoader.loadClass(s);
-            } catch (IllegalAccessError | ClassNotFoundException e) {
-                System.out.println("cannot find "+s);
-            }
-        });
-
-        modelParser.getTests().forEach((s, f) -> {
-            try {
-                urlClassLoader.loadClass(s);
-            } catch (IllegalAccessError | ClassNotFoundException e) {
-                System.out.println("cannot find "+s);
-            }
-        });
-
-        FileUtils.deleteDirectory(new File("src/test/resources/binaries/junit"));
-        Assert.assertTrue(new File("src/test/resources/models/junit_java.xmi").delete());
-    }
 
 }
