@@ -1,5 +1,7 @@
 package com.tblf.parsing;
 
+import net.openhft.chronicle.queue.ChronicleQueue;
+import net.openhft.chronicle.queue.ChronicleQueueBuilder;
 import net.openhft.chronicle.queue.ExcerptAppender;
 import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.impl.single.SingleChronicleQueueBuilder;
@@ -9,8 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.*;
 
 public class QueueReader extends BufferedReader {
-    private Wire wire;
-    private File file;
+    private ExcerptTailer excerptTailer;
 
     public QueueReader(File file) throws FileNotFoundException {
         super(new Reader(file) {
@@ -28,15 +29,13 @@ public class QueueReader extends BufferedReader {
         if (!file.exists())
             throw new FileNotFoundException("The file "+file.getAbsolutePath()+" does not exist");
 
-        this.file = file;
-        ExcerptAppender excerptAppender = SingleChronicleQueueBuilder.binary(file).build().acquireAppender();
-        ExcerptTailer excerptTailer = excerptAppender.queue().createTailer().toStart();
-        wire = excerptTailer.readingDocument().wire();
+        ChronicleQueue queue = ChronicleQueueBuilder.single(file.getAbsolutePath()).build();
+        excerptTailer = queue.createTailer();
     }
 
     @Override
     public String readLine() throws IOException {
-        return wire.read().text();
+        return excerptTailer.readText();
     }
 
 

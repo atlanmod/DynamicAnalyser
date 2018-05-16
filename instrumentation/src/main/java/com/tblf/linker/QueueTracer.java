@@ -2,16 +2,16 @@ package com.tblf.linker;
 
 import com.tblf.utils.Configuration;
 import net.openhft.chronicle.queue.ChronicleQueue;
+import net.openhft.chronicle.queue.ChronicleQueueBuilder;
 import net.openhft.chronicle.queue.ExcerptAppender;
-import net.openhft.chronicle.queue.impl.single.SingleChronicleQueueBuilder;
 import net.openhft.chronicle.wire.DocumentContext;
 
 import java.io.File;
 import java.io.IOException;
 
 public class QueueTracer implements Tracer {
-    private DocumentContext documentContext;
     private File file;
+    private ExcerptAppender excerptAppender;
 
     public QueueTracer() {
         file = new File(Configuration.getProperty("traceFile"));
@@ -39,34 +39,33 @@ public class QueueTracer implements Tracer {
 
         file.mkdir();
 
-        ChronicleQueue queue = SingleChronicleQueueBuilder.binary(file).build();
-        final ExcerptAppender appender = queue.acquireAppender();
-        documentContext = appender.writingDocument();
+        ChronicleQueue queue = ChronicleQueueBuilder.single(file.getAbsolutePath()).build();
+        excerptAppender = queue.acquireAppender();
     }
 
     @Override
     public void updateTest(String className, String methodName) {
-        documentContext.wire().write("test").text("&:".concat(className).concat(":").concat(methodName));
+        excerptAppender.writeText("&:".concat(className).concat(":").concat(methodName));
     }
 
     @Override
     public void updateTarget(String className, String methodName) {
-        documentContext.wire().write("target").text("%:".concat(className).concat(":").concat(methodName));
+        excerptAppender.writeText("%:".concat(className).concat(":").concat(methodName));
     }
 
     @Override
     public void updateStatementsUsingColumn(String startPos, String endPos) {
-        documentContext.wire().write("statement").text("!:".concat(startPos).concat(":").concat(endPos));
+        excerptAppender.writeText("!:".concat(startPos).concat(":").concat(endPos));
     }
 
     @Override
     public void updateStatementsUsingLine(String line) {
-        documentContext.wire().write("line").text("?:".concat(line));
+        excerptAppender.writeText("?:".concat(line));
     }
 
     @Override
     public void endTrace() {
-        documentContext.close();
+        excerptAppender.queue().close();
     }
 
     public File getFile() {
@@ -75,6 +74,6 @@ public class QueueTracer implements Tracer {
 
     @Override
     public void close() throws Exception {
-        documentContext.close();
+        endTrace();
     }
 }

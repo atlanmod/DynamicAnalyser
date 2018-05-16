@@ -1,13 +1,17 @@
 package com.tblf.linker;
 
+import net.openhft.chronicle.queue.ChronicleQueue;
+import net.openhft.chronicle.queue.ChronicleQueueBuilder;
 import net.openhft.chronicle.queue.ExcerptAppender;
 import net.openhft.chronicle.queue.ExcerptTailer;
+import net.openhft.chronicle.queue.impl.single.SingleChronicleQueue;
 import net.openhft.chronicle.queue.impl.single.SingleChronicleQueueBuilder;
 import net.openhft.chronicle.wire.Wire;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 
 public class QueueTracerTest {
 
@@ -18,15 +22,16 @@ public class QueueTracerTest {
         tracer.updateTest("myTest", "myMethod");
         tracer.updateTest("myTest1", "myMethod1");
         tracer.updateTest("myTest2", "myMethod2");
-        tracer.endTrace();
-        File file = tracer.getFile();
-        ExcerptAppender excerptAppender = SingleChronicleQueueBuilder.binary(file).build().acquireAppender();
-        ExcerptTailer excerptTailer = excerptAppender.queue().createTailer().toStart();
-        Wire wire = excerptTailer.readingDocument().wire();
+        //tracer.endTrace();
 
-        Assert.assertEquals("&:myTest:myMethod", wire.read().text());
-        Assert.assertEquals("&:myTest1:myMethod1", wire.read().text());
-        Assert.assertEquals("&:myTest2:myMethod2", wire.read().text());
+        File file = tracer.getFile();
+
+        ChronicleQueue queue = ChronicleQueueBuilder.single(file.getAbsolutePath()).build();
+        ExcerptTailer excerptTailer = queue.createTailer();
+
+        Assert.assertEquals("&:myTest:myMethod", excerptTailer.readText());
+        Assert.assertEquals("&:myTest1:myMethod1", excerptTailer.readText());
+        Assert.assertEquals("&:myTest2:myMethod2", excerptTailer.readText());
     }
 
     @Test
@@ -35,14 +40,14 @@ public class QueueTracerTest {
         tracer.startTrace();
         tracer.updateTest("myTest", "myMethod");
         tracer.updateTarget("myTarget", "myTargetMethod");
-        tracer.endTrace();
-        File file = tracer.getFile();
-        ExcerptAppender excerptAppender = SingleChronicleQueueBuilder.binary(file).build().acquireAppender();
-        ExcerptTailer excerptTailer = excerptAppender.queue().createTailer().toStart();
-        Wire wire = excerptTailer.readingDocument().wire();
 
-        Assert.assertEquals("&:myTest:myMethod", wire.read().text());
-        Assert.assertEquals("%:myTarget:myTargetMethod", wire.read().text());
+        File file = tracer.getFile();
+
+        ChronicleQueue queue = ChronicleQueueBuilder.single(file.getAbsolutePath()).build();
+        ExcerptTailer excerptTailer = queue.createTailer();
+
+        Assert.assertEquals("&:myTest:myMethod", excerptTailer.readText());
+        Assert.assertEquals("%:myTarget:myTargetMethod", excerptTailer.readText());
     }
 
     @Test
@@ -52,15 +57,15 @@ public class QueueTracerTest {
         tracer.updateTest("myTest", "myMethod");
         tracer.updateTarget("myTarget", "myTargetMethod");
         tracer.updateStatementsUsingColumn("50", "75");
-        tracer.endTrace();
-        File file = tracer.getFile();
-        ExcerptAppender excerptAppender = SingleChronicleQueueBuilder.binary(file).build().acquireAppender();
-        ExcerptTailer excerptTailer = excerptAppender.queue().createTailer().toStart();
-        Wire wire = excerptTailer.readingDocument().wire();
 
-        Assert.assertEquals("&:myTest:myMethod", wire.read().text());
-        Assert.assertEquals("%:myTarget:myTargetMethod", wire.read().text());
-        Assert.assertEquals("!:50:75", wire.read().text());
+        File file = tracer.getFile();
+
+        ChronicleQueue queue = ChronicleQueueBuilder.single(file.getAbsolutePath()).build();
+        ExcerptTailer excerptTailer = queue.createTailer();
+
+        Assert.assertEquals("&:myTest:myMethod", excerptTailer.readText());
+        Assert.assertEquals("%:myTarget:myTargetMethod", excerptTailer.readText());
+        Assert.assertEquals("!:50:75", excerptTailer.readText());
     }
 
     @Test
@@ -70,15 +75,15 @@ public class QueueTracerTest {
         tracer.updateTest("myTest", "myMethod");
         tracer.updateTarget("myTarget", "myTargetMethod");
         tracer.updateStatementsUsingLine("50");
-        tracer.endTrace();
-        File file = tracer.getFile();
-        ExcerptAppender excerptAppender = SingleChronicleQueueBuilder.binary(file).build().acquireAppender();
-        ExcerptTailer excerptTailer = excerptAppender.queue().createTailer().toStart();
-        Wire wire = excerptTailer.readingDocument().wire();
 
-        Assert.assertEquals("&:myTest:myMethod", wire.read().text());
-        Assert.assertEquals("%:myTarget:myTargetMethod", wire.read().text());
-        Assert.assertEquals("?:50", wire.read().text());
+        File file = tracer.getFile();
+
+        ChronicleQueue queue = ChronicleQueueBuilder.single(file.getAbsolutePath()).build();
+        ExcerptTailer excerptTailer = queue.createTailer();
+
+        Assert.assertEquals("&:myTest:myMethod", excerptTailer.readText());
+        Assert.assertEquals("%:myTarget:myTargetMethod", excerptTailer.readText());
+        Assert.assertEquals("?:50", excerptTailer.readText());
     }
 
 }
