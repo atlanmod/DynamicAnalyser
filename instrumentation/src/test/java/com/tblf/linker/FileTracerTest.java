@@ -1,5 +1,6 @@
 package com.tblf.linker;
 
+import com.tblf.utils.Configuration;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -22,9 +23,11 @@ public class FileTracerTest {
 
     @Test
     public void checkStartTrace() throws IOException {
-        FileTracer.getInstance().startTrace();
-        Assert.assertNotNull(((FileTracer) FileTracer.getInstance()).getFile());
-        File f = ((FileTracer) FileTracer.getInstance()).getFile();
+        Configuration.setProperty("traceFile", "src/test/resources/checkStartTrace");
+        FileTracer tracer = new FileTracer();
+
+        Assert.assertNotNull(tracer.getFile());
+        File f = tracer.getFile();
 
         Assert.assertNotNull(f);
         Assert.assertTrue(f.exists());
@@ -32,17 +35,18 @@ public class FileTracerTest {
 
     @Test
     public void checkSetTestMethod() throws IOException {
-        FileTracer.getInstance().startTrace();
+        Configuration.setProperty("traceFile", "src/test/resources/checkSetTestMethod");
+        FileTracer tracer = new FileTracer();
 
-        File file = ((FileTracer) FileTracer.getInstance()).getFile();
+        File file = tracer.getFile();
         Assert.assertNotNull(file);
         Assert.assertTrue(file.exists());
 
         traces.add(file);
 
-        FileTracer.getInstance().updateTest("com.pkg.MyTest", "myMethod");
+        tracer.updateTest("com.pkg.MyTest", "myMethod");
 
-        FileTracer.getInstance().endTrace();
+        tracer.endTrace();
 
         String s = IOUtils.toString(file.toURI(), "UTF-8");
         Assert.assertEquals("&:com.pkg.MyTest:myMethod\n", s);
@@ -50,17 +54,18 @@ public class FileTracerTest {
 
     @Test
     public void checkSetTargetMethod() throws IOException {
-        FileTracer.getInstance().startTrace();
+        Configuration.setProperty("traceFile", "src/test/resources/checkSetTargetMethod");
+        FileTracer tracer = new FileTracer();
 
-        File file = ((FileTracer) FileTracer.getInstance()).getFile();
+        File file = tracer.getFile();
         Assert.assertNotNull(file);
         Assert.assertTrue(file.exists());
 
         traces.add(file);
 
-        FileTracer.getInstance().updateTarget("com.pkg.MyTarget", "myMethod");
+        tracer.updateTarget("com.pkg.MyTarget", "myMethod");
 
-        FileTracer.getInstance().endTrace();
+        tracer.endTrace();
 
         String s = IOUtils.toString(file.toURI(), Charset.defaultCharset());
         String oracle = "%:com.pkg.MyTarget:myMethod\n";
@@ -69,16 +74,17 @@ public class FileTracerTest {
 
     @Test
     public void checkUpdateStatementUsingColumn() throws IOException {
-        FileTracer.getInstance().startTrace();
+        Configuration.setProperty("traceFile", "src/test/resources/checkUpdateStatementUsingColumn");
+        FileTracer tracer = new FileTracer();
 
-        File file = ((FileTracer) FileTracer.getInstance()).getFile();
+        File file = tracer.getFile();
         Assert.assertNotNull(file);
         Assert.assertTrue(file.exists());
 
         traces.add(file);
 
-        FileTracer.getInstance().updateStatementsUsingColumn("50", "70");
-        FileTracer.getInstance().endTrace();
+        tracer.updateStatementsUsingColumn("50", "70");
+        tracer.endTrace();
 
         String s = IOUtils.toString(file.toURI(), Charset.defaultCharset());
         String oracle = "!:50:70\n";
@@ -88,68 +94,70 @@ public class FileTracerTest {
 
     @Test
     public void checkUpdateStatementUsingColumnTwice() throws IOException {
-        FileTracer.getInstance().startTrace();
+        Configuration.setProperty("traceFile", "src/test/resources/checkUpdateStatementUsingColumnTwice");
+        FileTracer tracer = new FileTracer();
 
-        File file = ((FileTracer) FileTracer.getInstance()).getFile();
+        File file = tracer.getFile();
         Assert.assertNotNull(file);
         Assert.assertTrue(file.exists());
 
         traces.add(file);
 
-        FileTracer.getInstance().updateTest("Test", "testMethod");
-        FileTracer.getInstance().updateTarget("Target", "targetMethod");
-        FileTracer.getInstance().updateStatementsUsingColumn("50", "70");
-        FileTracer.getInstance().updateStatementsUsingColumn("150", "170");
-        FileTracer.getInstance().updateStatementsUsingColumn("50", "70");
-        FileTracer.getInstance().endTrace();
+        tracer.updateTest("Test", "testMethod");
+        tracer.updateTarget("Target", "targetMethod");
+        tracer.updateStatementsUsingColumn("50", "70");
+        tracer.updateStatementsUsingColumn("150", "170");
+        tracer.updateStatementsUsingColumn("50", "70");
+        tracer.endTrace();
 
         String s = IOUtils.toString(file.toURI(), Charset.defaultCharset());
         String oracle = "&:Test:testMethod\n" +
-                        "%:Target:targetMethod\n" +
-                        "!:50:70\n" +
-                        "!:150:170\n";
+                "%:Target:targetMethod\n" +
+                "!:50:70\n" +
+                "!:150:170\n";
 
         Assert.assertEquals(oracle, s);
     }
 
     @Test
     public void checkUpdateStatementUsingLineNumber() throws IOException {
-        FileTracer.getInstance().startTrace();
+        Configuration.setProperty("traceFile", "src/test/resources/checkUpdateStatementUsingLineNumber");
+        FileTracer tracer = new FileTracer();
 
-        File file = ((FileTracer) FileTracer.getInstance()).getFile();
+        File file = tracer.getFile();
         Assert.assertNotNull(file);
         Assert.assertTrue(file.exists());
 
         traces.add(file);
 
-        FileTracer.getInstance().updateTest("Test", "testMethod");
-        FileTracer.getInstance().updateTarget("Target", "targetMethod");
-        FileTracer.getInstance().updateStatementsUsingLine("7");
-        FileTracer.getInstance().updateStatementsUsingLine("8");
-        FileTracer.getInstance().updateStatementsUsingLine("7");
-        FileTracer.getInstance().endTrace();
+        tracer.updateTest("Test", "testMethod");
+        tracer.updateTarget("Target", "targetMethod");
+        tracer.updateStatementsUsingLine("7");
+        tracer.updateStatementsUsingLine("8");
+        tracer.updateStatementsUsingLine("7");
+        tracer.endTrace();
 
         String s = IOUtils.toString(file.toURI(), Charset.defaultCharset());
         String oracle = "&:Test:testMethod\n" +
-                        "%:Target:targetMethod\n" +
-                        "?:7\n" +
-                        "?:8\n";
+                "%:Target:targetMethod\n" +
+                "?:7\n" +
+                "?:8\n";
 
         Assert.assertEquals(oracle, s);
     }
 
     @Test
     public void checkUpdateStatementUsingLineNumberTwice() throws IOException {
-        FileTracer.getInstance().startTrace();
+        Configuration.setProperty("traceFile", "src/test/resources/checkUpdateStatementUsingLineNumberTwice");
+        FileTracer tracer = new FileTracer();
 
-        File file = ((FileTracer) FileTracer.getInstance()).getFile();
+        File file = tracer.getFile();
         Assert.assertNotNull(file);
         Assert.assertTrue(file.exists());
 
         traces.add(file);
 
-        FileTracer.getInstance().updateStatementsUsingLine("50");
-        FileTracer.getInstance().endTrace();
+        tracer.updateStatementsUsingLine("50");
 
         String s = IOUtils.toString(file.toURI(), Charset.defaultCharset());
         String oracle = "?:50\n";
@@ -158,16 +166,18 @@ public class FileTracerTest {
 
     @Test
     public void checkEndTrace() throws IOException {
-        FileTracer.getInstance().startTrace();
-        File file = ((FileTracer) FileTracer.getInstance()).getFile();
+        Configuration.setProperty("traceFile", "src/test/resources/checkEndTrace");
+        FileTracer tracer = new FileTracer();
+
+        File file = tracer.getFile();
         Assert.assertNotNull(file);
         Assert.assertTrue(file.exists());
 
         traces.add(file);
 
-        FileTracer.getInstance().updateStatementsUsingLine("50");
+        tracer.updateStatementsUsingLine("50");
 
-        FileTracer.getInstance().endTrace();
+        tracer.endTrace();
 
         Assert.assertEquals("?:50\n", IOUtils.toString(file.toURI(), "UTF-8"));
     }

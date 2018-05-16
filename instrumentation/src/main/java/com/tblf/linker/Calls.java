@@ -23,7 +23,7 @@ public class Calls {
                 break;
             }
             case "file": {
-                tracer = FileTracer.getInstance();
+                tracer = new FileTracer();
                 break;
             }
             default: {

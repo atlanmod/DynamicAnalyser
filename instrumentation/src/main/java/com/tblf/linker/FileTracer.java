@@ -17,7 +17,6 @@ import java.util.logging.Logger;
  */
 public class FileTracer implements Tracer {
 
-    private static FileTracer INSTANCE;
     private static final Logger LOGGER = Logger.getLogger("FileTracer");
 
     private String currentTarget;
@@ -34,34 +33,7 @@ public class FileTracer implements Tracer {
     /**
      * Private constructor. This class must not be instanciated by the client
      */
-    private FileTracer() {
-
-    }
-
-    /**
-     * Singleton getInstance method
-     * @return the current instance of {@link Tracer}
-     */
-    public static Tracer getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new FileTracer();
-            INSTANCE.reset();
-        }
-
-
-        return INSTANCE;
-    }
-
-    @Override
-    public void startTrace() {
-        reset();
-    }
-
-    /**
-     * Reset the {@link FileTracer}. creates a new trace and reset all the current tests and targets being executed
-     */
-    private void reset() {
-
+    public FileTracer() {
         try {
 
             //this.file = File.createTempFile(String.valueOf(System.currentTimeMillis()), ".extr");
@@ -71,22 +43,25 @@ public class FileTracer implements Tracer {
                 FileUtils.clearFile(this.file);
 
             this.writer = new FlushingBufferedWriter(new FileWriter(this.file));
-
-            this.currentTarget = null;
-            this.currentTest = null;
-            this.currentTestMethod = null;
-            this.currentTargetMethod = null;
-            this.lineWritten = new HashMap<>();
-            this.statementWritten = new HashMap<>();
-            LOGGER.info("Now writing execution trace in: "+this.file.getAbsolutePath());
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Couldn't reset the trace file", e);
         }
 
+        this.lineWritten = new HashMap<>();
+        this.statementWritten = new HashMap<>();
+        LOGGER.info("Now writing execution trace in: " + this.file.getAbsolutePath());
+
     }
+
+    @Override
+    public void startTrace() {
+
+    }
+
 
     /**
      * Return the file being lineWritten
+     *
      * @return
      */
     public File getFile() {
@@ -95,8 +70,9 @@ public class FileTracer implements Tracer {
 
     /**
      * Write in the file the current test being executed and set the field
+     *
      * @param className the name of the test class
-     * @param method the name of the sut method
+     * @param method    the name of the sut method
      */
     @Override
     public void updateTest(String className, String method) {
@@ -113,7 +89,7 @@ public class FileTracer implements Tracer {
             try {
                 this.writer.write(this.stringBuilder.toString());
             } catch (IOException e) {
-                LOGGER.log(Level.WARNING, "Cannot update the test "+className, e);
+                LOGGER.log(Level.WARNING, "Cannot update the test " + className, e);
             }
         }
 
@@ -121,8 +97,9 @@ public class FileTracer implements Tracer {
 
     /**
      * Write in the file the current target being executed and set the field
+     *
      * @param className the name of the sut class
-     * @param method the name of the sut method
+     * @param method    the name of the sut method
      */
     @Override
     public void updateTarget(String className, String method) {
@@ -135,7 +112,7 @@ public class FileTracer implements Tracer {
             try {
                 this.writer.write(this.stringBuilder.toString());
             } catch (IOException e) {
-                LOGGER.warning("Couldn't write the current target " + className+" - "+method +" in trace" + Arrays.toString(e.getStackTrace()));
+                LOGGER.warning("Couldn't write the current target " + className + " - " + method + " in trace" + Arrays.toString(e.getStackTrace()));
             }
         }
 
@@ -143,8 +120,9 @@ public class FileTracer implements Tracer {
 
     /**
      * Write in the file the current statement being executed
+     *
      * @param startCol the starting position of the column, at the file level
-     * @param endCol the ending position of the column, at the file level
+     * @param endCol   the ending position of the column, at the file level
      */
     @Override
     public void updateStatementsUsingColumn(String startCol, String endCol) {
@@ -168,6 +146,7 @@ public class FileTracer implements Tracer {
 
     /**
      * Write in the file the current statement being executed
+     *
      * @param line the line number at the line level
      */
     @Override
@@ -182,7 +161,7 @@ public class FileTracer implements Tracer {
                 this.writer.write(this.stringBuilder.toString());
                 this.lineWritten.get(this.currentTarget).add(Integer.valueOf(line));
             } catch (IOException e) {
-                LOGGER.warning("Couldn't write the current line "+line+" in the file" + Arrays.toString(e.getStackTrace()));
+                LOGGER.warning("Couldn't write the current line " + line + " in the file" + Arrays.toString(e.getStackTrace()));
             }
         }
     }
@@ -194,7 +173,7 @@ public class FileTracer implements Tracer {
     public void endTrace() {
         try {
             this.writer.close();
-            LOGGER.info("trace file saved in "+this.file.getAbsolutePath());
+            LOGGER.info("trace file saved in " + this.file.getAbsolutePath());
         } catch (IOException e) {
             LOGGER.warning("Couldn't write in the file" + Arrays.toString(e.getStackTrace()));
         }
@@ -202,7 +181,6 @@ public class FileTracer implements Tracer {
 
     @Override
     protected void finalize() throws Throwable {
-        INSTANCE.endTrace();
         super.finalize();
     }
 

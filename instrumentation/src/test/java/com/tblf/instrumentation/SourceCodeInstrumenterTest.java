@@ -51,15 +51,12 @@ public class SourceCodeInstrumenterTest {
                 Files.walk((binOut.toPath())).filter(path -> path.toString().endsWith(".class")).collect(Collectors.toList()).size()
         >= Files.walk(proj.toPath()).filter(path -> path.toString().endsWith(".java")).collect(Collectors.toList()).size());
 
-        FileTracer.getInstance().startTrace();
         try {
             Class clazz = SingleURLClassLoader.getInstance().getClassLoader().loadClass("com.tblf.SimpleProject.AppTest");
             JUnitCore.runClasses(clazz);
         } catch (Throwable e) {
             Assert.fail(e.toString());
         }
-
-        FileTracer.getInstance().endTrace();
 
         FileUtils.deleteDirectory(binOut);
     }

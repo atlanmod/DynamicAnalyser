@@ -91,11 +91,8 @@ public class ByteCodeInstrumenterTest {
         Class bClass = SingleURLClassLoader.getInstance().getClassLoader().loadClass("com.tblf.SimpleProject.App");
         Assert.assertNotNull(bClass);
 
-        FileTracer.getInstance().startTrace();
         //Running the testClass instrumented with the Test instrumentation
         Result result = JUnitCore.runClasses(aClass);
-
-        FileTracer.getInstance().endTrace();
 
         Assert.assertTrue(result.getFailures()
                         .stream()

@@ -130,7 +130,10 @@ public class AnalysisLauncherTest {
         File file = new File("src/test/resources/fullprojects/SimpleProject");
 
         AnalysisLauncher analysisLauncher = new AnalysisLauncher(file);
-        analysisLauncher.setInstrumentationType(InstrumentationType.BYTECODE);
+
+        Configuration.setProperty("trace", "file");
+        Configuration.setProperty("instrumentationType", String.valueOf(InstrumentationType.BYTECODE));
+
         analysisLauncher.setOutputModel(new File(file, "analysis.xmi"));
 
         analysisLauncher.applyBefore(file1 -> {
@@ -163,7 +166,10 @@ public class AnalysisLauncherTest {
         File file = new File("src/test/resources/fullprojects/SimpleProject");
 
         AnalysisLauncher analysisLauncher = new AnalysisLauncher(file);
-        analysisLauncher.setInstrumentationType(InstrumentationType.SOURCECODE);
+
+        Configuration.setProperty("trace", "file");
+        Configuration.setProperty("instrumentationType", String.valueOf(InstrumentationType.SOURCECODE));
+
         analysisLauncher.setOutputModel(new File(file, "analysis.xmi"));
 
         analysisLauncher.applyAfter(file1 -> {
