@@ -1,5 +1,7 @@
 package com.tblf.linker;
 
+import java.io.File;
+
 /**
  * Abstract class defining the class generating the execution traces when being called
  */
@@ -43,5 +45,11 @@ public interface Tracer extends AutoCloseable{
      */
     void endTrace();
 
+    /**
+     * Return the trace {@link File}
+     * @return a {@link File}
+     *
+     */
+    File getFile();
 }
 
