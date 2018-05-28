@@ -7,5 +7,8 @@ notifications:
     email: true
 
 install:
+    - git clone https://github.com/mondo-project/mondo-hawk/
+    - cd mondo-hawk && ./install-maven-deps.sh
+    - mvn -f install pom-plain.xml
     - cd $TRAVIS_BUILD_DIR/ && mvn clean
     - cd $TRAVIS_BUILD_DIR/ && mvn install -Ptravis
