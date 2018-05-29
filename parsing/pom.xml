@@ -41,12 +41,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.hawk.service</groupId>
-            <artifactId>org.hawk.service.api</artifactId>
-            <version>1.5.0-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.hawk</groupId>
