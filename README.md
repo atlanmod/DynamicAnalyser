@@ -123,4 +123,4 @@ The Meta-model is available in the Model package. It has been generated for NeoE
 Examples coming soon. 
 
 
-[![Build Status](https://travis-ci.com/orichalque/dynamic-analyser.svg?token=xAKoZhwQpQtJ2iQvzzQ8&branch=travis)](https://travis-ci.com/orichalque/dynamic-analyser)
+[![Build Status](https://travis-ci.org/atlanmod/MDE4RTS.svg?branch=master)](https://travis-ci.org/atlanmod/MDE4RTS)
