@@ -185,6 +185,7 @@
                                 <!-- exclude tests here -->
                                 <exclude>**/MavenUtilsTest.java</exclude> <!-- no ${maven.home} on travis -->
                             </excludes>
+                            <testFailureIgnore>true</testFailureIgnore>
                         </configuration>
                     </plugin>
                 </plugins>

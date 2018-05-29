@@ -11,4 +11,4 @@ install:
     - cd mondo-hawk && ./install-maven-deps.sh
     - mvn -f pom-plain.xml install -pl \!standalone/_hawk_runtime_example
     - cd $TRAVIS_BUILD_DIR/ && mvn clean
-    - cd $TRAVIS_BUILD_DIR/ && mvn install -DtestFailureIgnore=true
+    - cd $TRAVIS_BUILD_DIR/ && mvn install -Ptravis
