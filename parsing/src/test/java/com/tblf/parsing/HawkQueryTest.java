@@ -71,7 +71,7 @@ public class HawkQueryTest {
 
         modelIndexer.addVCSManager(localFolder, true);
 
-        modelIndexer.init(1000, 512 * 1000);
+        modelIndexer.init(0, 0);
 
         waitForSync(modelIndexer, () -> null);
 
@@ -88,7 +88,7 @@ public class HawkQueryTest {
 
         modelIndexer.addVCSManager(localFolder, true);
 
-        modelIndexer.init(1000, 512 * 1000);
+        modelIndexer.init(0, 0);
 
         waitForSync(modelIndexer, () -> null);
 
