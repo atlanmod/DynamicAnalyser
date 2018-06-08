@@ -14,7 +14,7 @@ public class MavenUtilsTest {
 
     @Test
     public void checkCompilePom() throws IOException {
-        ModelUtils.unzip(new File("src/test/resources/projects/SimpleProject.zip"));
+        com.tblf.utils.FileUtils.unzip(new File("src/test/resources/projects/SimpleProject.zip"));
         File project = new File("src/test/resources/projects/SimpleProject");
 
         Assert.assertTrue(! (new File(project, "target")).exists());
@@ -33,7 +33,7 @@ public class MavenUtilsTest {
 
     @Test
     public void checkModifyPom() throws IOException {
-        ModelUtils.unzip(new File("src/test/resources/projects/SimpleProject.zip"));
+        com.tblf.utils.FileUtils.unzip(new File("src/test/resources/projects/SimpleProject.zip"));
         File project = new File("src/test/resources/projects/SimpleProject");
 
         Assert.assertTrue(! (new File(project, "target")).exists());

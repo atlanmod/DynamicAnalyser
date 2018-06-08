@@ -1,6 +1,5 @@
 package com.tblf.utils;
 
-import com.github.javaparser.JavaParser;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
@@ -144,7 +143,7 @@ public class ModelUtilsTest {
 
     @Test
     public void checkGetMethodSignature() throws IOException {
-        ModelUtils.unzip(new File("src/test/resources/projects/SimpleProject3.zip"));
+        com.tblf.utils.FileUtils.unzip(new File("src/test/resources/projects/SimpleProject3.zip"));
 
         File file = new File("src/test/resources/projects/SimpleProject");
         assert file.exists();
@@ -173,7 +172,7 @@ public class ModelUtilsTest {
 
     @Test
     public void checkGetOverridenMethod() throws IOException {
-        ModelUtils.unzip(new File("src/test/resources/projects/SimpleProject3.zip"));
+        com.tblf.utils.FileUtils.unzip(new File("src/test/resources/projects/SimpleProject3.zip"));
 
         File file = new File("src/test/resources/projects/SimpleProject");
         assert file.exists();

@@ -1,7 +1,6 @@
 package com.tblf.utils;
 
 import com.tblf.model.ModelPackage;
-import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
@@ -29,8 +28,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 /**
  * Created by Thibault on 18/09/2017.
@@ -81,7 +78,7 @@ public class ModelUtils {
      */
     public static Resource loadModelFromZip(File zipFile) throws IOException {
 
-        List<File> files = unzip(zipFile);
+        List<File> files = com.tblf.utils.FileUtils.unzip(zipFile);
 
         Optional<File> xmiFile = files.stream().filter(file -> file.toString().endsWith(".xmi")).findAny();
 
@@ -151,60 +148,11 @@ public class ModelUtils {
      * @throws IOException
      */
     public static Resource loadJavaApplicationModelFromZip(File zipFile) throws IOException {
-        List<File> files = unzip(zipFile);
+        List<File> files = com.tblf.utils.FileUtils.unzip(zipFile);
 
         File directory = files.get(0).getParentFile();
 
         return loadJavaApplicationModel(directory);
-    }
-
-    /**
-     * Unzip a model zipped and return the list of all the files it contains.
-     * (The zip could contain any kind of files, but we use it for xmi model compressed as zips)
-     *
-     * @param zip
-     * @return
-     * @throws IOException
-     */
-    public static List<File> unzip(File zip) throws IOException {
-
-        ZipEntry zipEntry;
-        List<File> filesUnzipped = new ArrayList<>();
-
-        FileInputStream fileInputStream = new FileInputStream(zip);
-        try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(fileInputStream))) {
-
-            final int BUFFER = 2048;
-
-            while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-                LOGGER.fine("Extracting: " + zipEntry);
-
-                File file = FileUtils.getFile(zip.getParentFile(), zipEntry.toString());
-
-                if (zipEntry.toString().endsWith("/")) {
-                    file.mkdir();
-                } else {
-                    filesUnzipped.add(file);
-
-                    int count;
-                    byte data[] = new byte[BUFFER];
-
-                    FileOutputStream fileOutputStream = new FileOutputStream(file);
-
-                    try (BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream, BUFFER)) {
-                        while ((count = zipInputStream.read(data, 0, BUFFER)) != -1) {
-                            bufferedOutputStream.write(data, 0, count);
-                        }
-
-                        bufferedOutputStream.flush();
-                        bufferedOutputStream.close();
-                    }
-                }
-            }
-            zipInputStream.close();
-        }
-
-        return filesUnzipped;
     }
 
 

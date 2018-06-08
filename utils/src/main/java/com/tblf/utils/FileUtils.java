@@ -12,6 +12,8 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class FileUtils {
     private static final Logger LOGGER = Logger.getLogger(FileUtils.class.getName());
@@ -153,5 +155,54 @@ public class FileUtils {
         PrintWriter printWriter = new PrintWriter(file);
         printWriter.print("");
         printWriter.close();
+    }
+
+    /**
+     * Unzip a model zipped and return the list of all the files it contains.
+     * (The zip could contain any kind of files, but we use it for xmi model compressed as zips)
+     *
+     * @param zip
+     * @return
+     * @throws IOException
+     */
+    public static List<File> unzip(File zip) throws IOException {
+
+        ZipEntry zipEntry;
+        List<File> filesUnzipped = new ArrayList<>();
+
+        FileInputStream fileInputStream = new FileInputStream(zip);
+        try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(fileInputStream))) {
+
+            final int BUFFER = 2048;
+
+            while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+                LOGGER.fine("Extracting: " + zipEntry);
+
+                File file = org.apache.commons.io.FileUtils.getFile(zip.getParentFile(), zipEntry.toString());
+
+                if (zipEntry.toString().endsWith("/")) {
+                    file.mkdir();
+                } else {
+                    filesUnzipped.add(file);
+
+                    int count;
+                    byte data[] = new byte[BUFFER];
+
+                    FileOutputStream fileOutputStream = new FileOutputStream(file);
+
+                    try (BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream, BUFFER)) {
+                        while ((count = zipInputStream.read(data, 0, BUFFER)) != -1) {
+                            bufferedOutputStream.write(data, 0, count);
+                        }
+
+                        bufferedOutputStream.flush();
+                        bufferedOutputStream.close();
+                    }
+                }
+            }
+            zipInputStream.close();
+        }
+
+        return filesUnzipped;
     }
 }
