@@ -4,7 +4,6 @@ import com.tblf.DotCP.DotCPParserBuilder;
 import com.tblf.classloading.SingleURLClassLoader;
 import com.tblf.instrumentation.bytecode.ByteCodeInstrumenter;
 import com.tblf.linker.Calls;
-import com.tblf.linker.FileTracer;
 import com.tblf.parsing.ModelParser;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.ModelUtils;
@@ -41,7 +40,7 @@ public class ByteCodeInstrumenterTest {
     @Test
     public void checkInstrumentTarget() throws ClassNotFoundException, IOException, URISyntaxException {
         File file = new File("src/test/resources/binaries/junit.zip");
-        ModelUtils.unzip(file);
+        com.tblf.utils.FileUtils.unzip(file);
 
         File folder = new File("src/test/resources/binaries/junit");
         Configuration.setProperty("sutBinaries", "/bin");
@@ -70,7 +69,7 @@ public class ByteCodeInstrumenterTest {
         Configuration.setProperty("sutBinaries", "/");
         Configuration.setProperty("testBinaries", "/");
         File zip = new File("src/test/resources/binaries/simpleProj.zip");
-        ModelUtils.unzip(zip);
+        com.tblf.utils.FileUtils.unzip(zip);
 
         File folder = new File("src/test/resources/binaries/simpleProj");
 
@@ -109,7 +108,7 @@ public class ByteCodeInstrumenterTest {
     public void checkInstrumentModel() throws Exception {
 
         File assertJZip = new File("src/test/resources/binaries/assertj.zip");
-        ModelUtils.unzip(assertJZip);
+        com.tblf.utils.FileUtils.unzip(assertJZip);
 
         Resource model = ModelUtils.loadModelFromZip(new File("src/test/resources/binaries/assertj/assertj-core_java.zip"));
         ModelParser modelParser = new ModelParser();

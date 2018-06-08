@@ -1,6 +1,5 @@
 package com.tblf.classloading;
 
-import com.tblf.utils.ModelUtils;
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
@@ -42,7 +41,7 @@ public class ByteCodeUrlClassLoaderTest {
 
     @Test
     public void loadSingleClassFileWithNoDependency() throws IOException {
-        ModelUtils.unzip(new File("src/test/resources/binaries/main.zip"));
+        com.tblf.utils.FileUtils.unzip(new File("src/test/resources/binaries/main.zip"));
 
         File file = new File("src/test/resources/binaries/main");
 
