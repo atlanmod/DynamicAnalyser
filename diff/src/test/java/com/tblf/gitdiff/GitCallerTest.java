@@ -20,7 +20,7 @@ public class GitCallerTest {
     public void checkCompareCommit() throws IOException {
         File zip = new File("src/test/resources/files.zip");
 
-        ModelUtils.unzip(zip);
+        com.tblf.utils.FileUtils.unzip(zip);
 
         File file = new File("src/test/resources/files");
         Assert.assertTrue(file.exists());
@@ -40,7 +40,7 @@ public class GitCallerTest {
             h.setLevel(Level.FINE);
         }
 
-        ModelUtils.unzip(new File("src/test/resources/fullprojects/SimpleProject.zip"));
+        com.tblf.utils.FileUtils.unzip(new File("src/test/resources/fullprojects/SimpleProject.zip"));
 
         File file = new File("src/test/resources/fullprojects/SimpleProject");
         assert file.exists();
@@ -62,7 +62,7 @@ public class GitCallerTest {
         for (Handler h : rootLogger.getHandlers()) {
             h.setLevel(Level.FINE);
         }
-        ModelUtils.unzip(new File("src/test/resources/fullprojects/SimpleProject2.zip"));
+        com.tblf.utils.FileUtils.unzip(new File("src/test/resources/fullprojects/SimpleProject2.zip"));
 
         File file = new File("src/test/resources/fullprojects/SimpleProject");
         assert file.exists();

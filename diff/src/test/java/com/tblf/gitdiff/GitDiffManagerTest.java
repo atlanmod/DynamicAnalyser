@@ -26,7 +26,7 @@ public class GitDiffManagerTest {
         for (Handler h : rootLogger.getHandlers()) {
             h.setLevel(Level.FINE);
         }
-        ModelUtils.unzip(new File("src/test/resources/fullprojects/SimpleProject3.zip"));
+        com.tblf.utils.FileUtils.unzip(new File("src/test/resources/fullprojects/SimpleProject3.zip"));
 
         File file = new File("src/test/resources/fullprojects/SimpleProject");
         assert file.exists();

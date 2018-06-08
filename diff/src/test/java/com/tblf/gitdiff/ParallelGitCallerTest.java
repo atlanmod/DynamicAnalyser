@@ -24,7 +24,7 @@ public class ParallelGitCallerTest {
             h.setLevel(Level.FINE);
         }
 
-        ModelUtils.unzip(new File("src/test/resources/fullprojects/SimpleProject.zip"));
+        com.tblf.utils.FileUtils.unzip(new File("src/test/resources/fullprojects/SimpleProject.zip"));
 
         File file = new File("src/test/resources/fullprojects/SimpleProject");
         assert file.exists();

@@ -1,7 +1,6 @@
 package com.tblf.junitrunner;
 
 import com.tblf.utils.Configuration;
-import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -20,7 +19,7 @@ public class JUnitRunnerTest {
     @Test
     public void runJUnitTestClass() throws IOException, ClassNotFoundException {
 
-        ModelUtils.unzip(new File("src/test/resources/binaries/simpleProj.zip"));
+        com.tblf.utils.FileUtils.unzip(new File("src/test/resources/binaries/simpleProj.zip"));
 
         File file = new File("src/test/resources/binaries/simpleProj");
         if (! file.exists()){
