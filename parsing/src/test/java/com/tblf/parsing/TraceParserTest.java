@@ -3,7 +3,6 @@ package com.tblf.parsing;
 import com.tblf.model.Analysis;
 import com.tblf.model.ModelPackage;
 import com.tblf.utils.Configuration;
-import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EPackage;
@@ -53,7 +52,7 @@ public class TraceParserTest {
         Map<String, Object> m = reg.getExtensionToFactoryMap();
         m.put("xmi", new XMIResourceFactoryImpl());
 
-        ModelUtils.unzip(new File("./src/test/resources/models/simpleProject.zip"));
+        com.tblf.utils.FileUtils.unzip(new File("./src/test/resources/models/simpleProject.zip"));
 
         File file = new File("./src/test/resources/models/simpleProject");
         Files.walk(file.toPath())
