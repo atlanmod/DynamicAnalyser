@@ -1,8 +1,8 @@
 package com.tblf.parsing;
 
 import com.tblf.parsing.indexer.HawkQuery;
-import org.eclipse.modisco.java.composition.javaapplication.Java2File;
-import org.eclipse.modisco.java.composition.javaapplication.JavaapplicationFactory;
+import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -11,11 +11,20 @@ public class HawkQueryTest {
 
 
     @Test
-    public void checkQueryTestSetup() {
-        Java2File java2File = JavaapplicationFactory.eINSTANCE.createJava2File();
-
+    @Ignore
+    public void checkHawkLoadingSimpleProject() {
         Query query = new HawkQuery(new File("src/test/resources/hawk/models/simpleProject"));
-        query.queryLine(3, 3, java2File);
+        query.queryLine(3, 3, null);
+    }
+
+    @Test
+    public void checkHawkLoadingComplexProject() {
+        try(HawkQuery query = new HawkQuery(new File("src/test/resources/hawk/models/junit"))) {
+            query.queryLine(3, 3, null);
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+        }
+
     }
 }
 

@@ -2,6 +2,7 @@ package com.tblf.parsing.indexer;
 
 import com.tblf.parsing.Query;
 import com.tblf.utils.Configuration;
+import org.eclipse.emf.common.util.URI;
 import org.eclipse.modisco.java.composition.javaapplication.Java2File;
 import org.eclipse.modisco.kdm.source.extension.ASTNodeSourceRegion;
 import org.hawk.core.IModelIndexer;
@@ -10,6 +11,7 @@ import org.hawk.core.runtime.ModelIndexerImpl;
 import org.hawk.core.util.DefaultConsole;
 import org.hawk.emf.metamodel.EMFMetaModelResourceFactory;
 import org.hawk.emf.model.EMFModelResourceFactory;
+import org.hawk.emfresource.impl.LocalHawkResourceImpl;
 import org.hawk.epsilon.emc.EOLQueryEngine;
 import org.hawk.epsilon.emc.wrappers.GraphNodeWrapper;
 import org.hawk.graph.updater.GraphMetaModelUpdater;
@@ -29,8 +31,9 @@ import java.util.logging.Logger;
 import static org.junit.Assert.fail;
 
 //TODO
-public class HawkQuery implements Query {
+public class HawkQuery implements Query, AutoCloseable {
     private IModelIndexer modelIndexer;
+    private LocalHawkResourceImpl localHawkResource;
 
     private static final Logger LOGGER = Logger.getAnonymousLogger();
 
@@ -81,15 +84,20 @@ public class HawkQuery implements Query {
         localFolder.run();
         modelIndexer.addVCSManager(localFolder, true);
 
+        localHawkResource = new LocalHawkResourceImpl(URI.createURI(file.getAbsolutePath()), modelIndexer, false, null, null);
     }
 
     @Override
     public Collection<ASTNodeSourceRegion> queryLine(int lineStart, int lineEnd, Java2File java2File) {
-        System.out.println(java2File.toString());
-        waitForSync(modelIndexer, () -> modelIndexer.getKnownQueryLanguages().get("org.hawk.epsilon.emc.EOLQueryEngine")
+        waitForSync(modelIndexer, () -> {
+                    Object value = modelIndexer.getKnownQueryLanguages().get("org.hawk.epsilon.emc.EOLQueryEngine")
                     .query(modelIndexer,
-                            ""
-                            ,null));
+                            "return null;"
+                            ,null);
+
+                    LOGGER.fine(value.toString());
+                    return null;
+        });
 
         //TODO
         return Collections.EMPTY_LIST;
@@ -121,6 +129,11 @@ public class HawkQuery implements Query {
         } catch (Throwable e) {
             LOGGER.log(Level.WARNING, "Error with indexer synchronization", e);
         }
+    }
+
+    @Override
+    public void close() throws Exception {
+        modelIndexer.shutdown(IModelIndexer.ShutdownRequestType.ONLY_LOCAL);
     }
 }
 
