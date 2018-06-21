@@ -3,12 +3,11 @@ package com.tblf.business;
 import com.tblf.instrumentation.InstrumentationType;
 import com.tblf.instrumentation.Instrumenter;
 import com.tblf.instrumentation.InstrumenterBuilder;
-import com.tblf.instrumentation.bytecode.ByteCodeInstrumenter;
-import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
 import com.tblf.junitrunner.MavenRunner;
 import com.tblf.linker.Calls;
 import com.tblf.parsing.ModelParser;
 import com.tblf.parsing.TraceParser;
+import com.tblf.parsing.TraceType;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.FileUtils;
 import com.tblf.utils.ModelUtils;
@@ -17,7 +16,9 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -26,6 +27,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class AnalysisLauncher {
+    public static int oracle;
 
     private static final Logger LOGGER = Logger.getLogger(AnalysisLauncher.class.getName());
 
@@ -39,6 +41,8 @@ public class AnalysisLauncher {
     private List<Consumer<File>> before;
     private List<Consumer<File>> after;
 
+    private List<Object> processors;
+
     private boolean isPomAtRoot = true;
 
     /**
@@ -50,6 +54,7 @@ public class AnalysisLauncher {
         root = source;
         before = new ArrayList<>();
         after = new ArrayList<>();
+        processors = new ArrayList<>();
     }
 
     /**
@@ -59,6 +64,29 @@ public class AnalysisLauncher {
      */
     public void setInstrumentationType(InstrumentationType instrumentationType) {
         Configuration.setProperty("mode", instrumentationType.toString());
+    }
+
+    public void setTraceType(TraceType traceType) {
+        Configuration.setProperty("trace", traceType.toString());
+    }
+
+    /**
+     * Register a custom processor for the instrumentation
+     *
+     * @param processor a processor. Can be a source code processor such as a @{@link spoon.processing.Processor}
+     *                  or a bytecode visitor such as {@link org.objectweb.asm.commons.AdviceAdapter}
+     */
+    public void registerProcessor(Object processor) {
+        processors.add(processor);
+    }
+
+    /**
+     * Register a set of custom processors for the instrumentation. Has to be compatible with the instrumentation type chosen.
+     *
+     * @param procs a {@link Collection} of {@link Object}s
+     */
+    public void registerProcessors(Collection<Object> procs) {
+        processors.addAll(procs);
     }
 
     public void setOutputModel(File file) {
@@ -72,7 +100,7 @@ public class AnalysisLauncher {
      * Execute the test
      * Parse the execution trace to produce the impact analysis model
      */
-    private void impactAnalysis() {
+    private void instrumentAndRunTests() {
         sources.forEach(source -> {
 
             before.forEach(fileConsumer -> fileConsumer.accept(source));
@@ -102,21 +130,26 @@ public class AnalysisLauncher {
                 instrumenter.getDependencies().add(new File(Configuration.class.getProtectionDomain().getCodeSource().getLocation().toURI()));
 
                 instrumenter.instrument(modelParser.getTargets().keySet(), modelParser.getTests().keySet());
-            } catch (Exception e) {
+
+                LOGGER.info("Running the tests to create execution traces");
+                new MavenRunner(new File(source, "pom.xml")).run();
+
+            } catch (IOException | URISyntaxException e) {
                 LOGGER.log(Level.WARNING, "An error was caught during the impact analysis", e);
             }
 
-            LOGGER.info("Running the tests ");
-            // Running the tests to build the execution trace
+            after.forEach(fileConsumer -> fileConsumer.accept(source));
+        });
+    }
+
+    /**
+     * Parses the execution traces generated for impact analysis purposes
+     */
+    private void parseTestTrace() {
+        sources.forEach(source -> {
+            File exTrace = new File(source, Configuration.getProperty("traceFile"));
 
             try {
-                File exTrace;
-
-                //new JUnitRunner(instrumenter.getClassLoader()).runTests(modelParser.getTests().keySet());
-                new MavenRunner(new File(source, "pom.xml")).run();
-
-                exTrace = new File(source, Configuration.getProperty("traceFile"));
-
                 if (!exTrace.exists())
                     throw new IOException("Cannot get the execution trace file.");
 
@@ -124,11 +157,32 @@ public class AnalysisLauncher {
                 new TraceParser(exTrace, outputModel, resourceSet)
                         .parse()
                         .save(Collections.EMPTY_MAP);
-
-                exTrace.delete();
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "An error was caught during the impact analysis", e);
+                LOGGER.log(Level.WARNING, "An exception was caught when parsing the trace", e);
             }
+            exTrace.delete();
+        });
+
+    }
+
+    /**
+     * Instrument the source code using the given processors
+     */
+    private void instrument() {
+        sources.forEach(source -> {
+            before.forEach(fileConsumer -> fileConsumer.accept(source));
+
+            ModelUtils.buildResourceSet(source);
+
+            instrumenterBuilder = instrumenterBuilder   .onDirectory(source)
+                                                        .withQueueExecutionTrace();
+
+            //TODO /!\ external dependencies might need to be added to the classpath
+
+            instrumenterBuilder.build().instrument(processors);
+
+            LOGGER.info("Running the tests to create execution traces");
+            new MavenRunner(new File(source, "pom.xml")).run();
 
             after.forEach(fileConsumer -> fileConsumer.accept(source));
         });
@@ -156,11 +210,11 @@ public class AnalysisLauncher {
                 LOGGER.warning("No instrumentation chosen");
         }
 
-        switch (Configuration.getProperty("trace")) {
-            case "queue":
+        switch (TraceType.valueOf(Configuration.getProperty("trace"))) {
+            case QUEUE:
                 instrumenterBuilder = instrumenterBuilder.withQueueExecutionTrace();
                 break;
-            case "file":
+            case FILE:
                 instrumenterBuilder = instrumenterBuilder.withSingleFileExecutionTrace();
                 break;
             default:
@@ -194,11 +248,27 @@ public class AnalysisLauncher {
     /**
      * Run the impact analysis using the configurations set by the user
      */
+    public void runImpactAnalysis() {
+        setUp();
+
+        instrumentAndRunTests();
+
+        parseTestTrace();
+    }
+
     public void run() {
         setUp();
 
-        impactAnalysis();
+        instrument();
 
+        parse();
+    }
+
+    /**
+     * Parse the execution trace, using the right {@link com.tblf.parsing.Parser} on the right execution trace
+     */
+    private void parse() {
+        //TODO
     }
 
     public void setIsPomAtRoot(boolean bool) {
