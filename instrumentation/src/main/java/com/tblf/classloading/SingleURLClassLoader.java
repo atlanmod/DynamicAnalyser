@@ -71,7 +71,8 @@ public class SingleURLClassLoader {
      * @param bytes a byte array
      */
     public void loadBytes(byte[] bytes) {
-        urlClassLoader.loadBytes(ByteBuffer.wrap(bytes));
+        //urlClassLoader.loadBytes(ByteBuffer.wrap(bytes));
+        urlClassLoader.loadBytes(bytes, null);
     }
 
     /**

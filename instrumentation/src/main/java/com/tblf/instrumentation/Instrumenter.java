@@ -9,12 +9,14 @@ import java.util.Collection;
  */
 public abstract class Instrumenter {
 
+    //TODO ConditionalProcessing : Map<Function<?>:Boolean, Object>
     protected File directory;
     protected File sutDirectory;
     protected File testDirectory;
     protected File outputDirectory;
 
     protected Collection<File> dependencies;
+    protected Collection<Object> customProcessors;
 
     protected Instrumenter() {
         dependencies = new ArrayList<>();
@@ -23,6 +25,14 @@ public abstract class Instrumenter {
     public abstract void instrument(Collection<String> targets, Collection<String> tests);
 
     public abstract void instrument(Collection<Object> processors);
+
+    public Collection<Object> getCustomProcessors() {
+        return customProcessors;
+    }
+
+    public void setCustomProcessors(Collection<Object> customProcessors) {
+        this.customProcessors = customProcessors;
+    }
 
     public abstract ClassLoader getClassLoader();
 
