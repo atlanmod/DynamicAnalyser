@@ -1,17 +1,10 @@
 package com.tblf.junitrunner;
 
-import com.tblf.linker.Calls;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.MavenUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.logging.Level;
@@ -24,6 +17,9 @@ public class MavenRunner {
 
     public MavenRunner(File pom) {
         this.pom = pom;
+        if (System.getProperty("maven.home") == null)
+            System.setProperty("maven.home", Configuration.getProperty("MAVEN_HOME"));
+
     }
 
     /**
@@ -32,8 +28,6 @@ public class MavenRunner {
      *
      */
     public void run() {
-        if (System.getProperty("maven.home") == null)
-            System.setProperty("maven.home", Configuration.getProperty("MAVEN_HOME"));
 
         File pomDir = pom.getParentFile();
 
