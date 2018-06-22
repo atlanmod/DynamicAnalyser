@@ -23,6 +23,6 @@ public class InstURLClassLoader extends URLClassLoader {
     }
 
     void loadBytes(ByteBuffer byteBuffer) {
-        Class aClass = defineClass((String)null, byteBuffer, (ProtectionDomain)null);
+        defineClass(null, byteBuffer, (ProtectionDomain)null);
     }
 }

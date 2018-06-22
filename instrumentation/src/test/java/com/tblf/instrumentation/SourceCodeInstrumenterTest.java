@@ -2,8 +2,6 @@ package com.tblf.instrumentation;
 
 import com.tblf.classloading.SingleURLClassLoader;
 import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
-import com.tblf.linker.FileTracer;
-import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -21,7 +19,7 @@ public class SourceCodeInstrumenterTest {
 
     @Before
     public void setup() throws IOException {
-        ModelUtils.unzip(new File("src/test/resources/sources/SimpleProject.zip"));
+        com.tblf.utils.FileUtils.unzip(new File("src/test/resources/sources/SimpleProject.zip"));
     }
 
     @After

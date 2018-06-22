@@ -44,6 +44,11 @@ public class QueueTracer implements Tracer {
     }
 
     @Override
+    public void write(String value) {
+        excerptAppender.writeText(value);
+    }
+
+    @Override
     public void updateTest(String className, String methodName) {
         excerptAppender.writeText("&:".concat(className).concat(":").concat(methodName));
     }

@@ -1,6 +1,5 @@
 package com.tblf.junitrunner;
 
-import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
@@ -12,7 +11,7 @@ public class MavenRunnerTest {
     @Test
     public void testRun() throws IOException {
 
-        ModelUtils.unzip(new File("src/test/resources/binaries/SimpleProject.zip"));
+        com.tblf.utils.FileUtils.unzip(new File("src/test/resources/binaries/SimpleProject.zip"));
         File project = new File("src/test/resources/binaries/SimpleProject");
 
         System.setProperty("mode", "SOURCECODE");

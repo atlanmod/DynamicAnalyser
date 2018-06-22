@@ -5,7 +5,6 @@ import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
 import com.tblf.linker.Calls;
 import com.tblf.linker.FileTracer;
 import com.tblf.utils.Configuration;
-import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
@@ -26,7 +25,12 @@ public class InstrumentationLinkageTest {
 
     @Before
     public void setup() throws IOException {
-        ModelUtils.unzip(new File("src/test/resources/sources/SimpleProject.zip"));
+        File dir = new File("src/test/resources/sources/SimpleProject/");
+
+        if (dir.exists())
+            FileUtils.deleteDirectory(dir);
+
+        com.tblf.utils.FileUtils.unzip(new File("src/test/resources/sources/SimpleProject.zip"));
     }
 
     @After
@@ -59,6 +63,7 @@ public class InstrumentationLinkageTest {
 
         try {
             //Running the class
+            Calls.getTracer().startTrace();
             Class clazz = SingleURLClassLoader.getInstance().getClassLoader().loadClass("com.tblf.SimpleProject.AppTest");
             JUnitCore.runClasses(clazz);
         } catch (Throwable e) {

@@ -10,10 +10,12 @@ import java.io.Writer;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Trace the execution of an application and store it into a file
- * Is a singleton. Indeed, this class would be called by the instrumented code, and instantiating it at the beginning of each call would be really costly
+ * Highly advised to -not- use it since it's outdated, slower, and less reusable than the QueueTracer
  */
 public class FileTracer implements Tracer {
 
@@ -30,6 +32,9 @@ public class FileTracer implements Tracer {
     private Map<String, Collection<Integer>> lineWritten; //store a collection of written lines , in order to limit the size of the trace
     private Map<String, Collection<AbstractMap.SimpleEntry<Integer, Integer>>> statementWritten; //store a collection of written statement, in order to limit the size of the trace
 
+    private Pattern firstSegment = Pattern.compile(":(.*):");
+    private Pattern secondSegment = Pattern.compile(":(\\w*)");
+    private static Matcher MATCHER;
     /**
      * Private constructor. This class must not be instanciated by the client
      */
@@ -67,6 +72,27 @@ public class FileTracer implements Tracer {
     public File getFile() {
         return this.file;
     }
+
+    @Override
+    public void write(String value) {
+        if (value.startsWith("&"))
+            this.updateTest(getFirstSegment(value), getSecondSegment(value));
+        if (value.startsWith("%"))
+            this.updateTarget(getFirstSegment(value), getSecondSegment(value));
+        if (value.startsWith("!"))
+            this.updateStatementsUsingColumn(getFirstSegment(value), getSecondSegment(value));
+        if (value.startsWith("?"))
+            this.updateStatementsUsingLine(getSecondSegment(value));
+    }
+
+    private String getFirstSegment(String value) {
+        return value.substring(value.indexOf(":")+1, value.lastIndexOf(":"));
+    }
+
+    private String getSecondSegment(String value) {
+        return value.substring(value.lastIndexOf(":")+1);
+    }
+
 
     /**
      * Write in the file the current test being executed and set the field

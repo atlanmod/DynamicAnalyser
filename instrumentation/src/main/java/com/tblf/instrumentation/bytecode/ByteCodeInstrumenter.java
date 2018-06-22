@@ -5,12 +5,12 @@ import com.tblf.classloading.SingleURLClassLoader;
 import com.tblf.instrumentation.Instrumenter;
 import com.tblf.instrumentation.bytecode.visitors.TargetClassVisitor;
 import com.tblf.instrumentation.bytecode.visitors.TestClassVisitor;
-import com.tblf.linker.Calls;
 import com.tblf.utils.Configuration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.xml.sax.SAXException;
@@ -21,7 +21,10 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -136,43 +139,29 @@ public class ByteCodeInstrumenter extends Instrumenter {
 
     @Override
     public void instrument(Collection<Object> processors) {
-        throw new NotImplementedException("not implemented yet");
+        Collection<ClassVisitor> classVisitors = processors.stream().map(o -> ((ClassVisitor) o)).collect(Collectors.toList());
+        try {
+            Files.walk(directory.toPath(), Integer.MAX_VALUE)
+                    .filter(path -> path.toString().endsWith(".class")).forEach(path -> classVisitors.forEach(classVisitor -> {
+
+                try {
+                    ClassReader classReader = new ClassReader(new FileInputStream(path.toFile()));
+                    ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+                    FieldUtils.writeField(classVisitor, "cv", classWriter, true );
+                    classReader.accept(classVisitor, ClassReader.EXPAND_FRAMES);
+                    singleURLClassLoader.loadBytes(classWriter.toByteArray());
+                    IOUtils.write(classWriter.toByteArray(), new FileOutputStream(path.toFile()));
+                } catch (IOException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }));
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Could not instrument bytecode of "+directory.getAbsolutePath(), e);
+        }
     }
 
-    /**
-     * Iterate over all the qualified names. Find their corresponding file, and classified them if they're a test of a target class.
-     * @param allClassesQualifiedNames a {@link Collection} of {@link String}
-     * @param targetClasses a {@link HashMap} with qualified names as key, and {@link File} as values
-     * @param testClasses   a {@link HashMap} with qualified names as key, and {@link File} as values
-     * @param allClasses a {@link Collection} containing all the compiled files
-     */
-    private void sortClasses(Collection<String> allClassesQualifiedNames,
-                             HashMap<String, File> targetClasses,
-                             HashMap<String, File> testClasses,
-                             Collection<File> allClasses) {
 
-        allClassesQualifiedNames.forEach(s ->
-            {
-                String[] split = s.split("\\.");
-                String name = split[split.length - 1]; //last segment
-                Collection<File> filesWithAMatchingName = allClasses.stream()
-                        .filter(file1 -> file1.getName().equals(name+".class"))
-                        .collect(Collectors.toList());
 
-                filesWithAMatchingName.forEach(file -> {
-                    if (file.getAbsolutePath().contains(sutDirectory.getAbsolutePath())) {
-                        //is a target
-                        targetClasses.put(s, file);
-                    }
-
-                    if (file.getAbsolutePath().contains(testDirectory.getAbsolutePath())) {
-                        //is a test class
-                        testClasses.put(s, file);
-                    }
-                });
-            }
-        );
-    }
 
     private byte[] instrumentTargetClass(File target, String qualifiedName) throws IOException {
 
@@ -193,6 +182,41 @@ public class ByteCodeInstrumenter extends Instrumenter {
         classReader.accept(new TestClassVisitor(Opcodes.ASM5, classWriter, qualifiedName), ClassReader.EXPAND_FRAMES);
 
         return classWriter.toByteArray();
+    }
+
+    /**
+     * Iterate over all the qualified names. Find their corresponding file, and classified them if they're a test of a target class.
+     * @param allClassesQualifiedNames a {@link Collection} of {@link String}
+     * @param targetClasses a {@link HashMap} with qualified names as key, and {@link File} as values
+     * @param testClasses   a {@link HashMap} with qualified names as key, and {@link File} as values
+     * @param allClasses a {@link Collection} containing all the compiled files
+     */
+    private void sortClasses(Collection<String> allClassesQualifiedNames,
+                             HashMap<String, File> targetClasses,
+                             HashMap<String, File> testClasses,
+                             Collection<File> allClasses) {
+
+        allClassesQualifiedNames.forEach(s ->
+                {
+                    String[] split = s.split("\\.");
+                    String name = split[split.length - 1]; //last segment
+                    Collection<File> filesWithAMatchingName = allClasses.stream()
+                            .filter(file1 -> file1.getName().equals(name+".class"))
+                            .collect(Collectors.toList());
+
+                    filesWithAMatchingName.forEach(file -> {
+                        if (file.getAbsolutePath().contains(sutDirectory.getAbsolutePath())) {
+                            //is a target
+                            targetClasses.put(s, file);
+                        }
+
+                        if (file.getAbsolutePath().contains(testDirectory.getAbsolutePath())) {
+                            //is a test class
+                            testClasses.put(s, file);
+                        }
+                    });
+                }
+        );
     }
 
     private void fetchDependencies() throws ParserConfigurationException, SAXException, IOException, URISyntaxException {

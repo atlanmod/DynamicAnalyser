@@ -7,6 +7,8 @@ import java.io.File;
  */
 public interface Tracer extends AutoCloseable{
 
+    void write(String value);
+
     /**
      * Update the current test being executed
      * @param className the name of the test class

@@ -1,6 +1,5 @@
 package com.tblf.classloading;
 
-import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
@@ -23,7 +22,7 @@ public class InstURLClassLoaderTest {
     public void checkLoadBytes() throws IOException, ClassNotFoundException {
         InstURLClassLoader instURLClassLoader = new InstURLClassLoader(new URL[]{});
         File zip = new File("src/test/resources/binaries/main.zip");
-        ModelUtils.unzip(zip);
+        com.tblf.utils.FileUtils.unzip(zip);
 
         File directory = new File("src/test/resources/binaries/main");
 
@@ -46,7 +45,7 @@ public class InstURLClassLoaderTest {
     @Test
     public void testLoadAllFolder() throws IOException, ClassNotFoundException {
         File zip = new File("src/test/resources/binaries/assertj.zip");
-        ModelUtils.unzip(zip);
+        com.tblf.utils.FileUtils.unzip(zip);
 
         File file = new File("src/test/resources/binaries/assertj");
         InstURLClassLoader instURLClassLoader = new InstURLClassLoader(new URL[]{file.toURI().toURL()});
@@ -59,7 +58,7 @@ public class InstURLClassLoaderTest {
     @Test
     public void testLoadByteBufferNoName() throws IOException, ClassNotFoundException {
         File zip = new File("src/test/resources/binaries/assertj.zip");
-        ModelUtils.unzip(zip);
+        com.tblf.utils.FileUtils.unzip(zip);
 
         File directory = new File("src/test/resources/binaries/assertj");
 
@@ -81,7 +80,7 @@ public class InstURLClassLoaderTest {
     @Test
     public void testLoadByteNoName() throws IOException, ClassNotFoundException {
         File zip = new File("src/test/resources/binaries/assertj.zip");
-        ModelUtils.unzip(zip);
+        com.tblf.utils.FileUtils.unzip(zip);
 
         File directory = new File("src/test/resources/binaries/assertj");
 

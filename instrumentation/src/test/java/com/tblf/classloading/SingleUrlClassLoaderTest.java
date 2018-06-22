@@ -1,6 +1,5 @@
 package com.tblf.classloading;
 
-import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,8 +40,8 @@ public class SingleUrlClassLoaderTest {
         File zip1 = new File("src/test/resources/binaries/junit.zip");
         File zip2 = new File("src/test/resources/binaries/main.zip");
 
-        ModelUtils.unzip(zip1);
-        ModelUtils.unzip(zip2);
+        com.tblf.utils.FileUtils.unzip(zip1);
+        com.tblf.utils.FileUtils.unzip(zip2);
         File directory1 = new File("src/test/resources/binaries/junit");
 
         File file = new File(directory1, "bin");

@@ -2,7 +2,6 @@ package com.tblf.linker;
 
 import com.tblf.utils.Configuration;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -46,13 +45,7 @@ public class Calls {
      * @param method the name of the method being executed
      */
     public static void setTestMethod(String className, String method) {
-
-        try {
-            tracer.updateTest(className, method);
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Exception caught when setting the test method", e);
-        }
-
+        tracer.write("&:".concat(className).concat(":").concat(method));
     }
 
     /**
@@ -61,12 +54,7 @@ public class Calls {
      * @param method the name of the method being executed
      */
     public static void setTargetMethod(String className, String method) {
-        try {
-            tracer.updateTarget(className, method);
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Exception caught when setting the target method", e);
-        }
-
+        tracer.write("%:".concat(className).concat(":").concat(method));
     }
 
     /**
@@ -77,8 +65,8 @@ public class Calls {
      * @param endCol the end position of the statement, at the file level
      */
     public static void match(String className, String method, String startCol, String endCol) {
-        tracer.updateTarget(className, method);
-        tracer.updateStatementsUsingColumn(startCol, endCol);
+        tracer.write("%:".concat(className).concat(":").concat(method));
+        tracer.write("!:".concat(startCol).concat(":").concat(endCol));
     }
 
     /**
@@ -88,8 +76,8 @@ public class Calls {
      * @param line the line number
      */
     public static void match(String className, String method, String line) {
-        tracer.updateTarget(className, method);
-        tracer.updateStatementsUsingLine(line);
+        tracer.write("%:".concat(className).concat(":").concat(method));
+        tracer.write("?:".concat(line));
     }
 
     /**
@@ -98,11 +86,7 @@ public class Calls {
      * @param endCol the end position at the file level
      */
     public static void match(String startCol, String endCol) {
-        try {
-            tracer.updateStatementsUsingColumn(startCol, endCol);
-        } catch (Exception e) {
-            LOGGER.log(Level.FINE, "Cannot trace the line "+startCol+" -> "+endCol, e);
-        }
+        tracer.write("!:".concat(startCol).concat(":").concat(endCol));
     }
 
     /**
@@ -110,12 +94,7 @@ public class Calls {
      * @param line the line number
      */
     public static void match(String line) {
-        try {
-            tracer.updateStatementsUsingLine(line);
-        } catch (Exception e) {
-            LOGGER.log(Level.FINE, "Cannot trace the line "+line, e);
-        }
-
+        tracer.write("?:".concat(line));
     }
 
     public static Tracer getTracer() {

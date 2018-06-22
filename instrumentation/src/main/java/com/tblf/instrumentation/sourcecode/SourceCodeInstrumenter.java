@@ -65,6 +65,7 @@ public class SourceCodeInstrumenter extends Instrumenter {
         deleteSources();
     }
 
+
     @Override
     public void instrument(Collection<Object> processors) {
         Launcher spoonLauncher = generateSpoonLauncher();
