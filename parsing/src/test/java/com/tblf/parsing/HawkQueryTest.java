@@ -24,7 +24,6 @@ public class HawkQueryTest {
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
-
     }
 }
 
