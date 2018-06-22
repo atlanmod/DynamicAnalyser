@@ -85,5 +85,4 @@ public class QueueTracerTest {
         Assert.assertEquals("%:myTarget:myTargetMethod", excerptTailer.readText());
         Assert.assertEquals("?:50", excerptTailer.readText());
     }
-
 }

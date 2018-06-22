@@ -25,6 +25,11 @@ public class InstrumentationLinkageTest {
 
     @Before
     public void setup() throws IOException {
+        File dir = new File("src/test/resources/sources/SimpleProject/");
+
+        if (dir.exists())
+            FileUtils.deleteDirectory(dir);
+
         com.tblf.utils.FileUtils.unzip(new File("src/test/resources/sources/SimpleProject.zip"));
     }
 
@@ -58,6 +63,7 @@ public class InstrumentationLinkageTest {
 
         try {
             //Running the class
+            Calls.getTracer().startTrace();
             Class clazz = SingleURLClassLoader.getInstance().getClassLoader().loadClass("com.tblf.SimpleProject.AppTest");
             JUnitCore.runClasses(clazz);
         } catch (Throwable e) {
