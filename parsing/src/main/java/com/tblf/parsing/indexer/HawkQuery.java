@@ -119,7 +119,7 @@ public class HawkQuery implements Query, AutoCloseable {
         final SyncEndListener changeListener = new SyncEndListener(r, sem);
         indexer.addGraphChangeListener(changeListener);
         try {
-            if (!sem.tryAcquire(3000, TimeUnit.SECONDS)) {
+            if (!sem.tryAcquire(60, TimeUnit.SECONDS)) {
                 fail("Synchronization timed out");
             } else {
                 indexer.removeGraphChangeListener(changeListener);
