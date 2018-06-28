@@ -66,8 +66,8 @@
 
         <dependency>
             <groupId>io.moquette</groupId>
-            <artifactId>moquette-broker</artifactId>
-            <version>0.11</version>
+            <artifactId>moquette-distribution</artifactId>
+            <version>0.12-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
 
