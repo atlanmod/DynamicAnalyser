@@ -1,5 +1,6 @@
 package com.tblf.parsing;
 
+import com.tblf.parsing.parsers.ModelParser;
 import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.ecore.resource.Resource;

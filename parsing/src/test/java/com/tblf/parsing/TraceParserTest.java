@@ -2,6 +2,7 @@ package com.tblf.parsing;
 
 import com.tblf.model.Analysis;
 import com.tblf.model.ModelPackage;
+import com.tblf.parsing.parsers.TraceParser;
 import com.tblf.utils.Configuration;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.common.util.URI;

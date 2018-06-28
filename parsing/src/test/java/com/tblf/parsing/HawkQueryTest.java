@@ -1,6 +1,7 @@
 package com.tblf.parsing;
 
 import com.tblf.parsing.indexer.HawkQuery;
+import com.tblf.parsing.queries.Query;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;

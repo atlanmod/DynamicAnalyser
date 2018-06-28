@@ -1,9 +1,9 @@
 package com.tblf.parsing;
 
+import com.tblf.parsing.parsers.QueueReader;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ChronicleQueueBuilder;
 import net.openhft.chronicle.queue.ExcerptAppender;
-import net.openhft.chronicle.wire.DocumentContext;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Before;

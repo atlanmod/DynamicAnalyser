@@ -1,5 +1,6 @@
-package com.tblf.parsing;
+package com.tblf.parsing.parsers;
 
+import com.tblf.parsing.parsers.Parser;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 

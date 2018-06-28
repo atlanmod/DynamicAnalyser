@@ -1,4 +1,4 @@
-package com.tblf.parsing;
+package com.tblf.parsing.parsers;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 

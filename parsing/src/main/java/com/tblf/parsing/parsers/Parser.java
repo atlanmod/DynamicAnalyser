@@ -1,4 +1,4 @@
-package com.tblf.parsing;
+package com.tblf.parsing.parsers;
 
 import com.tblf.model.ModelPackage;
 import org.eclipse.emf.common.util.URI;

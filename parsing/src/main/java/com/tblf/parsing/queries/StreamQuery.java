@@ -1,5 +1,6 @@
-package com.tblf.parsing;
+package com.tblf.parsing.queries;
 
+import com.tblf.parsing.queries.Query;
 import org.eclipse.gmt.modisco.java.Statement;
 import org.eclipse.modisco.java.composition.javaapplication.Java2File;
 import org.eclipse.modisco.kdm.source.extension.ASTNodeSourceRegion;

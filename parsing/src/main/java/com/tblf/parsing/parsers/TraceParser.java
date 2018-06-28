@@ -1,21 +1,16 @@
-package com.tblf.parsing;
+package com.tblf.parsing.parsers;
 
 import com.tblf.model.Analysis;
 import com.tblf.model.ModelFactory;
-import com.tblf.model.ModelPackage;
+import com.tblf.parsing.queries.Query;
+import com.tblf.parsing.queries.StreamQuery;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.ParserUtils;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.gmt.modisco.java.*;
-import org.eclipse.gmt.modisco.java.emf.JavaPackage;
-import org.eclipse.gmt.modisco.omg.kdm.kdm.KdmPackage;
-import org.eclipse.modisco.java.composition.javaapplication.Java2Directory;
 import org.eclipse.modisco.java.composition.javaapplication.Java2File;
-import org.eclipse.modisco.java.composition.javaapplication.JavaapplicationPackage;
 import org.eclipse.modisco.kdm.source.extension.ASTNodeSourceRegion;
-import org.eclipse.modisco.kdm.source.extension.ExtensionPackage;
 
 import java.io.*;
 import java.util.*;

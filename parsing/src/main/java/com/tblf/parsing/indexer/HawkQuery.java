@@ -1,6 +1,6 @@
 package com.tblf.parsing.indexer;
 
-import com.tblf.parsing.Query;
+import com.tblf.parsing.queries.Query;
 import com.tblf.utils.Configuration;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.modisco.java.composition.javaapplication.Java2File;
@@ -13,7 +13,6 @@ import org.hawk.emf.metamodel.EMFMetaModelResourceFactory;
 import org.hawk.emf.model.EMFModelResourceFactory;
 import org.hawk.emfresource.impl.LocalHawkResourceImpl;
 import org.hawk.epsilon.emc.EOLQueryEngine;
-import org.hawk.epsilon.emc.wrappers.GraphNodeWrapper;
 import org.hawk.graph.updater.GraphMetaModelUpdater;
 import org.hawk.graph.updater.GraphModelUpdater;
 import org.hawk.localfolder.LocalFolder;

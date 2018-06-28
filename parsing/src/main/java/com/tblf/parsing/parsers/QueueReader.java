@@ -1,4 +1,4 @@
-package com.tblf.parsing;
+package com.tblf.parsing.parsers;
 
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ChronicleQueueBuilder;
