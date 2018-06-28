@@ -37,16 +37,15 @@ public class MqttTracerTest {
     public void writeMqttTracer() throws Exception {
 
         tracer = new MqttTracer();
-        tracer.write("testValue");
-        tracer.endTrace();
 
         MQTT mqtt = new MQTT();
         mqtt.setHost("0.0.0.0", 1883);
         BlockingConnection blockingConnection = mqtt.blockingConnection();
         blockingConnection.connect();
         blockingConnection.subscribe(new Topic[]{new Topic("trace", QoS.AT_MOST_ONCE)});
-
+        tracer.write("testValue");
         Message message =  blockingConnection.receive();
+        tracer.endTrace();
 
         String content = new String(message.getPayload(), Charset.defaultCharset());
 
