@@ -1,6 +1,8 @@
 package com.tblf.linker;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.Writer;
 
 public class FlushingBufferedWriter extends BufferedWriter {
 

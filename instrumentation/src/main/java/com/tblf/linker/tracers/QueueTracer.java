@@ -4,7 +4,6 @@ import com.tblf.utils.Configuration;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ChronicleQueueBuilder;
 import net.openhft.chronicle.queue.ExcerptAppender;
-import net.openhft.chronicle.wire.WireKey;
 
 import java.io.File;
 import java.io.IOException;

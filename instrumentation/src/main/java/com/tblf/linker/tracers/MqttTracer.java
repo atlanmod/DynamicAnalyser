@@ -1,7 +1,9 @@
 package com.tblf.linker.tracers;
 
 import com.tblf.utils.Configuration;
-import org.fusesource.mqtt.client.*;
+import org.fusesource.mqtt.client.BlockingConnection;
+import org.fusesource.mqtt.client.MQTT;
+import org.fusesource.mqtt.client.QoS;
 
 import java.io.File;
 import java.net.URISyntaxException;

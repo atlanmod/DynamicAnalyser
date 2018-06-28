@@ -5,11 +5,8 @@ package com.tblf.model.impl;
 import com.tblf.model.Analysis;
 import com.tblf.model.Model;
 import com.tblf.model.ModelPackage;
-
 import fr.inria.atlanmod.neoemf.core.DefaultPersistentEObject;
-
 import org.eclipse.emf.common.util.EList;
-
 import org.eclipse.emf.ecore.EClass;
 
 /**

@@ -6,7 +6,6 @@ import com.tblf.instrumentation.Instrumenter;
 import com.tblf.instrumentation.bytecode.visitors.TargetClassVisitor;
 import com.tblf.instrumentation.bytecode.visitors.TestClassVisitor;
 import com.tblf.utils.Configuration;
-import com.tblf.utils.MavenUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -29,7 +28,6 @@ import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Created by Thibault on 20/09/2017.

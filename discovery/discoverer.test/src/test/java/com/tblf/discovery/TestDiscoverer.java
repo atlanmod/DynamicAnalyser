@@ -1,9 +1,7 @@
 package com.tblf.discovery;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.*;
 
-import java.io.*;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;

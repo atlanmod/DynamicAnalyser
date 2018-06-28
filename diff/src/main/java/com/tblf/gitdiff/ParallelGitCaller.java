@@ -1,16 +1,10 @@
 package com.tblf.gitdiff;
 
 import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.patch.FileHeader;
 import org.eclipse.modisco.java.composition.javaapplication.Java2File;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 
 public class ParallelGitCaller extends GitCaller {
 

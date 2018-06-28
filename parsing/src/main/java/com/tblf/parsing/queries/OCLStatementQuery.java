@@ -1,6 +1,5 @@
 package com.tblf.parsing.queries;
 
-import com.tblf.parsing.queries.Query;
 import org.apache.commons.lang.NotImplementedException;
 import org.eclipse.modisco.java.composition.javaapplication.Java2File;
 import org.eclipse.modisco.kdm.source.extension.ASTNodeSourceRegion;

@@ -12,8 +12,6 @@ import java.io.File;
 
 public class QueueTracerTest {
 
-    private boolean asserted = false;
-
     @Test
     public void testWriteWithTopic() {
         Tracer tracer = new QueueTracer();

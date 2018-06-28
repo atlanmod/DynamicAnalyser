@@ -1,6 +1,5 @@
 package com.tblf.instrumentation.sourcecode.processors;
 
-import spoon.SpoonException;
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCodeSnippetStatement;

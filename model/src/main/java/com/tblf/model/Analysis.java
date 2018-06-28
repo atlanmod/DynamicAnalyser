@@ -3,9 +3,7 @@
 package com.tblf.model;
 
 import fr.inria.atlanmod.neoemf.core.PersistentEObject;
-
 import org.eclipse.emf.common.util.EList;
-
 import org.eclipse.emf.ecore.EObject;
 
 /**

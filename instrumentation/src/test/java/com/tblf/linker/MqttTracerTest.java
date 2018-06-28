@@ -52,6 +52,26 @@ public class MqttTracerTest {
         Assert.assertEquals("not the expected value", "testValue", content);
     }
 
+    @Test
+    public void writeMqttTracerWithTopic() throws Exception {
+
+        tracer = new MqttTracer();
+
+        MQTT mqtt = new MQTT();
+        mqtt.setHost("0.0.0.0", 1883);
+        BlockingConnection blockingConnection = mqtt.blockingConnection();
+        blockingConnection.connect();
+        blockingConnection.subscribe(new Topic[]{new Topic("topic", QoS.AT_MOST_ONCE)});
+
+        tracer.write("topic", "testValue");
+        Message message =  blockingConnection.receive();
+        tracer.endTrace();
+
+        String content = new String(message.getPayload(), Charset.defaultCharset());
+
+        Assert.assertEquals("not the expected value", "testValue", content);
+    }
+
     @After
     public void tearDown() {
         tracer.endTrace();
