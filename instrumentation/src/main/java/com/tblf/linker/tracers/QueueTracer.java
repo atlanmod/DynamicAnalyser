@@ -1,10 +1,10 @@
-package com.tblf.linker;
+package com.tblf.linker.tracers;
 
 import com.tblf.utils.Configuration;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ChronicleQueueBuilder;
 import net.openhft.chronicle.queue.ExcerptAppender;
-import net.openhft.chronicle.wire.DocumentContext;
+import net.openhft.chronicle.wire.WireKey;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,6 +46,11 @@ public class QueueTracer implements Tracer {
     @Override
     public void write(String value) {
         excerptAppender.writeText(value);
+    }
+
+    @Override
+    public void write(String topic, String value) {
+        excerptAppender.writeDocument(wire -> wire.write(topic).text(value));
     }
 
     @Override

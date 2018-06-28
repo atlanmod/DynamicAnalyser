@@ -3,7 +3,7 @@ package com.tblf.integration;
 import com.tblf.classloading.SingleURLClassLoader;
 import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
 import com.tblf.linker.Calls;
-import com.tblf.linker.FileTracer;
+import com.tblf.linker.tracers.FileTracer;
 import com.tblf.utils.Configuration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;

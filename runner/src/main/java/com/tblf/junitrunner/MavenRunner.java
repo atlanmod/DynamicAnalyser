@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,12 +16,23 @@ public class MavenRunner {
     private static final Logger LOGGER = Logger.getLogger(MavenRunner.class.getName());
 
     private File pom;
+    private Collection<File> pomDependencies;
 
     public MavenRunner(File pom) {
+        pomDependencies = new ArrayList<>();
         this.pom = pom;
         if (System.getProperty("maven.home") == null)
             System.setProperty("maven.home", Configuration.getProperty("MAVEN_HOME"));
 
+    }
+
+    /**
+     * Add dependencies to external maven projects by passing the poms
+     * @param pomDependencies a {@link Collection} of {@link File} pom.xml
+     */
+    public MavenRunner withPomDependencies(Collection<File> pomDependencies) {
+        this.pomDependencies.addAll(pomDependencies);
+        return this;
     }
 
     /**
@@ -38,7 +51,7 @@ public class MavenRunner {
                 && new File(pomDir, "target/classes").exists()
                 && new File(pomDir, "target/test-classes").exists())) {
 
-            MavenUtils.compilePom(pom);
+            this.compilePom();
         }
 
 
@@ -78,9 +91,14 @@ public class MavenRunner {
         }
 
         MavenUtils.addDependencyToPom(pom, new File("pom.xml")); //Used to run the instrumented code.
+
+        pomDependencies.forEach(file -> MavenUtils.addDependencyToPom(pom, file));
+
         Configuration.save(new File(pom.getParentFile(), "config.properties")); //Save the conf inside the instrumented code.
         MavenUtils.runTestsOnly(pom);
     }
 
-
+    public void compilePom() {
+        MavenUtils.compilePom(pom.getParentFile());
+    }
 }

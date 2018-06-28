@@ -5,8 +5,9 @@ import com.tblf.instrumentation.Instrumenter;
 import com.tblf.instrumentation.InstrumenterBuilder;
 import com.tblf.junitrunner.MavenRunner;
 import com.tblf.linker.Calls;
-import com.tblf.parsing.ModelParser;
-import com.tblf.parsing.TraceParser;
+import com.tblf.parsing.parsers.ModelParser;
+import com.tblf.parsing.parsers.Parser;
+import com.tblf.parsing.parsers.TraceParser;
 import com.tblf.parsing.TraceType;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.FileUtils;
@@ -42,6 +43,7 @@ public class AnalysisLauncher {
     private List<Consumer<File>> after;
 
     private List<Object> processors;
+    private List<File> dependencies;
 
     private boolean isPomAtRoot = true;
 
@@ -55,6 +57,7 @@ public class AnalysisLauncher {
         before = new ArrayList<>();
         after = new ArrayList<>();
         processors = new ArrayList<>();
+        dependencies = new ArrayList<>();
     }
 
     /**
@@ -80,13 +83,8 @@ public class AnalysisLauncher {
         processors.add(processor);
     }
 
-    /**
-     * Register a set of custom processors for the instrumentation. Has to be compatible with the instrumentation type chosen.
-     *
-     * @param procs a {@link Collection} of {@link Object}s
-     */
-    public void registerProcessors(Collection<Object> procs) {
-        processors.addAll(procs);
+    public void registerDependencies(Collection<File> deps) {
+        dependencies.addAll(deps);
     }
 
     public void setOutputModel(File file) {
@@ -174,15 +172,14 @@ public class AnalysisLauncher {
 
             ModelUtils.buildResourceSet(source);
 
-            instrumenterBuilder = instrumenterBuilder   .onDirectory(source)
-                                                        .withQueueExecutionTrace();
-
-            //TODO /!\ external dependencies might need to be added to the classpath
-
-            instrumenterBuilder.build().instrument(processors);
+            instrumenterBuilder
+                    .onDirectory(source)
+                    .withQueueExecutionTrace()
+                    .build()
+                    .instrument(processors);
 
             LOGGER.info("Running the tests to create execution traces");
-            new MavenRunner(new File(source, "pom.xml")).run();
+            new MavenRunner(new File(source, "pom.xml")).withPomDependencies(dependencies).run();
 
             after.forEach(fileConsumer -> fileConsumer.accept(source));
         });
@@ -265,7 +262,7 @@ public class AnalysisLauncher {
     }
 
     /**
-     * Parse the execution trace, using the right {@link com.tblf.parsing.Parser} on the right execution trace
+     * Parse the execution trace, using the right {@link Parser} on the right execution trace
      */
     private void parse() {
         //TODO

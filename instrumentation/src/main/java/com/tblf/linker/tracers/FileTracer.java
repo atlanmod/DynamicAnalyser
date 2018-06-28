@@ -1,5 +1,6 @@
-package com.tblf.linker;
+package com.tblf.linker.tracers;
 
+import com.tblf.linker.FlushingBufferedWriter;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.FileUtils;
 
@@ -10,8 +11,6 @@ import java.io.Writer;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Trace the execution of an application and store it into a file
@@ -32,9 +31,6 @@ public class FileTracer implements Tracer {
     private Map<String, Collection<Integer>> lineWritten; //store a collection of written lines , in order to limit the size of the trace
     private Map<String, Collection<AbstractMap.SimpleEntry<Integer, Integer>>> statementWritten; //store a collection of written statement, in order to limit the size of the trace
 
-    private Pattern firstSegment = Pattern.compile(":(.*):");
-    private Pattern secondSegment = Pattern.compile(":(\\w*)");
-    private static Matcher MATCHER;
     /**
      * Private constructor. This class must not be instanciated by the client
      */
@@ -83,6 +79,11 @@ public class FileTracer implements Tracer {
             this.updateStatementsUsingColumn(getFirstSegment(value), getSecondSegment(value));
         if (value.startsWith("?"))
             this.updateStatementsUsingLine(getSecondSegment(value));
+    }
+
+    @Override
+    public void write(String topic, String value) {
+        this.write(value);
     }
 
     private String getFirstSegment(String value) {

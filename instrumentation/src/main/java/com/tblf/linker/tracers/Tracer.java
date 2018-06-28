@@ -1,4 +1,4 @@
-package com.tblf.linker;
+package com.tblf.linker.tracers;
 
 import java.io.File;
 
@@ -7,7 +7,19 @@ import java.io.File;
  */
 public interface Tracer extends AutoCloseable{
 
+    /**
+     * Write a raw value in the tracer for future postprocessing
+     * @param value a {@link String}
+     */
     void write(String value);
+
+    /**
+     * Write a value along with a topic in the tracer. May be use for more accurate traces.
+     * e.g.: write("energy", "50uJ")
+     * @param topic a {@link String}
+     * @param value a {@link String}
+     */
+    void write(String topic, String value);
 
     /**
      * Update the current test being executed

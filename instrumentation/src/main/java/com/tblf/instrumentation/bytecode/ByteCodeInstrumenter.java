@@ -6,6 +6,7 @@ import com.tblf.instrumentation.Instrumenter;
 import com.tblf.instrumentation.bytecode.visitors.TargetClassVisitor;
 import com.tblf.instrumentation.bytecode.visitors.TestClassVisitor;
 import com.tblf.utils.Configuration;
+import com.tblf.utils.MavenUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -28,6 +29,7 @@ import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by Thibault on 20/09/2017.
@@ -141,8 +143,10 @@ public class ByteCodeInstrumenter extends Instrumenter {
     public void instrument(Collection<Object> processors) {
         Collection<ClassVisitor> classVisitors = processors.stream().map(o -> ((ClassVisitor) o)).collect(Collectors.toList());
         try {
+
             Files.walk(directory.toPath(), Integer.MAX_VALUE)
-                    .filter(path -> path.toString().endsWith(".class")).forEach(path -> classVisitors.forEach(classVisitor -> {
+                    .filter(path -> path.toString().endsWith(".class"))
+                    .forEach(path -> classVisitors.forEach(classVisitor -> {
 
                 try {
                     ClassReader classReader = new ClassReader(new FileInputStream(path.toFile()));
@@ -159,9 +163,6 @@ public class ByteCodeInstrumenter extends Instrumenter {
             LOGGER.log(Level.WARNING, "Could not instrument bytecode of "+directory.getAbsolutePath(), e);
         }
     }
-
-
-
 
     private byte[] instrumentTargetClass(File target, String qualifiedName) throws IOException {
 

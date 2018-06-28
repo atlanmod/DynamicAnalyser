@@ -1,9 +1,9 @@
 package com.tblf.business;
 
-import com.tblf.linker.FileTracer;
-import com.tblf.linker.QueueTracer;
-import com.tblf.linker.Tracer;
-import com.tblf.parsing.QueueReader;
+import com.tblf.linker.tracers.FileTracer;
+import com.tblf.linker.tracers.QueueTracer;
+import com.tblf.linker.tracers.Tracer;
+import com.tblf.parsing.parsers.QueueReader;
 import com.tblf.utils.Configuration;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;

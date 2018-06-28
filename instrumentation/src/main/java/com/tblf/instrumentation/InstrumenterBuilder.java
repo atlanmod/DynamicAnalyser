@@ -2,17 +2,12 @@ package com.tblf.instrumentation;
 
 import com.tblf.instrumentation.bytecode.ByteCodeInstrumenter;
 import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
-import com.tblf.linker.Calls;
-import com.tblf.linker.FileTracer;
-import com.tblf.linker.QueueTracer;
-import com.tblf.linker.Tracer;
-import com.tblf.utils.Configuration;
+import com.tblf.linker.tracers.FileTracer;
+import com.tblf.linker.tracers.QueueTracer;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Builder creating an {@link Instrumenter}
@@ -66,7 +61,7 @@ public class InstrumenterBuilder {
     }
 
     /**
-     * Instantiate a @{@link com.tblf.linker.FileTracer} to trace the execution
+     * Instantiate a @{@link FileTracer} to trace the execution
      * @return this, the current {@link InstrumenterBuilder}
      */
     public InstrumenterBuilder withSingleFileExecutionTrace() {
@@ -75,7 +70,7 @@ public class InstrumenterBuilder {
     }
 
     /**
-     * Instantiate a {@link com.tblf.linker.QueueTracer} to trace the execution. Faster and safer
+     * Instantiate a {@link QueueTracer} to trace the execution. Faster and safer
      * @return this, the current {@link InstrumenterBuilder}
      */
     public InstrumenterBuilder withQueueExecutionTrace() {

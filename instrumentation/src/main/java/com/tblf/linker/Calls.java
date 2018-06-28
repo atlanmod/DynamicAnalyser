@@ -1,5 +1,8 @@
 package com.tblf.linker;
 
+import com.tblf.linker.tracers.FileTracer;
+import com.tblf.linker.tracers.QueueTracer;
+import com.tblf.linker.tracers.Tracer;
 import com.tblf.utils.Configuration;
 
 import java.util.logging.Logger;
@@ -37,6 +40,15 @@ public class Calls {
      * This private constructor forces the class to -not- be instanciated
      */
     private Calls() {
+    }
+
+    /**
+     * Write the following String in the {@link Tracer}
+     * @param value a {@link String}
+     */
+    public static void write(String value) {
+        System.out.println("Writing: "+value);
+        tracer.write(value);
     }
 
     /**

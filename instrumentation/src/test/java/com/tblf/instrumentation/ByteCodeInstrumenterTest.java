@@ -4,7 +4,7 @@ import com.tblf.DotCP.DotCPParserBuilder;
 import com.tblf.classloading.SingleURLClassLoader;
 import com.tblf.instrumentation.bytecode.ByteCodeInstrumenter;
 import com.tblf.linker.Calls;
-import com.tblf.parsing.ModelParser;
+import com.tblf.parsing.parsers.ModelParser;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;

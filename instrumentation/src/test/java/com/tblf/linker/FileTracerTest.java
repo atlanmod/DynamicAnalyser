@@ -1,5 +1,6 @@
 package com.tblf.linker;
 
+import com.tblf.linker.tracers.FileTracer;
 import com.tblf.utils.Configuration;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;

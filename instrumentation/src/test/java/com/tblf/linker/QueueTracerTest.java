@@ -1,19 +1,47 @@
 package com.tblf.linker;
 
+import com.tblf.linker.tracers.QueueTracer;
+import com.tblf.linker.tracers.Tracer;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ChronicleQueueBuilder;
-import net.openhft.chronicle.queue.ExcerptAppender;
 import net.openhft.chronicle.queue.ExcerptTailer;
-import net.openhft.chronicle.queue.impl.single.SingleChronicleQueue;
-import net.openhft.chronicle.queue.impl.single.SingleChronicleQueueBuilder;
-import net.openhft.chronicle.wire.Wire;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 
 public class QueueTracerTest {
+
+    private boolean asserted = false;
+
+    @Test
+    public void testWriteWithTopic() {
+        Tracer tracer = new QueueTracer();
+        tracer.startTrace();
+        tracer.write("test", "value");
+        tracer.endTrace();
+
+        File file = tracer.getFile();
+
+        ChronicleQueue queue = ChronicleQueueBuilder.single(file.getAbsolutePath()).build();
+        ExcerptTailer excerptTailer = queue.createTailer();
+
+        Assert.assertEquals("value", excerptTailer.readingDocument().wire().read("test").text());
+    }
+
+    @Test
+    public void testWrite() {
+        Tracer tracer = new QueueTracer();
+        tracer.startTrace();
+        tracer.write("value");
+
+        File file = tracer.getFile();
+
+        ChronicleQueue queue = ChronicleQueueBuilder.single(file.getAbsolutePath()).build();
+        ExcerptTailer excerptTailer = queue.createTailer();
+
+        Assert.assertEquals("value", excerptTailer.readText());
+    }
 
     @Test
     public void testUpdateTest() {
@@ -85,4 +113,6 @@ public class QueueTracerTest {
         Assert.assertEquals("%:myTarget:myTargetMethod", excerptTailer.readText());
         Assert.assertEquals("?:50", excerptTailer.readText());
     }
+
+
 }
