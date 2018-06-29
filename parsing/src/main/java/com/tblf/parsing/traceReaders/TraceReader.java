@@ -1,7 +1,26 @@
 package com.tblf.parsing.traceReaders;
 
-public interface TraceReader {
+import java.io.File;
 
-    String read();
+public abstract class TraceReader {
 
+    private File file;
+
+    public abstract String read();
+
+    public TraceReader() {
+
+    }
+
+    public TraceReader(File file) {
+        this.file = file;
+    }
+
+    public File getFile() {
+        return file;
+    }
+
+    public void setFile(File file) {
+        this.file = file;
+    }
 }

@@ -7,14 +7,24 @@ import java.util.logging.Logger;
 /**
  * Simplest reader, reading a single execution trace file using a {@link BufferedReader}
  */
-public class TraceFileReader implements TraceReader {
+public class TraceFileReader extends TraceReader {
     private static Logger LOGGER = Logger.getLogger(TraceFileReader.class.getName());
     private BufferedReader bufferedReader;
+
+    public TraceFileReader() {
+    }
+
     /**
      * Constructor initializing the reader
      * @param file
      */
     public TraceFileReader(File file) {
+        setFile(file);
+    }
+
+    @Override
+    public void setFile(File file) {
+        super.setFile(file);
         try {
             bufferedReader = new BufferedReader(new FileReader(file));
         } catch (FileNotFoundException e) {

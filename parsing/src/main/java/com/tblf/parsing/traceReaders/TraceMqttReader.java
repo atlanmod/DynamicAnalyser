@@ -17,10 +17,13 @@ import java.util.logging.Logger;
 /**
  * Mqtt client getting the traces from a broker
  */
-public class TraceMqttReader implements TraceReader {
+public class TraceMqttReader extends TraceReader {
 
     private static final Logger LOGGER = Logger.getLogger(TraceMqttReader.class.getName());
     private BlockingConnection blockingConnection;
+
+    public TraceMqttReader() {
+    }
 
     /**
      * Constructor. Takes a property files as a parameter, e.g.:
@@ -30,9 +33,15 @@ public class TraceMqttReader implements TraceReader {
      * @param conf
      */
     public TraceMqttReader(File conf) {
+        setFile(conf);
+    }
+
+    @Override
+    public void setFile(File file) {
+        super.setFile(file);
         Properties properties = new Properties();
         try {
-            properties.load(new FileInputStream(conf));
+            properties.load(new FileInputStream(file));
         } catch (IOException e) {
             e.printStackTrace();
         }
