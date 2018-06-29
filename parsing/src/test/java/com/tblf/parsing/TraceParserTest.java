@@ -2,7 +2,9 @@ package com.tblf.parsing;
 
 import com.tblf.model.Analysis;
 import com.tblf.model.ModelPackage;
-import com.tblf.parsing.parsers.TraceParser;
+import com.tblf.parsing.parsers.Parser;
+import com.tblf.parsing.parsingBehaviors.ImpactAnalysisBehavior;
+import com.tblf.parsing.traceReaders.TraceFileReader;
 import com.tblf.utils.Configuration;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.emf.common.util.URI;
@@ -99,10 +101,12 @@ public class TraceParserTest {
 
         file.createNewFile();
 
-        TraceParser traceParser = new TraceParser(trace, file, resourceSet);
-        Resource resource = traceParser.parse();
+        Parser parser = new Parser(new TraceFileReader(trace), new ImpactAnalysisBehavior(resourceSet, file));
+        parser.parse();
 
-        resource.save(Collections.EMPTY_MAP);
+        ResourceSet resourceSet = parser.getParsingBehavior().getModel();
+        Resource resource = resourceSet.getResource(URI.createURI(file.toURI().toURL().toString()), true);
+
         Assert.assertTrue(file.exists());
         Assert.assertEquals(3, resource.getContents().size());
     }
@@ -127,8 +131,11 @@ public class TraceParserTest {
 
         file.createNewFile();
 
-        TraceParser traceParser = new TraceParser(trace, file, resourceSet);
-        Resource resource = traceParser.parse();
+        Parser parser = new Parser(new TraceFileReader(trace), new ImpactAnalysisBehavior(resourceSet, file));
+        parser.parse();
+
+        ResourceSet resourceSet = parser.getParsingBehavior().getModel();
+        Resource resource = resourceSet.getResource(URI.createURI(file.toURI().toURL().toString()), true);
 
         resource.save(Collections.EMPTY_MAP);
         Assert.assertTrue(file.exists());
@@ -159,8 +166,11 @@ public class TraceParserTest {
 
         file.createNewFile();
 
-        TraceParser traceParser = new TraceParser(trace, file, resourceSet);
-        Resource resource = traceParser.parse();
+        Parser parser = new Parser(new TraceFileReader(trace), new ImpactAnalysisBehavior(resourceSet, file));
+        parser.parse();
+
+        ResourceSet resourceSet = parser.getParsingBehavior().getModel();
+        Resource resource = resourceSet.getResource(URI.createURI(file.toURI().toURL().toString()), true);
 
         resource.save(Collections.EMPTY_MAP);
         Assert.assertTrue(file.exists());
@@ -191,8 +201,11 @@ public class TraceParserTest {
 
         file.createNewFile();
 
-        TraceParser traceParser = new TraceParser(trace, file, resourceSet);
-        Resource resource = traceParser.parse();
+        Parser parser = new Parser(new TraceFileReader(trace), new ImpactAnalysisBehavior(resourceSet, file));
+        parser.parse();
+
+        ResourceSet resourceSet = parser.getParsingBehavior().getModel();
+        Resource resource = resourceSet.getResource(URI.createURI(file.toURI().toURL().toString()), true);
 
         resource.getContents().forEach(eObject -> {
             Analysis analysis = (Analysis) eObject;

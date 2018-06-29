@@ -4,6 +4,7 @@ import com.tblf.linker.tracers.FileTracer;
 import com.tblf.linker.tracers.QueueTracer;
 import com.tblf.linker.tracers.Tracer;
 import com.tblf.utils.Configuration;
+import sun.security.krb5.Config;
 
 import java.util.logging.Logger;
 
@@ -20,12 +21,12 @@ public class Calls {
 
     static {
         switch(Configuration.getProperty("trace")) {
-            case "queue": {
-                tracer = new QueueTracer();
+            case "FILE": {
+                tracer = new FileTracer();
                 break;
             }
-            case "file": {
-                tracer = new FileTracer();
+            case "QUEUE": {
+                tracer = new QueueTracer();
                 break;
             }
             default: {

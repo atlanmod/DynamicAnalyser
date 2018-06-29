@@ -8,10 +8,14 @@ import com.tblf.linker.Calls;
 import com.tblf.parsing.TraceType;
 import com.tblf.parsing.parsers.ModelParser;
 import com.tblf.parsing.parsers.Parser;
-import com.tblf.parsing.parsers.TraceParser;
+import com.tblf.parsing.parsingBehaviors.ImpactAnalysisBehavior;
+import com.tblf.parsing.traceReaders.TraceFileReader;
+import com.tblf.parsing.traceReaders.TraceQueueReader;
+import com.tblf.parsing.traceReaders.TraceReader;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.FileUtils;
 import com.tblf.utils.ModelUtils;
+import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 
@@ -46,6 +50,8 @@ public class AnalysisLauncher {
     private List<File> dependencies;
 
     private boolean isPomAtRoot = true;
+
+    private TraceReader traceReader;
 
     /**
      * Constructor getting all the analysable module inside the {@link File} directory
@@ -151,12 +157,16 @@ public class AnalysisLauncher {
                 if (!exTrace.exists())
                     throw new IOException("Cannot get the execution trace file.");
 
-                //Parsing the traces
-                new TraceParser(exTrace, outputModel, resourceSet)
-                        .parse()
-                        .save(Collections.EMPTY_MAP);
+                traceReader.setFile(exTrace);
+                new Parser(traceReader, new ImpactAnalysisBehavior(resourceSet, outputModel)).parse();
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "An exception was caught when parsing the trace", e);
+            }
+
+            try {
+                resourceSet.getResource(URI.createURI(outputModel.toURI().toURL().toString()), true).save(Collections.EMPTY_MAP);
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Could not save the model", e);
             }
             exTrace.delete();
         });
@@ -185,10 +195,11 @@ public class AnalysisLauncher {
         });
     }
 
+
     /**
      * Set the dependencies before running the impact analysis
      */
-    private void setUp() {
+    private void setUpInstrumentation() {
         instrumenterBuilder = new InstrumenterBuilder();
 
         if (isPomAtRoot)
@@ -210,9 +221,14 @@ public class AnalysisLauncher {
         switch (TraceType.valueOf(Configuration.getProperty("trace"))) {
             case QUEUE:
                 instrumenterBuilder = instrumenterBuilder.withQueueExecutionTrace();
+                traceReader = new TraceQueueReader();
                 break;
             case FILE:
                 instrumenterBuilder = instrumenterBuilder.withSingleFileExecutionTrace();
+                traceReader = new TraceFileReader();
+                break;
+            case MQTT:
+                //TODO
                 break;
             default:
                 LOGGER.warning("No instrumentation chosen");
@@ -246,7 +262,7 @@ public class AnalysisLauncher {
      * Run the impact analysis using the configurations set by the user
      */
     public void runImpactAnalysis() {
-        setUp();
+        setUpInstrumentation();
 
         instrumentAndRunTests();
 
@@ -254,7 +270,7 @@ public class AnalysisLauncher {
     }
 
     public void run() {
-        setUp();
+        setUpInstrumentation();
 
         instrument();
 

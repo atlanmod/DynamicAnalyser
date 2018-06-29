@@ -124,7 +124,7 @@ public class AnalysisLauncherTest {
         Resource analysisModel = ModelUtils.loadModel(model);
 
         Assert.assertEquals("Not the expected number of impacts", 10, analysisModel.getContents().size());
-        FileUtils.deleteDirectory(file);
+       // FileUtils.deleteDirectory(file);
     }
 
     @Test

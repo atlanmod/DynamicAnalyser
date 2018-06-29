@@ -40,7 +40,7 @@ public class InstrumentationLinkageTest {
 
     @Test
     public void checkInstrument() throws IOException {
-        Configuration.setProperty("trace", "file");
+        Configuration.setProperty("trace", "FILE");
 
         //Instrumenting the project
         File proj = new File("src/test/resources/sources/SimpleProject/");
@@ -73,7 +73,7 @@ public class InstrumentationLinkageTest {
         FileUtils.deleteDirectory(binOut);
 
 
-        File file = ((FileTracer) Calls.getTracer()).getFile();
+        File file = Calls.getTracer().getFile();
 
         String result = IOUtils.toString(file.toURI(), "UTF-8");
 
