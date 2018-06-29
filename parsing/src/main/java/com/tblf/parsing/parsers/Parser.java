@@ -1,57 +1,28 @@
 package com.tblf.parsing.parsers;
 
-import com.tblf.model.ModelPackage;
-import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
-import org.eclipse.gmt.modisco.java.emf.JavaPackage;
-import org.eclipse.gmt.modisco.omg.kdm.kdm.KdmPackage;
-import org.eclipse.modisco.java.composition.javaapplication.JavaapplicationPackage;
-import org.eclipse.modisco.kdm.source.extension.ExtensionPackage;
+import com.tblf.parsing.parsingBehaviors.ParsingBehavior;
+import com.tblf.parsing.traceReaders.TraceReader;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class Parser {
+public class Parser {
 
     protected static final Logger LOGGER = Logger.getLogger("Parser");
 
     protected File trace;
-    protected Resource outputModel;
-    protected ResourceSet resourceSet;
+
+    protected TraceReader traceReader;
+    protected ParsingBehavior parsingBehavior;
 
     /**
-     * Constructor defining the needed parameters for the parsing
-     *
-     * @param traceFile   the execution trace file. Can be either a simple file, or a folder containing multiple traces
-     * @param outputModel the output model as a {@link File}
-     * @param resourceSet the EMF {@link ResourceSet} containing the {@link Resource}s
+     * Constructor defining the parameters needed for the parsing
+     * @param traceReader a {@link TraceReader} defining method to read a trace.
+     * @param behavior a {@link ParsingBehavior} defining the behaviour to adapt when parsing the trace
      */
-    public Parser(File traceFile, File outputModel, ResourceSet resourceSet) {
-        this.trace = traceFile;
-
-        JavaPackage.eINSTANCE.eClass();
-        JavaapplicationPackage.eINSTANCE.eClass();
-        ExtensionPackage.eINSTANCE.eClass();
-        KdmPackage.eINSTANCE.eClass();
-        ModelPackage.eINSTANCE.eClass();
-
-        Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
-        Map<String, Object> m = reg.getExtensionToFactoryMap();
-        m.put("xmi", new XMIResourceFactoryImpl());
-
-        try {
-            if (!outputModel.exists() && !outputModel.createNewFile()) {
-                throw new IOException("Cannot create the output model");
-            }
-            this.outputModel = resourceSet.createResource(URI.createURI(outputModel.toURI().toURL().toString()));
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Cannot load the traces", e);
-        }
+    public Parser(TraceReader traceReader, ParsingBehavior behavior) {
+        this.parsingBehavior = behavior;
+        this.traceReader = traceReader;
     }
 
     /**
@@ -59,5 +30,28 @@ public abstract class Parser {
      *
      * @return the traces
      */
-    public abstract Resource parse();
+    public void parse() {
+
+        String trace;
+
+        while ((trace = traceReader.read()) != null) {
+            parsingBehavior.manage(trace);
+        }
+    }
+
+    public TraceReader getTraceReader() {
+        return traceReader;
+    }
+
+    public void setTraceReader(TraceReader traceReader) {
+        this.traceReader = traceReader;
+    }
+
+    public ParsingBehavior getParsingBehavior() {
+        return parsingBehavior;
+    }
+
+    public void setParsingBehavior(ParsingBehavior parsingBehavior) {
+        this.parsingBehavior = parsingBehavior;
+    }
 }
