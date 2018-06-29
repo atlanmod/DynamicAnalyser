@@ -48,7 +48,6 @@ public class Calls {
      * @param value a {@link String}
      */
     public static void write(String value) {
-        System.out.println("Writing: "+value);
         tracer.write(value);
     }
 

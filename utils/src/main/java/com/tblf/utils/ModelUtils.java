@@ -262,7 +262,7 @@ public class ModelUtils {
 
         String currentName = (String) eObject.eGet(eStructuralFeature);
 
-        if (eObject.eContainer() instanceof ClassDeclaration) {
+        if (eObject.eContainer() instanceof TypeDeclaration) {
             currentName = "$".concat(currentName);
         }
 

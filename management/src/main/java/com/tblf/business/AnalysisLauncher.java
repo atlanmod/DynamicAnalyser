@@ -18,6 +18,8 @@ import com.tblf.utils.ModelUtils;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.gmt.modisco.java.ClassDeclaration;
+import org.eclipse.gmt.modisco.java.InterfaceDeclaration;
 
 import java.io.File;
 import java.io.IOException;
