@@ -4,6 +4,7 @@ import com.tblf.classloading.SingleURLClassLoader;
 import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
 import com.tblf.linker.Calls;
 import com.tblf.linker.tracers.FileTracer;
+import com.tblf.parsing.TraceType;
 import com.tblf.utils.Configuration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -31,6 +32,10 @@ public class InstrumentationLinkageTest {
             FileUtils.deleteDirectory(dir);
 
         com.tblf.utils.FileUtils.unzip(new File("src/test/resources/sources/SimpleProject.zip"));
+        File file = new File(Configuration.getProperty("traceFile"));
+        if (file.exists())
+            FileUtils.forceDelete(file);
+
     }
 
     @After
@@ -40,7 +45,7 @@ public class InstrumentationLinkageTest {
 
     @Test
     public void checkInstrument() throws IOException {
-        Configuration.setProperty("trace", "FILE");
+        Configuration.setProperty("trace", String.valueOf(TraceType.FILE));
 
         //Instrumenting the project
         File proj = new File("src/test/resources/sources/SimpleProject/");
@@ -63,6 +68,7 @@ public class InstrumentationLinkageTest {
 
         try {
             //Running the class
+            Calls.setTracer(new FileTracer());
             Calls.getTracer().startTrace();
             Class clazz = SingleURLClassLoader.getInstance().getClassLoader().loadClass("com.tblf.SimpleProject.AppTest");
             JUnitCore.runClasses(clazz);
@@ -72,8 +78,7 @@ public class InstrumentationLinkageTest {
 
         FileUtils.deleteDirectory(binOut);
 
-
-        File file = Calls.getTracer().getFile();
+        File file = new File(Configuration.getProperty("traceFile"));
 
         String result = IOUtils.toString(file.toURI(), "UTF-8");
 

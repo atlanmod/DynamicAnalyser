@@ -21,6 +21,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -139,7 +140,9 @@ public class ByteCodeInstrumenter extends Instrumenter {
 
     @Override
     public void instrument(Collection<Object> processors) {
+
         Collection<ClassVisitor> classVisitors = processors.stream().map(o -> ((ClassVisitor) o)).collect(Collectors.toList());
+
         try {
 
             Files.walk(directory.toPath(), Integer.MAX_VALUE)
@@ -151,9 +154,8 @@ public class ByteCodeInstrumenter extends Instrumenter {
                     ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
                     FieldUtils.writeField(classVisitor, "cv", classWriter, true );
                     classReader.accept(classVisitor, ClassReader.EXPAND_FRAMES);
-                    singleURLClassLoader.loadBytes(classWriter.toByteArray());
                     IOUtils.write(classWriter.toByteArray(), new FileOutputStream(path.toFile()));
-                } catch (IOException | IllegalAccessException e) {
+                } catch (IOException | IllegalAccessException | LinkageError e) {
                     e.printStackTrace();
                 }
             }));

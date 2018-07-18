@@ -6,6 +6,7 @@ import com.tblf.linker.tracers.Tracer;
 import com.tblf.utils.Configuration;
 import sun.security.krb5.Config;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -22,14 +23,17 @@ public class Calls {
     static {
         switch(Configuration.getProperty("trace")) {
             case "FILE": {
+                LOGGER.log(Level.INFO, "creating file-based tracer");
                 tracer = new FileTracer();
                 break;
             }
             case "QUEUE": {
+                LOGGER.log(Level.INFO, "creating queue-based tracer");
                 tracer = new QueueTracer();
                 break;
             }
             default: {
+                LOGGER.log(Level.INFO, "No configuration found: creating default queue-based tracer");
                 tracer = new QueueTracer();
             }
         }

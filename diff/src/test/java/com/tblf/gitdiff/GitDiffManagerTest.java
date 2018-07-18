@@ -52,7 +52,7 @@ public class GitDiffManagerTest {
                     methodDeclaration.getParameters().forEach(singleVariableDeclaration -> System.out.println(singleVariableDeclaration.getType().getType().getName()));
                 });
 
-        JavaParser.parse(new File("/home/thibault/Documents/git/Dynamic-Analyser/diff/src/test/resources/fullprojects/SimpleProject/src/main/java/com/tblf/SimpleProject/App.java")).getChildNodesByType(MethodDeclaration.class).forEach(methodDeclaration -> System.out.println("THE METHOD "+methodDeclaration.getSignature().asString()));
+        JavaParser.parse(new File("src/test/resources/fullprojects/SimpleProject/src/main/java/com/tblf/SimpleProject/App.java")).getChildNodesByType(MethodDeclaration.class).forEach(methodDeclaration -> System.out.println("THE METHOD "+methodDeclaration.getSignature().asString()));
         FileUtils.deleteDirectory(file);
     }
 }

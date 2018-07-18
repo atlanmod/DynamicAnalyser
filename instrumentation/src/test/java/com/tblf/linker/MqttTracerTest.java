@@ -25,7 +25,6 @@ public class MqttTracerTest {
         File conf = new File("src/test/resources/moquette.conf");
         server = new Server();
         server.startServer(conf);
-
     }
 
     @Test

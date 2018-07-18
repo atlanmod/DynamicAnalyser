@@ -69,16 +69,23 @@ public class FileTracer implements Tracer {
         return this.file;
     }
 
+    //FIXME: context specific method. to fix
     @Override
     public void write(String value) {
         if (value.startsWith("&"))
             this.updateTest(getFirstSegment(value), getSecondSegment(value));
-        if (value.startsWith("%"))
+        else if (value.startsWith("%"))
             this.updateTarget(getFirstSegment(value), getSecondSegment(value));
-        if (value.startsWith("!"))
+        else if (value.startsWith("!"))
             this.updateStatementsUsingColumn(getFirstSegment(value), getSecondSegment(value));
-        if (value.startsWith("?"))
+        else if (value.startsWith("?"))
             this.updateStatementsUsingLine(getSecondSegment(value));
+        else
+            try {
+                this.writer.write(value);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
     }
 
     @Override

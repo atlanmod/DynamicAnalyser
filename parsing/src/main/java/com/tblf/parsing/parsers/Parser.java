@@ -37,6 +37,7 @@ public class Parser {
         while ((trace = traceReader.read()) != null) {
             parsingBehavior.manage(trace);
         }
+        
     }
 
     public TraceReader getTraceReader() {

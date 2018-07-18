@@ -6,6 +6,7 @@ import com.tblf.linker.tracers.Tracer;
 import com.tblf.parsing.parsers.QueueReader;
 import com.tblf.utils.Configuration;
 import org.apache.commons.io.FileUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -16,6 +17,7 @@ import java.io.IOException;
 public class Benchmark {
 
     @Test
+    @Ignore
     public void comparingFileAndQueue() throws IOException {
         /* File trace */
 
