@@ -22,15 +22,14 @@ import org.eclipse.modisco.kdm.source.extension.ExtensionPackage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class ImpactAnalysisBehavior extends ParsingBehavior {
+public class FineGrainedImpactAnalysisBehavior extends ParsingBehavior {
 
-    private static final Logger LOGGER = Logger.getLogger(ImpactAnalysisBehavior.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(FineGrainedImpactAnalysisBehavior.class.getName());
     private static final String ANALYSIS_NAME = Configuration.getProperty("analysisName");
 
     private Map<String, Java2File> classQNJava2File;
@@ -50,7 +49,7 @@ public class ImpactAnalysisBehavior extends ParsingBehavior {
     private Resource outputModel;
     private Query query;
 
-    public ImpactAnalysisBehavior(ResourceSet model, File outputModelFile) {
+    public FineGrainedImpactAnalysisBehavior(ResourceSet model, File outputModelFile) {
         super(model);
 
         this.query = new StreamQuery();

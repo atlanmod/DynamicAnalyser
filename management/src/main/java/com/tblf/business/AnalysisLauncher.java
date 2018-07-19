@@ -8,7 +8,7 @@ import com.tblf.linker.Calls;
 import com.tblf.parsing.TraceType;
 import com.tblf.parsing.parsers.ModelParser;
 import com.tblf.parsing.parsers.Parser;
-import com.tblf.parsing.parsingBehaviors.ImpactAnalysisBehavior;
+import com.tblf.parsing.parsingBehaviors.FineGrainedImpactAnalysisBehavior;
 import com.tblf.parsing.traceReaders.TraceFileReader;
 import com.tblf.parsing.traceReaders.TraceQueueReader;
 import com.tblf.parsing.traceReaders.TraceReader;
@@ -18,8 +18,6 @@ import com.tblf.utils.ModelUtils;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.gmt.modisco.java.ClassDeclaration;
-import org.eclipse.gmt.modisco.java.InterfaceDeclaration;
 
 import java.io.File;
 import java.io.IOException;
@@ -160,7 +158,7 @@ public class AnalysisLauncher {
                     throw new IOException("Cannot get the execution trace file.");
 
                 traceReader.setFile(exTrace);
-                new Parser(traceReader, new ImpactAnalysisBehavior(resourceSet, outputModel)).parse();
+                new Parser(traceReader, new FineGrainedImpactAnalysisBehavior(resourceSet, outputModel)).parse();
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "An exception was caught when parsing the trace", e);
             }

@@ -39,6 +39,7 @@ public class QueueTracer implements Tracer {
         file.mkdir();
 
         ChronicleQueue queue = ChronicleQueueBuilder.single(file.getAbsolutePath()).build();
+
         excerptAppender = queue.acquireAppender();
     }
 

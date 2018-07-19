@@ -3,7 +3,7 @@ package com.tblf.parsing;
 import com.tblf.model.Analysis;
 import com.tblf.model.ModelPackage;
 import com.tblf.parsing.parsers.Parser;
-import com.tblf.parsing.parsingBehaviors.ImpactAnalysisBehavior;
+import com.tblf.parsing.parsingBehaviors.FineGrainedImpactAnalysisBehavior;
 import com.tblf.parsing.traceReaders.TraceFileReader;
 import com.tblf.utils.Configuration;
 import org.apache.commons.io.FileUtils;
@@ -101,7 +101,7 @@ public class TraceParserTest {
 
         file.createNewFile();
 
-        Parser parser = new Parser(new TraceFileReader(trace), new ImpactAnalysisBehavior(resourceSet, file));
+        Parser parser = new Parser(new TraceFileReader(trace), new FineGrainedImpactAnalysisBehavior(resourceSet, file));
         parser.parse();
 
         ResourceSet resourceSet = parser.getParsingBehavior().getModel();
@@ -131,7 +131,7 @@ public class TraceParserTest {
 
         file.createNewFile();
 
-        Parser parser = new Parser(new TraceFileReader(trace), new ImpactAnalysisBehavior(resourceSet, file));
+        Parser parser = new Parser(new TraceFileReader(trace), new FineGrainedImpactAnalysisBehavior(resourceSet, file));
         parser.parse();
 
         ResourceSet resourceSet = parser.getParsingBehavior().getModel();
@@ -166,7 +166,7 @@ public class TraceParserTest {
 
         file.createNewFile();
 
-        Parser parser = new Parser(new TraceFileReader(trace), new ImpactAnalysisBehavior(resourceSet, file));
+        Parser parser = new Parser(new TraceFileReader(trace), new FineGrainedImpactAnalysisBehavior(resourceSet, file));
         parser.parse();
 
         ResourceSet resourceSet = parser.getParsingBehavior().getModel();
@@ -201,7 +201,7 @@ public class TraceParserTest {
 
         file.createNewFile();
 
-        Parser parser = new Parser(new TraceFileReader(trace), new ImpactAnalysisBehavior(resourceSet, file));
+        Parser parser = new Parser(new TraceFileReader(trace), new FineGrainedImpactAnalysisBehavior(resourceSet, file));
         parser.parse();
 
         ResourceSet resourceSet = parser.getParsingBehavior().getModel();

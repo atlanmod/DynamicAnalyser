@@ -154,7 +154,9 @@ public class ByteCodeInstrumenter extends Instrumenter {
                     ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
                     FieldUtils.writeField(classVisitor, "cv", classWriter, true );
                     classReader.accept(classVisitor, ClassReader.EXPAND_FRAMES);
-                    IOUtils.write(classWriter.toByteArray(), new FileOutputStream(path.toFile()));
+                    FileOutputStream fileOutputStream = new FileOutputStream(path.toFile());
+                    IOUtils.write(classWriter.toByteArray(), fileOutputStream);
+                    fileOutputStream.close();
                 } catch (IOException | IllegalAccessException | LinkageError e) {
                     e.printStackTrace();
                 }

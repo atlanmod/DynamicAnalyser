@@ -59,16 +59,10 @@ public class HawkQuery implements Query, AutoCloseable {
         /* Loading the metamodels */
         File ecore = new File("src/main/resources/hawk/Ecore.ecore");
         File mm = new File("src/main/resources/hawk/java.ecore");
-        File jApplicationmm = new File("src/main/resources/hawk/javaApplication.ecore");
-        File kdmSourceExtension = new File("src/main/resources/hawk/kdmSourceExtension.ecore");
-        File kdm = new File("src/main/resources/hawk/kdm.ecore");
 
         try {
             modelIndexer.registerMetamodels(ecore);
             modelIndexer.registerMetamodels(mm);
-            modelIndexer.registerMetamodels(kdm);
-            modelIndexer.registerMetamodels(kdmSourceExtension);
-            modelIndexer.registerMetamodels(jApplicationmm);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Could not load metamodel", e);
         }
@@ -88,16 +82,10 @@ public class HawkQuery implements Query, AutoCloseable {
 
     @Override
     public Collection<ASTNodeSourceRegion> queryLine(int lineStart, int lineEnd, Java2File java2File) {
-        waitForSync(modelIndexer, () -> {
-                    Object value = modelIndexer.getKnownQueryLanguages().get("org.hawk.epsilon.emc.EOLQueryEngine")
-                    .query(modelIndexer,
-                            "return null;"
-                            ,null);
-
-                    LOGGER.fine(value.toString());
-                    return null;
-        });
-
+        waitForSync(modelIndexer, () -> modelIndexer.getKnownQueryLanguages().get("org.hawk.epsilon.emc.EOLQueryEngine")
+                .query(modelIndexer,
+                        ""
+                        , null));
         //TODO
         return Collections.EMPTY_LIST;
     }
@@ -107,13 +95,22 @@ public class HawkQuery implements Query, AutoCloseable {
         waitForSync(modelIndexer, () -> modelIndexer.getKnownQueryLanguages().get("org.hawk.epsilon.emc.EOLQueryEngine")
                 .query(modelIndexer,
                         ""
-                        ,null));
-
+                        , null));
         //TODO
         return Collections.EMPTY_LIST;
     }
 
-    protected void waitForSync(IModelIndexer indexer, final Callable<?> r) {
+    public Object queryWithInputEOLQuery(String query) {
+
+        return waitForSync(modelIndexer, () -> {
+            Object value = modelIndexer.getKnownQueryLanguages().get("org.hawk.epsilon.emc.EOLQueryEngine")
+                    .query(modelIndexer, query, null);
+            return value;
+        });
+
+    }
+
+    protected Object waitForSync(IModelIndexer indexer, final Callable<?> r) {
         final Semaphore sem = new Semaphore(0);
         final SyncEndListener changeListener = new SyncEndListener(r, sem);
         indexer.addGraphChangeListener(changeListener);
@@ -128,6 +125,8 @@ public class HawkQuery implements Query, AutoCloseable {
         } catch (Throwable e) {
             LOGGER.log(Level.WARNING, "Error with indexer synchronization", e);
         }
+
+        return changeListener.getReturnValue();
     }
 
     @Override
