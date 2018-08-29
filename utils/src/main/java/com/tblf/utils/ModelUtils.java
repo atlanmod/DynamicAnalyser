@@ -286,7 +286,7 @@ public class ModelUtils {
                 stream.filter(path -> path.toString().endsWith(Configuration.getProperty("modelFormat"))).forEach(path -> {
                     try {
                         resourceSet.getResource(URI.createURI(path.toUri().toURL().toString()), true);
-                    } catch (MalformedURLException e) {
+                    } catch (Exception e) {
                         LOGGER.log(Level.WARNING, "Cannot load the resource " + path.toString(), e);
                     }
                 });
