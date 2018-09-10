@@ -7,7 +7,10 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.modisco.java.composition.javaapplication.Java2File;
 import org.eclipse.modisco.kdm.source.extension.ASTNodeSourceRegion;
 import org.hawk.core.IModelIndexer;
+import org.hawk.core.IStateListener;
 import org.hawk.core.graph.IGraphDatabase;
+import org.hawk.core.query.InvalidQueryException;
+import org.hawk.core.query.QueryExecutionException;
 import org.hawk.core.runtime.ModelIndexerImpl;
 import org.hawk.core.util.DefaultConsole;
 import org.hawk.emf.metamodel.EMFMetaModelResourceFactory;
@@ -38,6 +41,9 @@ public class HawkQuery implements Query, AutoCloseable {
     private static final Logger LOGGER = Logger.getAnonymousLogger();
     private static final Semaphore sem = new Semaphore(0);
 
+    private GraphModelUpdater graphModelUpdater;
+
+
     public HawkQuery(File modelDirectory) {
         File file = new File(Configuration.getProperty("indexDirectory"));
 
@@ -49,8 +55,9 @@ public class HawkQuery implements Query, AutoCloseable {
         modelIndexer.addMetaModelResourceFactory(new EMFMetaModelResourceFactory());
         modelIndexer.addModelResourceFactory(new EMFModelResourceFactory());
         modelIndexer.addQueryEngine(new EOLQueryEngine());
+        graphModelUpdater = new GraphModelUpdater();
         modelIndexer.setMetaModelUpdater(new GraphMetaModelUpdater());
-        modelIndexer.addModelUpdater(new GraphModelUpdater());
+        modelIndexer.addModelUpdater(graphModelUpdater);
         modelIndexer.setDB(db, true);
         try {
             modelIndexer.init(0, 0);
@@ -84,7 +91,7 @@ public class HawkQuery implements Query, AutoCloseable {
 
     private File loadOrCreateModel(String resourceUrl) throws IOException {
         //"hawk/Ecore.ecore"
-        File model = new File("src/main/resources/"+resourceUrl);
+        File model = new File("src/main/resources/" + resourceUrl);
         if (!model.exists()) {
             model.getParentFile().mkdirs();
             model.createNewFile();
@@ -116,14 +123,25 @@ public class HawkQuery implements Query, AutoCloseable {
 
     public Object queryWithInputEOLQuery(String query) {
 
-        Object value = waitForSync(modelIndexer, () ->
-                modelIndexer.getKnownQueryLanguages().get("org.hawk.epsilon.emc.EOLQueryEngine").query(modelIndexer, query, null));
-        sem.release();
+        /*Object value = waitForSync(modelIndexer, () ->
+                modelIndexer.getKnownQueryLanguages().get("org.hawk.epsilon.emc.EOLQueryEngine").query(modelIndexer, query, null));*/
+
+        Object value = null;
+        if (modelIndexer.getCompositeStateListener().getCurrentState() != IStateListener.HawkState.RUNNING)
+            waitForSync(modelIndexer, () -> null);
+
+        try {
+            value = modelIndexer.getKnownQueryLanguages().get("org.hawk.epsilon.emc.EOLQueryEngine").query(modelIndexer, query, null);
+        } catch (InvalidQueryException e) {
+            e.printStackTrace();
+        } catch (QueryExecutionException e) {
+            e.printStackTrace();
+        }
+        //sem.release();
 
         return value;
 
     }
-
 
 
     private Object waitForSync(IModelIndexer indexer, final Callable<?> r) {
@@ -147,10 +165,8 @@ public class HawkQuery implements Query, AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        waitForSync(modelIndexer, () -> {
-            modelIndexer.shutdown(IModelIndexer.ShutdownRequestType.ONLY_LOCAL);
-            return null;
-        });
+        modelIndexer.shutdown(IModelIndexer.ShutdownRequestType.ONLY_LOCAL);
+
     }
 }
 

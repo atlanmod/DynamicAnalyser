@@ -48,9 +48,10 @@ public class HawkQueryTest {
 
     @Test
     public void checkHawkMultipleInputQuery() throws Exception {
+
         HawkQuery hawkQuery = new HawkQuery(new File("src/test/resources/hawk/models/junit"));
-        Assert.assertEquals(4241, hawkQuery.queryWithInputEOLQuery("return MethodDeclaration.all.size();"));
         Assert.assertEquals(1297, hawkQuery.queryWithInputEOLQuery("return ClassDeclaration.all.size();"));
+        Assert.assertEquals(4241, hawkQuery.queryWithInputEOLQuery("return MethodDeclaration.all.size();"));
         hawkQuery.close();
     }
 }
