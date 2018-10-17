@@ -3,12 +3,15 @@ package com.tblf.business;
 import com.tblf.classloading.SingleURLClassLoader;
 import com.tblf.instrumentation.InstrumentationType;
 import com.tblf.parsing.TraceType;
+import com.tblf.parsing.parsingBehaviors.EmptyParsingBehavior;
+import com.tblf.parsing.parsingBehaviors.ParsingBehavior;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.MavenUtils;
 import com.tblf.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -222,6 +225,7 @@ public class AnalysisLauncherTest {
                 } );
             }
         });
+        analysisLauncher.registerBehavior(new EmptyParsingBehavior());
 
         analysisLauncher.run();
         value = Integer.valueOf(FileUtils.readFileToString(tmpFile, Charset.defaultCharset()));
@@ -271,6 +275,7 @@ public class AnalysisLauncherTest {
         };
 
         analysisLauncher.registerProcessor(classVisitor);
+        analysisLauncher.registerBehavior(new EmptyParsingBehavior());
 
         File oracle = new File("/tmp/oracleFile.test");
         if (oracle.exists())

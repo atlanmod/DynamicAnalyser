@@ -5,11 +5,17 @@ import com.tblf.instrumentation.Instrumenter;
 import com.tblf.instrumentation.InstrumenterBuilder;
 import com.tblf.junitrunner.MavenRunner;
 import com.tblf.linker.Calls;
+import com.tblf.linker.tracers.FileTracer;
+import com.tblf.linker.tracers.MqttTracer;
+import com.tblf.linker.tracers.QueueTracer;
+import com.tblf.linker.tracers.Tracer;
 import com.tblf.parsing.TraceType;
 import com.tblf.parsing.parsers.ModelParser;
 import com.tblf.parsing.parsers.Parser;
 import com.tblf.parsing.parsingBehaviors.FineGrainedImpactAnalysisBehavior;
+import com.tblf.parsing.parsingBehaviors.ParsingBehavior;
 import com.tblf.parsing.traceReaders.TraceFileReader;
+import com.tblf.parsing.traceReaders.TraceMqttReader;
 import com.tblf.parsing.traceReaders.TraceQueueReader;
 import com.tblf.parsing.traceReaders.TraceReader;
 import com.tblf.utils.Configuration;
@@ -18,6 +24,7 @@ import com.tblf.utils.ModelUtils;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
+import sun.security.krb5.Config;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,6 +37,8 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import static com.tblf.parsing.TraceType.FILE;
 
 public class AnalysisLauncher {
     public static int oracle;
@@ -52,6 +61,7 @@ public class AnalysisLauncher {
     private boolean isPomAtRoot = true;
 
     private TraceReader traceReader;
+    private ParsingBehavior behavior;
 
     /**
      * Constructor getting all the analysable module inside the {@link File} directory
@@ -93,6 +103,13 @@ public class AnalysisLauncher {
         dependencies.addAll(deps);
     }
 
+    /**
+     * Register a behavior for the analysis. The {@link ParsingBehavior} will be called for each trace,
+     * and will define how the analyzer is supposed to act according to the execution trace.
+     * @param parsingBehavior a {@link ParsingBehavior}
+     */
+    public void registerBehavior(ParsingBehavior parsingBehavior) { behavior = parsingBehavior;}
+    
     public void setOutputModel(File file) {
         outputModel = file;
     }
@@ -228,7 +245,7 @@ public class AnalysisLauncher {
                 traceReader = new TraceFileReader();
                 break;
             case MQTT:
-                //TODO
+
                 break;
             default:
                 LOGGER.warning("No instrumentation chosen");
@@ -281,7 +298,27 @@ public class AnalysisLauncher {
      * Parse the execution trace, using the right {@link Parser} on the right execution trace
      */
     private void parse() {
-        //TODO
+        switch(TraceType.valueOf(Configuration.getProperty("trace"))) {
+            case FILE:
+                traceReader = new TraceFileReader();
+                break;
+            case MQTT:
+                traceReader = new TraceMqttReader();
+                break;
+            case QUEUE:
+                traceReader = new TraceQueueReader();
+                break;
+            default:
+                return;
+        }
+
+        File trace = new File(root, Configuration.getProperty("traceFile"));
+        traceReader.setFile(trace);
+
+        if (behavior == null)
+            throw new RuntimeException("No parsing behavior specified. Cannot run the analysis.");
+
+        new Parser(traceReader, behavior).parse();
     }
 
     public void setIsPomAtRoot(boolean bool) {
@@ -302,5 +339,9 @@ public class AnalysisLauncher {
 
     public void setResourceSet(ResourceSet resourceSet) {
         this.resourceSet = resourceSet;
+    }
+
+    public ParsingBehavior getBehavior() {
+        return behavior;
     }
 }
