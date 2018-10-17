@@ -45,7 +45,7 @@ public class HawkQuery implements Query, AutoCloseable {
 
 
     public HawkQuery(File modelDirectory) {
-        File file = new File(Configuration.getProperty("indexDirectory"));
+        File file = new File(modelDirectory, Configuration.getProperty("indexDirectory"));
 
         IGraphDatabase db = new Neo4JDatabase();
         db.run(file, new DefaultConsole());

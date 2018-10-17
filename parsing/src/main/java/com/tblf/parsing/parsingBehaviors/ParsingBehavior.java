@@ -19,4 +19,6 @@ public abstract class ParsingBehavior {
     public void setModel(ResourceSet model) {
         this.model = model;
     }
+
+
 }
