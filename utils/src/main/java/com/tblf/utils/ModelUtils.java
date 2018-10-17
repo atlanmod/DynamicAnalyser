@@ -287,7 +287,7 @@ public class ModelUtils {
                     try {
                         resourceSet.getResource(URI.createURI(path.toUri().toURL().toString()), true);
                     } catch (Exception e) {
-                        LOGGER.log(Level.WARNING, "Cannot load the resource " + path.toString(), e);
+                        LOGGER.log(Level.WARNING, "Cannot load the resource " + path.toString()+" : "+e.getMessage());
                     }
                 });
             }
