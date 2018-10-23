@@ -195,7 +195,6 @@ public class AnalysisLauncher {
      */
     private void instrument() {
         sources.forEach(source -> {
-            before.forEach(fileConsumer -> fileConsumer.accept(source));
 
             ModelUtils.buildResourceSet(source);
 
@@ -208,7 +207,6 @@ public class AnalysisLauncher {
             LOGGER.info("Running the tests to create execution traces");
             new MavenRunner(new File(source, "pom.xml")).withPomDependencies(dependencies).run();
 
-            after.forEach(fileConsumer -> fileConsumer.accept(source));
         });
     }
 
@@ -289,9 +287,13 @@ public class AnalysisLauncher {
     public void run() {
         setUpInstrumentation();
 
+        sources.forEach(source -> before.forEach(fileConsumer -> fileConsumer.accept(source)));
+
         instrument();
 
         parse();
+
+        sources.forEach(source -> after.forEach(fileConsumer -> fileConsumer.accept(source)));
     }
 
     /**
