@@ -1,6 +1,4 @@
-[![Build Status](https://travis-ci.org/atlanmod/MDE4RTS.svg?branch=master)](https://travis-ci.org/atlanmod/MDE4RTS)
-
-# MDE4RTS
+# Dynamic Analyser
 
 #### Table of Contents
   * [Model driven dynamic impact analysis](#model-driven-dynamic-impact-analysis)
