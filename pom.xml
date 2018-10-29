@@ -12,9 +12,7 @@
 
     <modules>
         <module>utils</module>
-        <module>model</module>
         <module>instrumentation</module>
-        <module>diff</module>
         <module>parsing</module>
         <module>runner</module>
         <module>management</module>
