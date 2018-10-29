@@ -1,6 +1,5 @@
 package com.tblf.utils;
 
-import com.tblf.model.ModelPackage;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
@@ -43,7 +42,6 @@ public class ModelUtils {
         JavaapplicationPackage.eINSTANCE.eClass();
         ExtensionPackage.eINSTANCE.eClass();
         KdmPackage.eINSTANCE.eClass();
-        ModelPackage.eINSTANCE.eClass();
 
         Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
         Map<String, Object> m = reg.getExtensionToFactoryMap();

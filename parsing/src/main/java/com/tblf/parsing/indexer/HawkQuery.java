@@ -132,9 +132,7 @@ public class HawkQuery implements Query, AutoCloseable {
 
         try {
             value = modelIndexer.getKnownQueryLanguages().get("org.hawk.epsilon.emc.EOLQueryEngine").query(modelIndexer, query, null);
-        } catch (InvalidQueryException e) {
-            e.printStackTrace();
-        } catch (QueryExecutionException e) {
+        } catch (InvalidQueryException | QueryExecutionException e) {
             e.printStackTrace();
         }
         //sem.release();
@@ -166,7 +164,6 @@ public class HawkQuery implements Query, AutoCloseable {
     @Override
     public void close() throws Exception {
         modelIndexer.shutdown(IModelIndexer.ShutdownRequestType.ONLY_LOCAL);
-
     }
 }
 

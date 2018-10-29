@@ -22,11 +22,6 @@
             <artifactId>utils</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>com.tblf</groupId>
-            <artifactId>model</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
 
         <dependency>
             <groupId>com.github.javaparser</groupId>

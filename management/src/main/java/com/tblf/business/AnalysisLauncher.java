@@ -1,18 +1,10 @@
 package com.tblf.business;
 
 import com.tblf.instrumentation.InstrumentationType;
-import com.tblf.instrumentation.Instrumenter;
 import com.tblf.instrumentation.InstrumenterBuilder;
 import com.tblf.junitrunner.MavenRunner;
-import com.tblf.linker.Calls;
-import com.tblf.linker.tracers.FileTracer;
-import com.tblf.linker.tracers.MqttTracer;
-import com.tblf.linker.tracers.QueueTracer;
-import com.tblf.linker.tracers.Tracer;
 import com.tblf.parsing.TraceType;
-import com.tblf.parsing.parsers.ModelParser;
 import com.tblf.parsing.parsers.Parser;
-import com.tblf.parsing.parsingBehaviors.FineGrainedImpactAnalysisBehavior;
 import com.tblf.parsing.parsingBehaviors.ParsingBehavior;
 import com.tblf.parsing.traceReaders.TraceFileReader;
 import com.tblf.parsing.traceReaders.TraceMqttReader;
@@ -21,35 +13,23 @@ import com.tblf.parsing.traceReaders.TraceReader;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.FileUtils;
 import com.tblf.utils.ModelUtils;
-import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
-import sun.security.krb5.Config;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static com.tblf.parsing.TraceType.FILE;
-
 public class AnalysisLauncher {
-    public static int oracle;
-
     private static final Logger LOGGER = Logger.getLogger(AnalysisLauncher.class.getName());
 
     private File root;
     private List<? extends File> sources;
     private ResourceSet resourceSet;
     private File outputModel;
-    private Instrumenter instrumenter;
     private InstrumenterBuilder instrumenterBuilder;
 
     private List<Consumer<File>> before;
@@ -115,82 +95,6 @@ public class AnalysisLauncher {
     }
 
     /**
-     * Execute the impact analysis:
-     * Get the SUT & Tests in the moDisco model
-     * Instrument the code
-     * Execute the test
-     * Parse the execution trace to produce the impact analysis model
-     */
-    private void instrumentAndRunTests() {
-        sources.forEach(source -> {
-
-            before.forEach(fileConsumer -> fileConsumer.accept(source));
-
-            LOGGER.info("Computing the impact analysis of " + source.getName());
-            this.resourceSet = ModelUtils.buildResourceSet(source);
-            instrumenterBuilder = instrumenterBuilder.onDirectory(source);
-
-            try {
-                Resource javaModel = this.resourceSet.getResources()
-                        .stream()
-                        .filter(resource -> resource.getURI().toString().endsWith("_java.xmi")).
-                                findFirst()
-                        .orElseThrow(() -> new IOException("Could not find the MoDisco java model"));
-
-                LOGGER.info("Analysis the model: " + javaModel.getURI().toFileString());
-                ModelParser modelParser = new ModelParser();
-                modelParser.parse(javaModel); //Get the tests and sut classes
-
-                LOGGER.log(Level.INFO, modelParser.getTargets().size() + " SUT classes and " + modelParser.getTests().size() + " test classes");
-
-                LOGGER.info("Instrumenting the code in: " + source.getName());
-
-                instrumenter = instrumenterBuilder.build();
-
-                instrumenter.getDependencies().add(new File(Calls.class.getProtectionDomain().getCodeSource().getLocation().toURI()));
-                instrumenter.getDependencies().add(new File(Configuration.class.getProtectionDomain().getCodeSource().getLocation().toURI()));
-
-                instrumenter.instrument(modelParser.getTargets().keySet(), modelParser.getTests().keySet());
-
-                LOGGER.info("Running the tests to create execution traces");
-                new MavenRunner(new File(source, "pom.xml")).run();
-
-            } catch (IOException | URISyntaxException e) {
-                LOGGER.log(Level.WARNING, "An error was caught during the impact analysis", e);
-            }
-
-            after.forEach(fileConsumer -> fileConsumer.accept(source));
-        });
-    }
-
-    /**
-     * Parses the execution traces generated for impact analysis purposes
-     */
-    private void parseTestTrace() {
-        sources.forEach(source -> {
-            File exTrace = new File(source, Configuration.getProperty("traceFile"));
-
-            try {
-                if (!exTrace.exists())
-                    throw new IOException("Cannot get the execution trace file.");
-
-                traceReader.setFile(exTrace);
-                new Parser(traceReader, new FineGrainedImpactAnalysisBehavior(resourceSet, outputModel)).parse();
-            } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "An exception was caught when parsing the trace", e);
-            }
-
-            try {
-                resourceSet.getResource(URI.createURI(outputModel.toURI().toURL().toString()), true).save(Collections.EMPTY_MAP);
-            } catch (IOException e) {
-                LOGGER.log(Level.WARNING, "Could not save the model", e);
-            }
-            exTrace.delete();
-        });
-
-    }
-
-    /**
      * Instrument the source code using the given processors
      */
     private void instrument() {
@@ -209,7 +113,6 @@ public class AnalysisLauncher {
 
         });
     }
-
 
     /**
      * Set the dependencies before running the impact analysis
@@ -273,16 +176,6 @@ public class AnalysisLauncher {
         after.add(method);
     }
 
-    /**
-     * Run the impact analysis using the configurations set by the user
-     */
-    public void runImpactAnalysis() {
-        setUpInstrumentation();
-
-        instrumentAndRunTests();
-
-        parseTestTrace();
-    }
 
     public void run() {
         setUpInstrumentation();
@@ -315,6 +208,7 @@ public class AnalysisLauncher {
         }
 
         File trace = new File(root, Configuration.getProperty("traceFile"));
+
         traceReader.setFile(trace);
 
         if (behavior == null)

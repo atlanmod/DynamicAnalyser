@@ -3,6 +3,7 @@ package com.tblf.parsing;
 import com.tblf.parsing.indexer.HawkQuery;
 import com.tblf.parsing.queries.Query;
 import org.apache.commons.io.FileUtils;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,5 +57,6 @@ public class HawkQueryTest {
         Assert.assertEquals(4241, hawkQuery.queryWithInputEOLQuery("return MethodDeclaration.all.size();"));
         hawkQuery.close();
     }
+
 }
 

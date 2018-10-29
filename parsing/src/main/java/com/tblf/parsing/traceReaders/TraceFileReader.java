@@ -25,9 +25,13 @@ public class TraceFileReader extends TraceReader {
     @Override
     public void setFile(File file) {
         super.setFile(file);
+
         try {
+            if(!file.exists())
+                file.createNewFile();
+
             bufferedReader = new BufferedReader(new FileReader(file));
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Could not read trace "+file.getAbsolutePath(), e);
         }
     }

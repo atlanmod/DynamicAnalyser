@@ -63,15 +63,9 @@ public class AnalysisLauncherTest {
         analysisLauncher.setTraceType(TraceType.FILE);
         analysisLauncher.setInstrumentationType(InstrumentationType.SOURCECODE);
         analysisLauncher.setOutputModel(new File(file, "analysis.xmi"));
-        analysisLauncher.runImpactAnalysis();
+        analysisLauncher.registerBehavior(new EmptyParsingBehavior());
+        analysisLauncher.run();
 
-        File model = new File(file, "analysis.xmi");
-        Assert.assertTrue(model.exists());
-
-        Resource analysisModel = ModelUtils.loadModel(model);
-
-        Assert.assertEquals(10, analysisModel.getContents().size());
-        FileUtils.deleteDirectory(file);
     }
 
     @Test
@@ -85,16 +79,11 @@ public class AnalysisLauncherTest {
         analysisLauncher.setTraceType(TraceType.QUEUE);
         analysisLauncher.setInstrumentationType(InstrumentationType.SOURCECODE);
         analysisLauncher.setOutputModel(new File(file, "analysis.xmi"));
-        analysisLauncher.runImpactAnalysis();
+        analysisLauncher.registerBehavior(new EmptyParsingBehavior());
+        analysisLauncher.run();
 
-        File model = new File(file, "analysis.xmi");
-        Assert.assertTrue(model.exists());
-
-        Resource analysisModel = ModelUtils.loadModel(model);
-
-        Assert.assertEquals(10, analysisModel.getContents().size());
-        FileUtils.deleteDirectory(file);
     }
+
     @Test
     public void checkParseBCI() throws IOException {
 
@@ -115,17 +104,10 @@ public class AnalysisLauncherTest {
         analysisLauncher.setInstrumentationType(InstrumentationType.BYTECODE);
         analysisLauncher.setTraceType(TraceType.FILE);
         analysisLauncher.setOutputModel(new File(file, "analysis.xmi"));
-
+        analysisLauncher.registerBehavior(new EmptyParsingBehavior());
         analysisLauncher.applyBefore(MavenUtils::compilePom);
-        analysisLauncher.runImpactAnalysis();
+        analysisLauncher.run();
 
-        File model = new File(file, "analysis.xmi");
-        Assert.assertTrue(model.exists());
-
-        Resource analysisModel = ModelUtils.loadModel(model);
-
-        Assert.assertEquals("Not the expected number of impacts", 10, analysisModel.getContents().size());
-       // FileUtils.deleteDirectory(file);
     }
 
     @Test
@@ -140,9 +122,8 @@ public class AnalysisLauncherTest {
         analysisLauncher.setOutputModel(new File(file, "analysis.xmi"));
         analysisLauncher.setInstrumentationType(InstrumentationType.SOURCECODE);
         analysisLauncher.setTraceType(TraceType.FILE);
-
+        analysisLauncher.registerBehavior(new EmptyParsingBehavior());
         analysisLauncher.applyBefore(file1 -> Assert.assertFalse(new File(file1, "analysis.xmi").exists()));
-
         analysisLauncher.applyBefore(file1 -> {
             File file2 = new File(file1, "aRandomFileName.txt");
             try {
@@ -154,7 +135,7 @@ public class AnalysisLauncherTest {
 
         analysisLauncher.applyBefore(file1 -> Assert.assertTrue(new File(file1, "aRandomFileName.txt").exists()));
 
-        analysisLauncher.runImpactAnalysis();
+        analysisLauncher.run();
 
         FileUtils.deleteDirectory(file);
     }
@@ -172,10 +153,10 @@ public class AnalysisLauncherTest {
         analysisLauncher.setInstrumentationType(InstrumentationType.SOURCECODE);
         analysisLauncher.setTraceType(TraceType.QUEUE);
         analysisLauncher.setOutputModel(new File(file, "analysis.xmi"));
-
+        analysisLauncher.registerBehavior(new EmptyParsingBehavior());
         analysisLauncher.applyAfter(file1 -> Assert.assertTrue(new File(file1, "trace").exists()));
 
-        analysisLauncher.runImpactAnalysis();
+        analysisLauncher.run();
 
         FileUtils.deleteDirectory(file);
     }
