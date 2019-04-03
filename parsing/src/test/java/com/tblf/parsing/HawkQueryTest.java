@@ -3,14 +3,12 @@ package com.tblf.parsing;
 import com.tblf.parsing.indexer.HawkQuery;
 import com.tblf.parsing.queries.Query;
 import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.File;
 import java.io.IOException;
 
+@Ignore
 public class HawkQueryTest {
 
     @Before
