@@ -1,8 +1,9 @@
 package com.tblf.parsing.traceReaders;
 
 import net.openhft.chronicle.queue.ChronicleQueue;
-import net.openhft.chronicle.queue.ChronicleQueueBuilder;
 import net.openhft.chronicle.queue.ExcerptTailer;
+import net.openhft.chronicle.queue.impl.single.SingleChronicleQueueBuilder;
+import net.openhft.chronicle.wire.Wire;
 
 import java.io.File;
 
@@ -26,12 +27,13 @@ public class TraceQueueReader extends TraceReader{
     @Override
     public void setFile(File file) {
         super.setFile(file);
-        ChronicleQueue queue = ChronicleQueueBuilder.single(file.getAbsolutePath()).build();
+        ChronicleQueue queue = SingleChronicleQueueBuilder.single(file).build();
         excerptTailer = queue.createTailer();
     }
 
     @Override
     public String read() {
-        return excerptTailer.readText();
+        Wire wire = excerptTailer.readingDocument().wire();
+        return (wire == null) ? null : wire.read().text();
     }
 }

@@ -1,8 +1,8 @@
 package com.tblf.parsing.parsers;
 
 import net.openhft.chronicle.queue.ChronicleQueue;
-import net.openhft.chronicle.queue.ChronicleQueueBuilder;
 import net.openhft.chronicle.queue.ExcerptTailer;
+import net.openhft.chronicle.queue.impl.single.SingleChronicleQueueBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -26,7 +26,7 @@ public class QueueReader extends BufferedReader {
         if (!file.exists())
             throw new FileNotFoundException("The file "+file.getAbsolutePath()+" does not exist");
 
-        ChronicleQueue queue = ChronicleQueueBuilder.single(file.getAbsolutePath()).build();
+        ChronicleQueue queue = SingleChronicleQueueBuilder.single(file.getAbsolutePath()).build();
         excerptTailer = queue.createTailer();
     }
 
