@@ -15,13 +15,9 @@ public class Configuration {
     static {
         properties = new Properties();
         try {
-            propertyFile = new File("config.properties");
-            if (! propertyFile.exists()) {
-                inputStream = Configuration.class.getClassLoader().getResourceAsStream("config.properties");
-            } else {
-                inputStream = new FileInputStream(propertyFile);
-            }
+            inputStream = Configuration.class.getClassLoader().getResourceAsStream("config.properties");
             properties.load(inputStream);
+            LOGGER.log(Level.INFO, "Properties successfully loaded.");
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Error loading the properties", e);
         }
