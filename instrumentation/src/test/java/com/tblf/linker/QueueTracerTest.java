@@ -3,8 +3,8 @@ package com.tblf.linker;
 import com.tblf.linker.tracers.QueueTracer;
 import com.tblf.linker.tracers.Tracer;
 import net.openhft.chronicle.queue.ChronicleQueue;
-import net.openhft.chronicle.queue.ChronicleQueueBuilder;
 import net.openhft.chronicle.queue.ExcerptTailer;
+import net.openhft.chronicle.queue.impl.single.SingleChronicleQueueBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -21,7 +21,7 @@ public class QueueTracerTest {
 
         File file = tracer.getFile();
 
-        ChronicleQueue queue = ChronicleQueueBuilder.single(file.getAbsolutePath()).build();
+        ChronicleQueue queue = SingleChronicleQueueBuilder.single(file.getAbsolutePath()).build();
         ExcerptTailer excerptTailer = queue.createTailer();
 
         Assert.assertEquals("value", excerptTailer.readingDocument().wire().read("test").text());
@@ -35,7 +35,7 @@ public class QueueTracerTest {
 
         File file = tracer.getFile();
 
-        ChronicleQueue queue = ChronicleQueueBuilder.single(file.getAbsolutePath()).build();
+        ChronicleQueue queue = SingleChronicleQueueBuilder.single(file.getAbsolutePath()).build();
         ExcerptTailer excerptTailer = queue.createTailer();
 
         Assert.assertEquals("value", excerptTailer.readText());
@@ -52,7 +52,7 @@ public class QueueTracerTest {
 
         File file = tracer.getFile();
 
-        ChronicleQueue queue = ChronicleQueueBuilder.single(file.getAbsolutePath()).build();
+        ChronicleQueue queue = SingleChronicleQueueBuilder.single(file.getAbsolutePath()).build();
         ExcerptTailer excerptTailer = queue.createTailer();
 
         Assert.assertEquals("&:myTest:myMethod", excerptTailer.readText());
@@ -69,7 +69,7 @@ public class QueueTracerTest {
 
         File file = tracer.getFile();
 
-        ChronicleQueue queue = ChronicleQueueBuilder.single(file.getAbsolutePath()).build();
+        ChronicleQueue queue = SingleChronicleQueueBuilder.single(file.getAbsolutePath()).build();
         ExcerptTailer excerptTailer = queue.createTailer();
 
         Assert.assertEquals("&:myTest:myMethod", excerptTailer.readText());
@@ -86,7 +86,7 @@ public class QueueTracerTest {
 
         File file = tracer.getFile();
 
-        ChronicleQueue queue = ChronicleQueueBuilder.single(file.getAbsolutePath()).build();
+        ChronicleQueue queue = SingleChronicleQueueBuilder.single(file.getAbsolutePath()).build();
         ExcerptTailer excerptTailer = queue.createTailer();
 
         Assert.assertEquals("&:myTest:myMethod", excerptTailer.readText());
@@ -104,7 +104,7 @@ public class QueueTracerTest {
 
         File file = tracer.getFile();
 
-        ChronicleQueue queue = ChronicleQueueBuilder.single(file.getAbsolutePath()).build();
+        ChronicleQueue queue = SingleChronicleQueueBuilder.single(file.getAbsolutePath()).build();
         ExcerptTailer excerptTailer = queue.createTailer();
 
         Assert.assertEquals("&:myTest:myMethod", excerptTailer.readText());

@@ -2,8 +2,8 @@ package com.tblf.linker.tracers;
 
 import com.tblf.utils.Configuration;
 import net.openhft.chronicle.queue.ChronicleQueue;
-import net.openhft.chronicle.queue.ChronicleQueueBuilder;
 import net.openhft.chronicle.queue.ExcerptAppender;
+import net.openhft.chronicle.queue.impl.single.SingleChronicleQueueBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +38,7 @@ public class QueueTracer implements Tracer {
 
         file.mkdir();
 
-        ChronicleQueue queue = ChronicleQueueBuilder.single(file.getAbsolutePath()).build();
+        ChronicleQueue queue = SingleChronicleQueueBuilder.single(file.getAbsolutePath()).build();
 
         excerptAppender = queue.acquireAppender();
     }
