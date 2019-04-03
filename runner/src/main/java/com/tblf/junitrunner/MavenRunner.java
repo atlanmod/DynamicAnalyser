@@ -2,6 +2,7 @@ package com.tblf.junitrunner;
 
 import com.tblf.utils.Configuration;
 import com.tblf.utils.MavenUtils;
+import sun.security.krb5.Config;
 
 import java.io.File;
 import java.io.IOException;
@@ -90,9 +91,12 @@ public class MavenRunner {
             }
         }
 
-        MavenUtils.addDependencyToPom(pom, new File("pom.xml")); //Used to run the instrumented code.
+        MavenUtils.addDependencyToPom(pom, Configuration.getProperty("groupId"), Configuration.getProperty("artifactId"), Configuration.getProperty("version")); //Used to run the instrumented code. //FIXME
 
-        pomDependencies.forEach(file -> MavenUtils.addDependencyToPom(pom, file));
+        pomDependencies.forEach(file -> {
+                    LOGGER.info("Adding "+file+" to the dependencies");
+                    MavenUtils.addDependencyToPom(pom, file);
+        });
 
         Configuration.save(new File(pom.getParentFile(), "config.properties")); //Save the conf inside the instrumented code.
         MavenUtils.runTestsOnly(pom);
