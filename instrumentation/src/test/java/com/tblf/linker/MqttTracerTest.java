@@ -3,7 +3,7 @@ package com.tblf.linker;
 import com.tblf.linker.tracers.MqttTracer;
 import com.tblf.linker.tracers.Tracer;
 import com.tblf.utils.Configuration;
-import io.moquette.server.Server;
+import io.moquette.broker.Server;
 import org.fusesource.mqtt.client.*;
 import org.junit.After;
 import org.junit.Assert;

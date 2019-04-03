@@ -78,12 +78,10 @@
             <scope>test</scope>
         </dependency>
 
-
-
         <dependency>
             <groupId>io.moquette</groupId>
-            <artifactId>moquette-distribution</artifactId>
-            <version>0.12-SNAPSHOT</version>
+            <artifactId>moquette-broker</artifactId>
+            <version>0.12.1</version>
             <scope>test</scope>
         </dependency>
 
