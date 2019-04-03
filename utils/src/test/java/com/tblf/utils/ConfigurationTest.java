@@ -9,4 +9,11 @@ public class ConfigurationTest {
     public void checkGetProperty() {
         Assert.assertEquals(Configuration.getProperty("name"), "Dynamic-Analyser");
     }
+
+    @Test
+    public void checkDynamicProperty() {
+        Assert.assertNotNull(Configuration.getProperty("version"));
+        Assert.assertNotNull(Configuration.getProperty("groupId"));
+        Assert.assertNotNull(Configuration.getProperty("artifactId"));
+    }
 }

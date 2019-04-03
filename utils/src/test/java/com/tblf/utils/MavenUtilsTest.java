@@ -3,7 +3,9 @@ package com.tblf.utils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -94,6 +96,45 @@ public class MavenUtilsTest {
         Assert.assertTrue(pomSourceAsString.contains("dependencyArtifactId"));
         Assert.assertTrue(pomSourceAsString.contains("dependencyGroupId"));
         Assert.assertTrue(pomSourceAsString.contains("2.0.0"));
+    }
+
+    @Test
+    public void checkMavenAddDependencyTwice() throws IOException, XmlPullParserException {
+        Model source = new Model();
+
+        source.setArtifactId("artifactId");
+        source.setGroupId("groupId");
+        source.setVersion("1.0.0");
+
+        File folder = new File("src/test/resources/checkMavenAddDependency");
+
+        assert folder.exists() || folder.mkdir();
+
+        File pomSource = new File(folder, "pomSource.xml");
+
+        if (pomSource.exists())
+            assert pomSource.delete();
+
+        assert pomSource.createNewFile();
+
+        new MavenXpp3Writer().write(new FileOutputStream(pomSource), source);
+
+        String pomSourceAsString = FileUtils.readFileToString(pomSource, Charset.defaultCharset());
+        String artifactId = "dependencyArtifactId";
+        String groupId = "dependencyGroupId";
+        String version = "2.0.0";
+
+        Assert.assertFalse(pomSourceAsString.contains(artifactId));
+        Assert.assertFalse(pomSourceAsString.contains(groupId));
+        Assert.assertFalse(pomSourceAsString.contains(version));
+
+        MavenUtils.addDependencyToPom(pomSource, groupId, artifactId, version);
+        Model model = new MavenXpp3Reader().read(new FileInputStream(pomSource));
+        Assert.assertEquals(1L, model.getDependencies().stream().filter(d -> d.getVersion().equals(version) && d.getArtifactId().equals(artifactId) && d.getGroupId().equals(groupId)).count());
+
+        MavenUtils.addDependencyToPom(pomSource, groupId, artifactId, version);
+        model = new MavenXpp3Reader().read(new FileInputStream(pomSource));
+        Assert.assertNotEquals(2L, model.getDependencies().stream().filter(d -> d.getVersion().equals(version) && d.getArtifactId().equals(artifactId) && d.getGroupId().equals(groupId)).count());
 
     }
 }
