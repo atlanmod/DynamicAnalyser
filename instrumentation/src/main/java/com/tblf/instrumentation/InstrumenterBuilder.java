@@ -1,5 +1,6 @@
 package com.tblf.instrumentation;
 
+import com.tblf.instrumentation.agent.AgentInstrumenter;
 import com.tblf.instrumentation.bytecode.ByteCodeInstrumenter;
 import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
 import com.tblf.linker.tracers.FileTracer;
@@ -28,10 +29,20 @@ public class InstrumenterBuilder {
      * @return the {@link Instrumenter}
      */
     public Instrumenter build() {
-
-        Instrumenter instrumenter = instrumentationType.equals(InstrumentationType.BYTECODE) ?
-                new ByteCodeInstrumenter() :
-                new SourceCodeInstrumenter();
+        Instrumenter instrumenter;
+        switch (instrumentationType) {
+            case BYTECODE:
+                instrumenter = new ByteCodeInstrumenter();
+                break;
+            case AGENT:
+                instrumenter = new AgentInstrumenter();
+                break;
+            case SOURCECODE:
+                instrumenter = new SourceCodeInstrumenter();
+                break;
+            default:
+                instrumenter = new SourceCodeInstrumenter();
+        }
 
         instrumenter.setDirectory(onDirectory);
         instrumenter.setOutputDirectory(outputDirectory);
@@ -57,6 +68,15 @@ public class InstrumenterBuilder {
      */
     public InstrumenterBuilder withByteCodeInstrumenter() {
         instrumentationType = InstrumentationType.BYTECODE;
+        return this;
+    }
+
+    /**
+     * Instantiate a {@link com.tblf.instrumentation.agent.AgentInstrumenter}
+     * @return this, the current {@link InstrumenterBuilder}
+     */
+    public InstrumenterBuilder withAgentInstrumenter() {
+        instrumentationType = InstrumentationType.AGENT;
         return this;
     }
 
