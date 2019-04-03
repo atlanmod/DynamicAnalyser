@@ -25,7 +25,11 @@ import java.util.logging.Logger;
  */
 public class MavenUtils {
     private static final Logger LOGGER = Logger.getAnonymousLogger();
+    private static Invoker INVOKER;
 
+    static {
+        INVOKER = new DefaultInvoker();
+    }
     /**
      * Run eclipse:eclipse, clean, and compile builds on the mvn project
      *
@@ -63,8 +67,9 @@ public class MavenUtils {
      */
     public static void addDependencyToPom(File pom, File file) {
         MavenXpp3Reader mavenXpp3Reader = new MavenXpp3Reader();
+        LOGGER.log(Level.INFO, "Adding "+file.getAbsolutePath()+" dependency to "+pom.getAbsolutePath());
         try {
-            Model pomModelToUpdate = mavenXpp3Reader.read(new FileInputStream(pom));
+
             Model pomModelToUse = mavenXpp3Reader.read(new FileInputStream(file));
 
             String artifactId = pomModelToUse.getArtifactId();
@@ -77,20 +82,31 @@ public class MavenUtils {
             if (version == null)
                 version = pomModelToUse.getParent().getVersion();
 
-            Collection<Dependency> dependencyCollection;
-            dependencyCollection = pomModelToUpdate.getDependencies();
+
+            addDependencyToPom(pom, groupId, artifactId, version);
+        } catch (XmlPullParserException | IOException e) {
+            LOGGER.log(Level.WARNING, "Could not update the pom", e);
+
+        }
+    }
+
+    public static void addDependencyToPom(File pom, String groupId, String artifactId, String version) {
+        try {
+            Model pomModelToUpdate = new MavenXpp3Reader().read(new FileInputStream(pom));
+            Collection<Dependency> dependencyCollection = pomModelToUpdate.getDependencies();
 
             if (dependencyCollection == null)
                 dependencyCollection = new ArrayList<>();
 
-            Dependency dependency = new Dependency();
-            dependency.setArtifactId(artifactId);
-            dependency.setVersion(version);
-            dependency.setGroupId(groupId);
+            if (! dependencyCollection.stream().anyMatch(d -> d.getArtifactId().equals(artifactId) && d.getGroupId().equals(groupId) && d.getVersion().equals(version))) {
+                Dependency dependency = new Dependency();
+                dependency.setArtifactId(artifactId);
+                dependency.setVersion(version);
+                dependency.setGroupId(groupId);
 
-            dependencyCollection.add(dependency);
-
-            new MavenXpp3Writer().write(new FileOutputStream(pom), pomModelToUpdate);
+                dependencyCollection.add(dependency);
+                new MavenXpp3Writer().write(new FileOutputStream(pom), pomModelToUpdate);
+            }
         } catch (XmlPullParserException | IOException e) {
             LOGGER.log(Level.WARNING, "Could not update the pom", e);
         }
@@ -99,7 +115,7 @@ public class MavenUtils {
     /**
      * Add a specific file in the maven surefire plugin classpath configuration
      *
-     * @param file a {@link File}
+     * @param file a {@link File}z
      */
     public static void addFileInPomTestClassPath(File pom, File file) {
 
@@ -153,12 +169,12 @@ public class MavenUtils {
     public static void runTestsOnly(File pom) {
         InvocationRequest invocationRequest = new DefaultInvocationRequest();
         invocationRequest.setJavaHome(new File(Configuration.getProperty("JAVA_HOME")));
-
         invocationRequest.setPomFile(pom);
+        invocationRequest.setBaseDirectory(pom.getParentFile());
         invocationRequest.setGoals(Arrays.asList("-Djacoco.skip", "-DtestFailureIgnore=true", "surefire:test"));
 
         try {
-            InvocationResult invocationResult = new DefaultInvoker().execute(invocationRequest);
+            InvocationResult invocationResult = INVOKER.execute(invocationRequest);
             if (invocationResult.getExecutionException() != null)
                 LOGGER.log(Level.WARNING, "Could not run all the tests", invocationResult.getExecutionException().fillInStackTrace());
         } catch (MavenInvocationException e) {
@@ -230,7 +246,7 @@ public class MavenUtils {
             plugin = new Plugin();
             plugin.setGroupId("org.apache.maven.plugins");
             plugin.setArtifactId("maven-surefire-plugin");
-            plugin.setVersion("2.20.1");
+            plugin.setVersion("3.0.0-M3");
             model.getBuild().getPlugins().add(plugin);
         }
 
