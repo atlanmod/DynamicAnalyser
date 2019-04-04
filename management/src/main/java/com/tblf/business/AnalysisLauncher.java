@@ -104,7 +104,6 @@ public class AnalysisLauncher {
 
             instrumenterBuilder
                     .onDirectory(source)
-                    .withQueueExecutionTrace()
                     .build()
                     .instrument(processors);
 
@@ -120,6 +119,7 @@ public class AnalysisLauncher {
     private void setUpInstrumentation() {
         instrumenterBuilder = new InstrumenterBuilder();
 
+        //FIXME: Is that really condition necessary ?
         if (isPomAtRoot)
             sources = FileUtils.getAllModules(root).stream().filter(FileUtils::isAnalysable).collect(Collectors.toList());
         else
@@ -131,6 +131,9 @@ public class AnalysisLauncher {
                 break;
             case SOURCECODE:
                 instrumenterBuilder = instrumenterBuilder.withSourceCodeInstrumenter();
+                break;
+            case AGENT:
+                instrumenterBuilder = instrumenterBuilder.withAgentInstrumenter();
                 break;
             default:
                 LOGGER.warning("No instrumentation chosen");
@@ -149,7 +152,7 @@ public class AnalysisLauncher {
 
                 break;
             default:
-                LOGGER.warning("No instrumentation chosen");
+                LOGGER.warning("No tracer chosen");
         }
 
         if (outputModel == null)

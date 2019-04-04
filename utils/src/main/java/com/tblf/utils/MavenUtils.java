@@ -207,9 +207,12 @@ public class MavenUtils {
         if (argLine == null) {
             argLine = new Xpp3Dom("argLine");
             ((Xpp3Dom) plugin.getConfiguration()).addChild(argLine);
+            argLine.setValue(opt);
+        } else {
+            argLine.setValue(argLine.getValue()+" "+opt);
         }
 
-        argLine.setValue(opt);
+
 
         MavenXpp3Writer mavenXpp3Writer = new MavenXpp3Writer();
 
