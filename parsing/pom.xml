@@ -44,38 +44,6 @@
             <artifactId>epsilon-emf</artifactId>
             <version>1.4.0</version>
         </dependency>
-
-        <dependency>
-            <groupId>org.hawk</groupId>
-            <artifactId>org.hawk.core</artifactId>
-            <version>${hawk.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hawk</groupId>
-            <artifactId>org.hawk.emf</artifactId>
-            <version>${hawk.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hawk</groupId>
-            <artifactId>org.hawk.neo4j-v2</artifactId>
-            <version>${hawk.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hawk</groupId>
-            <artifactId>org.hawk.localfolder</artifactId>
-            <version>${hawk.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hawk</groupId>
-            <artifactId>org.hawk.emfresource</artifactId>
-            <version>${hawk.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hawk</groupId>
-            <artifactId>org.hawk.epsilon</artifactId>
-            <version>${hawk.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>org.fusesource.mqtt-client</groupId>
             <artifactId>mqtt-client</artifactId>

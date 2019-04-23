@@ -10,10 +10,5 @@ install:
     -
 
 script:
-    - git clone https://github.com/mondo-project/mondo-hawk/
-    - cd mondo-hawk && ./install-maven-deps.sh
-    - mvn -f pom-plain.xml install
-    - cd $TRAVIS_BUILD_DIR/ && git clone https://github.com/andsel/moquette.git
-    - cd moquette && ./gradlew install
-    - cd $TRAVIS_BUILD_DIR/ && mvn clean
+    - mvn clean
     - mvn install -Ptravis
