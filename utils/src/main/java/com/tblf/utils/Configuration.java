@@ -53,4 +53,17 @@ public class Configuration {
             LOGGER.log(Level.WARNING, "Could not save the properties", e);
         }
     }
+
+    /**
+     * Replace the existing configuration with a new Configuration using an external {@link File}
+     * @param newConfigurationFile a {@link File} containing properties.
+     */
+    public static void load(File newConfigurationFile) {
+        try {
+            properties.load(new FileInputStream(newConfigurationFile));
+            LOGGER.log(Level.INFO, "Loaded the configuration file "+newConfigurationFile.getAbsolutePath());
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Could not load the given file "+newConfigurationFile.getAbsolutePath());
+        }
+    }
 }

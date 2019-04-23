@@ -212,8 +212,6 @@ public class MavenUtils {
             argLine.setValue(argLine.getValue()+" "+opt);
         }
 
-
-
         MavenXpp3Writer mavenXpp3Writer = new MavenXpp3Writer();
 
         try {

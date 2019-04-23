@@ -17,14 +17,17 @@ public class QueueTracerTest {
         Tracer tracer = new QueueTracer();
         tracer.startTrace();
         tracer.write("test", "value");
+        tracer.write("test", "value2");
+        tracer.write("test", "value3");
         tracer.endTrace();
 
         File file = tracer.getFile();
 
         ChronicleQueue queue = SingleChronicleQueueBuilder.single(file.getAbsolutePath()).build();
         ExcerptTailer excerptTailer = queue.createTailer();
-
         Assert.assertEquals("value", excerptTailer.readingDocument().wire().read("test").text());
+        Assert.assertEquals("value2", excerptTailer.readingDocument().wire().read("test").text());
+        Assert.assertEquals("value3", excerptTailer.readingDocument().wire().read("test").text());
     }
 
     @Test

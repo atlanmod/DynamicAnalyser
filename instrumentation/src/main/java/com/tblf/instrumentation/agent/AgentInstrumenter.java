@@ -26,7 +26,7 @@ public class AgentInstrumenter extends Instrumenter {
                 .collect(Collectors.joining(" "));
 
         File pomToAddAgents = new File(this.directory, "pom.xml");
-        MavenUtils.addJVMOptionsToSurefireConfig(pomToAddAgents, commandLine);
+        MavenUtils.addJVMOptionsToSurefireConfig(pomToAddAgents, commandLine+"="+this.directory.getAbsolutePath());
     }
 
     @Override
