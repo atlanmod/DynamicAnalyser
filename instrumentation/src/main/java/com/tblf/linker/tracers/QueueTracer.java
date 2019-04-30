@@ -46,12 +46,12 @@ public class QueueTracer implements Tracer {
     }
 
     @Override
-    public void write(String value) {
+    synchronized public void write(String value) {
         excerptAppender.writeText(value);
     }
 
     @Override
-    public void write(String topic, String value) {
+    synchronized public void write(String topic, String value) {
         excerptAppender.writeMessage(() -> topic, value);
     }
 

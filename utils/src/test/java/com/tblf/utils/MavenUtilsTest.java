@@ -5,6 +5,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
+import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -136,5 +137,58 @@ public class MavenUtilsTest {
         model = new MavenXpp3Reader().read(new FileInputStream(pomSource));
         Assert.assertNotEquals(2L, model.getDependencies().stream().filter(d -> d.getVersion().equals(version) && d.getArtifactId().equals(artifactId) && d.getGroupId().equals(groupId)).count());
 
+    }
+
+    @Test
+    public void checkAddTestOption() throws IOException {
+        Model source = new Model();
+
+        source.setArtifactId("artifactId");
+        source.setGroupId("groupId");
+        source.setVersion("1.0.0");
+
+        File folder = new File("src/test/resources/checkMavenAddDependency");
+
+        assert folder.exists() || folder.mkdir();
+
+        File pomSource = new File(folder, "pomSource.xml");
+
+        assert pomSource.exists() || pomSource.createNewFile();
+
+        new MavenXpp3Writer().write(new FileOutputStream(pomSource), source);
+
+        MavenUtils.addJVMOptionsToSurefireConfig(pomSource, "-noverify");
+
+        Assert.assertTrue(IOUtils.toString(new FileInputStream(pomSource), Charset.defaultCharset())
+                .contains("<configuration>\n" +
+                        "          <argLine>-noverify</argLine>\n" +
+                        "        </configuration>"));
+    }
+
+    @Test
+    public void checkAddTestOptionTwice() throws IOException {
+        Model source = new Model();
+
+        source.setArtifactId("artifactId");
+        source.setGroupId("groupId");
+        source.setVersion("1.0.0");
+
+        File folder = new File("src/test/resources/checkMavenAddDependency");
+
+        assert folder.exists() || folder.mkdir();
+
+        File pomSource = new File(folder, "pomSource.xml");
+
+        assert pomSource.exists() || pomSource.createNewFile();
+
+        new MavenXpp3Writer().write(new FileOutputStream(pomSource), source);
+
+        MavenUtils.addJVMOptionsToSurefireConfig(pomSource, "-noverify");
+        MavenUtils.addJVMOptionsToSurefireConfig(pomSource, "-noverify");
+
+        Assert.assertTrue(IOUtils.toString(new FileInputStream(pomSource), Charset.defaultCharset())
+                .contains("<configuration>\n" +
+                        "          <argLine>-noverify</argLine>\n" +
+                        "        </configuration>"));
     }
 }
