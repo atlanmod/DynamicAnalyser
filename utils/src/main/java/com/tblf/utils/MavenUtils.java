@@ -171,7 +171,7 @@ public class MavenUtils {
         invocationRequest.setJavaHome(new File(Configuration.getProperty("JAVA_HOME")));
         invocationRequest.setPomFile(pom);
         invocationRequest.setBaseDirectory(pom.getParentFile());
-        invocationRequest.setGoals(Arrays.asList("-Djacoco.skip", "-DtestFailureIgnore=true", "surefire:test"));
+        invocationRequest.setGoals(Arrays.asList("-Djacoco.skip", "-DtestFailureIgnore=true", "surefire:test", "-fn"));
 
         try {
             InvocationResult invocationResult = INVOKER.execute(invocationRequest);
