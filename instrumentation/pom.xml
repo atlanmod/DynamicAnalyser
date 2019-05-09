@@ -69,6 +69,12 @@
             <version>1.12</version>
         </dependency>
 
+        <!-- MapDB Tracer -->
+        <dependency>
+            <groupId>org.mapdb</groupId>
+            <artifactId>mapdb</artifactId>
+            <version>3.0.7</version>
+        </dependency>
 
         <!-- Tests -->
         <dependency>

@@ -34,6 +34,13 @@
             <version>5.17.3</version>
         </dependency>
 
+        <!-- MapDB Trace -->
+        <dependency>
+            <groupId>org.mapdb</groupId>
+            <artifactId>mapdb</artifactId>
+            <version>3.0.7</version>
+        </dependency>
+
         <dependency>
             <groupId>org.eclipse.epsilon</groupId>
             <artifactId>epsilon-core</artifactId>

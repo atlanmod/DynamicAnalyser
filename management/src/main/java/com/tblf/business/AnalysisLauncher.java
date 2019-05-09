@@ -6,10 +6,7 @@ import com.tblf.junitrunner.MavenRunner;
 import com.tblf.parsing.TraceType;
 import com.tblf.parsing.parsers.Parser;
 import com.tblf.parsing.parsingBehaviors.ParsingBehavior;
-import com.tblf.parsing.traceReaders.TraceFileReader;
-import com.tblf.parsing.traceReaders.TraceMqttReader;
-import com.tblf.parsing.traceReaders.TraceQueueReader;
-import com.tblf.parsing.traceReaders.TraceReader;
+import com.tblf.parsing.traceReaders.*;
 import com.tblf.utils.Configuration;
 import com.tblf.utils.FileUtils;
 import com.tblf.utils.ModelUtils;
@@ -206,6 +203,8 @@ public class AnalysisLauncher {
             case QUEUE:
                 traceReader = new TraceQueueReader();
                 break;
+            case MAP:
+                traceReader = new TraceMapReader();
             default:
                 return;
         }
