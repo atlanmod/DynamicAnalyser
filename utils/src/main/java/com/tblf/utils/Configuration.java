@@ -15,9 +15,15 @@ public class Configuration {
     static {
         properties = new Properties();
         try {
-            inputStream = Configuration.class.getClassLoader().getResourceAsStream("config.properties");
+            File file = new File("config.properties");
+            System.out.println("Trying to look for properties at : "+file.getAbsolutePath());
+            if (file.exists())
+                inputStream = new FileInputStream(file);
+            else
+                inputStream = Configuration.class.getClassLoader().getResourceAsStream("config.properties");
+
             properties.load(inputStream);
-            LOGGER.log(Level.INFO, "Properties successfully loaded.");
+            LOGGER.log(Level.INFO, "Properties successfully loaded ");
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Error loading the properties", e);
         }

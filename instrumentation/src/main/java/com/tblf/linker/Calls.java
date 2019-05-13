@@ -1,6 +1,7 @@
 package com.tblf.linker;
 
 import com.tblf.linker.tracers.FileTracer;
+import com.tblf.linker.tracers.MapDBTracer;
 import com.tblf.linker.tracers.QueueTracer;
 import com.tblf.linker.tracers.Tracer;
 import com.tblf.utils.Configuration;
@@ -30,6 +31,11 @@ public class Calls {
             case "QUEUE": {
                 LOGGER.log(Level.INFO, "creating queue-based tracer");
                 tracer = new QueueTracer();
+                break;
+            }
+            case "MAP": {
+                LOGGER.log(Level.INFO, "creating map-based tracer");
+                tracer = new MapDBTracer();
                 break;
             }
             default: {

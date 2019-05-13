@@ -20,7 +20,7 @@ public class MapDBTracer implements Tracer {
         if (dbFile.exists())
             dbFile.delete();
 
-        db = DBMaker.fileDB(dbFile).fileMmapEnable().make();
+        db = DBMaker.fileDB(dbFile).fileMmapEnable().closeOnJvmShutdown().make();
         map = (ConcurrentMap<String, HashSet<String>>) db.hashMap("map").createOrOpen();
     }
 

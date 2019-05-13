@@ -4,6 +4,7 @@ import com.tblf.instrumentation.agent.AgentInstrumenter;
 import com.tblf.instrumentation.bytecode.ByteCodeInstrumenter;
 import com.tblf.instrumentation.sourcecode.SourceCodeInstrumenter;
 import com.tblf.linker.tracers.FileTracer;
+import com.tblf.linker.tracers.MapDBTracer;
 import com.tblf.linker.tracers.QueueTracer;
 
 import java.io.File;
@@ -99,6 +100,15 @@ public class InstrumenterBuilder {
     }
 
     /**
+     * Instantiate a {@link MapDBTracer} to trace the execution. More scalable
+     * @return this, the current {@link InstrumenterBuilder}
+     */
+    public InstrumenterBuilder withMapExecutionTrace() {
+        this.tracer = MapDBTracer.class;
+        return this;
+    }
+
+    /**
      * Specify the directory to instrument
      * @param directory a {@link File}
      * @return this, the current {@link InstrumenterBuilder}
@@ -148,4 +158,6 @@ public class InstrumenterBuilder {
         this.dependencies = dependencies;
         return this;
     }
+
+
 }

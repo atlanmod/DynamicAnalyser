@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -136,22 +137,6 @@ public class AnalysisLauncher {
                 LOGGER.warning("No instrumentation chosen");
         }
 
-        switch (TraceType.valueOf(Configuration.getProperty("trace"))) {
-            case QUEUE:
-                instrumenterBuilder = instrumenterBuilder.withQueueExecutionTrace();
-                traceReader = new TraceQueueReader();
-                break;
-            case FILE:
-                instrumenterBuilder = instrumenterBuilder.withSingleFileExecutionTrace();
-                traceReader = new TraceFileReader();
-                break;
-            case MQTT:
-
-                break;
-            default:
-                LOGGER.warning("No tracer chosen");
-        }
-
         if (outputModel == null)
             outputModel = new File(root, Configuration.getProperty("outputModel") + "." + Configuration.getProperty("outputFormat"));
 
@@ -193,22 +178,28 @@ public class AnalysisLauncher {
      * Parse the execution trace, using the right {@link Parser} on the right execution trace
      */
     private void parse() {
-        switch(TraceType.valueOf(Configuration.getProperty("trace"))) {
-            case FILE:
-                traceReader = new TraceFileReader();
-                break;
-            case MQTT:
-                traceReader = new TraceMqttReader();
-                break;
+
+        switch (TraceType.valueOf(Configuration.getProperty("trace"))) {
             case QUEUE:
+                instrumenterBuilder = instrumenterBuilder.withQueueExecutionTrace();
                 traceReader = new TraceQueueReader();
+                LOGGER.log(Level.INFO, "Built Queue-based tracer");
+                break;
+            case FILE:
+                instrumenterBuilder = instrumenterBuilder.withSingleFileExecutionTrace();
+                traceReader = new TraceFileReader();
+                LOGGER.log(Level.INFO, "Built File-based tracer");
                 break;
             case MAP:
+                instrumenterBuilder = instrumenterBuilder.withMapExecutionTrace();
                 traceReader = new TraceMapReader();
-            default:
-                return;
-        }
+                LOGGER.log(Level.INFO, "Built Map-based tracer");
+            case MQTT:
 
+                break;
+            default:
+                LOGGER.warning("No tracer chosen");
+        }
         File trace = new File(root, Configuration.getProperty("traceFile"));
 
         traceReader.setFile(trace);
