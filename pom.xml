@@ -25,6 +25,13 @@
             <name>eclipse release</name>
             <url>https://repo.eclipse.org/content/groups/releases/</url>
         </repository>
+        <repository>
+            <id>gforge.inria.fr-snapshot</id>
+            <name>Maven Repository for Spoon Snapshot</name>
+            <url>http://spoon.gforge.inria.fr/repositories/snapshots/</url>
+            <snapshots/>
+        </repository>
+
     </repositories>
          
     <properties>
