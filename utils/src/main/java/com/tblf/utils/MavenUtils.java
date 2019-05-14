@@ -197,7 +197,8 @@ public class MavenUtils {
         }
 
         Plugin plugin = getSureFirePlugin(model);
-
+        plugin.setVersion("3.0.0-M3");	
+        
         Object conf = plugin.getConfiguration();
         if (conf == null)
             plugin.setConfiguration(new Xpp3Dom("configuration"));
