@@ -11,11 +11,7 @@
         <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-
-    <properties>
-        <hawk.version>1.2.0-SNAPSHOT</hawk.version>
-    </properties>
-
+   
     <dependencies>
         <dependency>
             <groupId>com.tblf</groupId>
@@ -39,17 +35,6 @@
             <groupId>org.mapdb</groupId>
             <artifactId>mapdb</artifactId>
             <version>3.0.7</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.epsilon</groupId>
-            <artifactId>epsilon-core</artifactId>
-            <version>1.4.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.epsilon</groupId>
-            <artifactId>epsilon-emf</artifactId>
-            <version>1.4.0</version>
         </dependency>
         <dependency>
             <groupId>org.fusesource.mqtt-client</groupId>
